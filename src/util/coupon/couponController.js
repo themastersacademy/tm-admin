@@ -70,6 +70,7 @@ export async function createCoupon({
   }
 }
 
+
 export async function getAllCoupons() {
   const params = {
     TableName: TABLE_NAME,

@@ -2,7 +2,7 @@ import { makeCourseEnrollmentActiveOrInactive } from "@/src/util/user/userContro
 
 export async function POST(request, { params }) {
   const { enrollmentID, isActive } = await request.json();
-  if (!enrollmentID || !isActive) {
+  if (!enrollmentID || isActive === undefined || isActive === null) {
     return Response.json(
       {
         success: false,

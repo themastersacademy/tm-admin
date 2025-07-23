@@ -115,7 +115,7 @@ export default function Institute() {
                 />
               ))
             ) : (
-              <Stack width="100%">
+              <Stack width="100%" height="70vh">
                 <NoDataFound info="No institute created yet" />
               </Stack>
             )

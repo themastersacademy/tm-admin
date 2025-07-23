@@ -1,5 +1,6 @@
 import { dynamoDB } from "../awsAgent";
 import { randomUUID } from "crypto";
+import { updateSubject } from "../subjects/createSubject";
 
 const TABLE_NAME = `${process.env.AWS_DB_NAME}content`;
 
@@ -39,8 +40,8 @@ export async function batchAddQuestions(questions) {
           "GSI1-sKey": gsi1sKey,
           createdAt: now,
           updatedAt: now,
-        }
-      }
+        },
+      },
     };
   };
 
@@ -54,7 +55,7 @@ export async function batchAddQuestions(questions) {
   const results = [];
   for (const batch of batches) {
     const requestItems = {
-      [TABLE_NAME]: batch.map(toPutRequest)
+      [TABLE_NAME]: batch.map(toPutRequest),
     };
     try {
       const resp = await dynamoDB
@@ -67,7 +68,7 @@ export async function batchAddQuestions(questions) {
       batch.forEach((q, idx) => {
         const thisReq = requestItems[TABLE_NAME][idx];
         const putKey = thisReq.PutRequest.Item.pKey;
-        const wasUnproc = unproc.some(u => u.PutRequest.Item.pKey === putKey);
+        const wasUnproc = unproc.some((u) => u.PutRequest.Item.pKey === putKey);
         if (wasUnproc) {
           results.push({ success: false, error: "Unprocessed by DynamoDB" });
         } else {
@@ -77,10 +78,19 @@ export async function batchAddQuestions(questions) {
     } catch (err) {
       // If the whole batch failed
       batch.forEach(() => {
-        results.push({ success: false, error: err.message || "BatchWrite failed" });
+        results.push({
+          success: false,
+          error: err.message || "BatchWrite failed",
+        });
       });
     }
   }
+
+  // Update subject totalQuestions
+  await updateSubject({
+    subjectID: questions[0].subjectID,
+    totalQuestions: questions.length,
+  });
 
   return results;
 }

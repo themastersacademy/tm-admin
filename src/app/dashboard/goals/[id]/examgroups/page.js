@@ -81,7 +81,26 @@ export default function Examgroups() {
 
   return (
     <Stack padding="20px" gap="15px">
-      <Header title="Exam Groups" back />
+      <Header
+        title="Exam Groups"
+        back
+        button={[
+          <Button
+            key="create"
+            variant="contained"
+            startIcon={<Add />}
+            onClick={dialogOpen}
+            sx={{
+              backgroundColor: "var(--primary-color)",
+              textTransform: "none",
+              marginLeft: "auto",
+            }}
+            disableElevation
+          >
+            create
+          </Button>,
+        ]}
+      />
       <Stack
         sx={{
           backgroundColor: "var(--white)",
@@ -92,19 +111,6 @@ export default function Examgroups() {
           minHeight: "100vh",
         }}
       >
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={dialogOpen}
-          sx={{
-            backgroundColor: "var(--primary-color)",
-            textTransform: "none",
-            marginLeft: "auto",
-          }}
-          disableElevation
-        >
-          create
-        </Button>
         <CreateDialog
           isDialogOpen={isDialogOpen}
           dialogClose={dialogClose}

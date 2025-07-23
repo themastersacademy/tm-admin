@@ -29,35 +29,39 @@ export function CourseProvider({ children }) {
 
   // Derive only titles and thumbnails
   const courseDetails = useMemo(() => {
+    // console.log("🚨 courseRes:", courseRes);
     if (courseErr) return [];
     return (
-      courseRes?.data?.map((c) => ({
-        courseID: c.courseID,
-        title: c.title,
-        thumbnail: c.thumbnail,
-        duration: c.duration,
-        lessons: c.lessons,
-        type: c.subscription.plans[0].type,
-        price: c.subscription.plans[0].priceWithTax,
-      })) || []
+      courseRes?.data?.map((c) => {
+        const firstPlan = c.subscription.plans?.[0] || {};
+        return {
+          courseID: c.courseID,
+          title: c.title,
+          thumbnail: c.thumbnail,
+          duration: c.duration,
+          lessons: c.lessons,
+          type: firstPlan.type,
+          price: firstPlan.priceWithTax,
+        };
+      }) || []
     );
   }, [courseRes, courseErr]);
 
   // Helper: get course details by ID
   const getCourseDetails = useCallback(
     (courseID) => {
-      const course = courseDetails.find((c) => c.courseID === courseID);
-      return course
-        ? {
-            title: course.title,
-            thumbnail: course.thumbnail,
-            courseID: course.courseID,
-            duration: course.duration,
-            lessons: course.lessons,
-            type: course.subscription.plans[0].type,
-            price: course.subscription.plans[0].priceWithTax,
-          }
-        : null;
+      const raw = courseRes?.data?.find((c) => c.courseID === courseID);
+      if (!raw) return null;
+      const firstPlan = raw.subscription?.plans?.[0] || {};
+      return {
+        courseID: raw.courseID,
+        title: raw.title,
+        thumbnail: raw.thumbnail,
+        duration: raw.duration,
+        lessons: raw.lessons,
+        type: firstPlan.type || null,
+        price: firstPlan.priceWithTax || null,
+      };
     },
     [courseDetails]
   );

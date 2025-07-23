@@ -22,15 +22,19 @@ export default function DialogCourseCard({
       sx={{
         width: "100%",
         minHeight: "80px",
-        border:
-          isFree && isPro
-            ? "1px solid var(--delete-color)"
-            : "2px solid var(--border-color)",
+        // border:
+        //   isFree && isPro
+        //     ? "1px solid var(--delete-color)"
+        //     : "2px solid var(--border-color)",
+        border: showPlanSelect
+          ? "1px solid var(--sec-color)"
+          : "1px solid var(--border-color)",
         padding: "10px",
         backgroundColor: "var(--white)",
         borderRadius: "10px",
         cursor: isFree && isPro ? "not-allowed" : "pointer",
         pointerEvents: isFree && isPro ? "none" : "auto",
+        transition: "all 0.3s ease",
       }}
       alignItems="center"
       flexDirection="row"
@@ -43,14 +47,25 @@ export default function DialogCourseCard({
           alt={"course"}
           width={80}
           height={60}
+          style={{
+            borderRadius: "5px",
+          }}
         />
       </Stack>
       <Stack gap="2px">
         <Typography width="220px" sx={{ fontSize: "16px", fontFamily: "Lato" }}>
           {course.title}
         </Typography>
+        <Stack flexDirection="row" gap="10px">
+          <Typography sx={{ fontSize: "12px", fontFamily: "Lato" }}>
+            {course.lessons} Lessons
+          </Typography>
+          <Typography sx={{ fontSize: "12px", fontFamily: "Lato" }}>
+            {course.duration} minutes
+          </Typography>
+        </Stack>
       </Stack>
-      {/* {showPlanSelect && (
+      {showPlanSelect && (
         <Stack width="150px">
           <StyledSelect
             title="Select Plan"
@@ -60,38 +75,13 @@ export default function DialogCourseCard({
               }`,
               value: index,
             }))}
-            value={selectedPlanIndex}
             getLabel={(option) => option.label}
             getValue={(option) => option.value}
+            value={selectedPlanIndex}
             onChange={(e) => handlePlanChange(e.target.value)}
           />
         </Stack>
-      )} */}
-       {showPlanSelect && (
-      <Stack width="150px">
-        <StyledSelect
-          title="Select Plan"
-          options={course.subscription.plans.map((plan, index) => ({
-            label: `${plan.duration} ${
-              plan.type === "MONTHLY" ? "Months" : "Years"
-            }`,
-            value: index,
-          }))}
-          getLabel={(option) => option.label}
-          getValue={(option) => option.value}
-          value={selectedPlanIndex}
-          onChange={(e) => handlePlanChange(e.target.value)}
-        />
-      </Stack>
-    )}
-      <Stack>
-        <Typography sx={{ fontSize: "14px", fontFamily: "Lato" }}>
-          {course.lessons} Lessons
-        </Typography>
-        <Typography sx={{ fontSize: "12px", fontFamily: "Lato" }}>
-          {course.duration} minutes
-        </Typography>
-      </Stack>
+      )}
     </Stack>
   );
 }

@@ -78,7 +78,7 @@ export async function getUserByID(id) {
   }
 }
 
-export async function updateUser({ email, id, name, phone, gender, address }) {
+export async function updateUser({ id, name, phone, gender, address }) {
   const params = {
     TableName: `${process.env.AWS_DB_NAME}users`,
     Key: {
@@ -221,7 +221,16 @@ export async function getCourseEnrollByUserID(id) {
 
   return {
     success: true,
-    data: courseEnrollments,
+    data: courseEnrollments.map((course) => {
+      return {
+        id: course.pKey.split("#")[1],
+        ...course,
+        pKey: undefined,
+        sKey: undefined,
+        "GSI1-pKey": undefined,
+        "GSI1-sKey": undefined,
+      };
+    }),
   };
 }
 
@@ -315,14 +324,13 @@ export async function makeCourseEnrollmentActiveOrInactive(
       ":u": now,
     },
     ConditionExpression: "attribute_exists(pKey)", // ensure enrollment exists
-    ReturnValues: "UPDATED_NEW",
   };
 
   try {
-    await dynamoDB.send(new UpdateCommand(params));
+    await dynamoDB.update(params).promise();
     return {
       success: true,
-      message: `Course enrollment ${enrollmentID} marked ${status}.`,
+      message: `Course enrollment ${status}.`,
     };
   } catch (err) {
     if (

@@ -18,6 +18,7 @@ import DialogCourseCard from "@/src/components/DialogCourseCard/DialogCourseCard
 import CourseCard from "@/src/components/CourseCard/CourseCard";
 import { useCourses } from "@/src/app/context/CourseProvider";
 import StyledSwitch from "@/src/components/StyledSwitch/StyledSwitch";
+import { enqueueSnackbar } from "notistack";
 
 export default function StudentCourse() {
   const { id } = useParams();
@@ -37,6 +38,7 @@ export default function StudentCourse() {
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${id}/get-course-enrollment`
       );
       if (data.success) {
+        console.log(data);
         const enrichedCourses = data.data.map((enrolledCourse) => {
           const matchedCourse = courseDetails?.find(
             (course) => course.courseID === enrolledCourse.courseID
@@ -55,16 +57,16 @@ export default function StudentCourse() {
     } finally {
       setIsLoading(false);
     }
-  }, [id]);
+  }, [courseDetails, id]);
 
-  const handleCourseStatusChange = async ({ courseID, status }) => {
+  const handleCourseStatusChange = async ({ id, status }) => {
     try {
       const data = await apiFetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${id}/update-enrollment-status`,
         {
           method: "POST",
           body: JSON.stringify({
-            enrollmentID: courseID,
+            enrollmentID: id,
             isActive: status,
           }),
         }
@@ -132,14 +134,14 @@ export default function StudentCourse() {
                 title={item.title}
                 thumbnail={item.thumbnail}
                 lessons={`${item.lessons} Lessons`}
-                hours={`${item.plan.duration} ${
-                  item.plan.type === "MONTHLY" ? "Months" : "Years"
+                hours={`${item.duration} ${
+                  item.type === "MONTHLY" ? "Months" : "Years"
                 }`}
                 price={item.price}
                 actionButton={
                   <Stack flexDirection="row" gap="5px" alignItems="center">
                     <Chip
-                      label={item.status || "Active"}
+                      label={item.status || "Active"} 
                       sx={{
                         backgroundColor: "var(--sec-color-acc-2)",
                         color: "var(--sec-color)",
@@ -149,12 +151,14 @@ export default function StudentCourse() {
                     />
                     <StyledSwitch
                       checked={item.status === "active"}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        console.log(item?.id);
+                        console.log(e.target.checked);
                         handleCourseStatusChange({
-                          courseID: item?.userID,
+                          id: item?.id,
                           status: e.target.checked,
-                        })
-                      }
+                        });
+                      }}
                     />
                   </Stack>
                 }
@@ -183,6 +187,7 @@ export default function StudentCourse() {
         selectedPlan={selectedPlan}
         setSelectedPlan={setSelectedPlan}
         userID={id}
+        fetchCourses={fetchCourses}
       />
     </Stack>
   );
@@ -194,11 +199,12 @@ const AddCourse = ({
   userID,
   selectedPlan,
   setSelectedPlan,
+  fetchCourses,
 }) => {
   const [courseList, setCourseList] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [expandedCourseID, setExpandedCourseID] = useState(null);
-  const [selectedPlanIndex, setSelectedPlanIndex] = useState(null);
+  const [selectedPlanIndex, setSelectedPlanIndex] = useState(0);
 
   const handleCardClick = (course, plan) => {
     setExpandedCourseID(course.courseID);
@@ -228,7 +234,11 @@ const AddCourse = ({
   }, []);
 
   const handleAddSubscription = () => {
-    if (!selectedCourse || !selectedPlanIndex) {
+    if (
+      !selectedCourse ||
+      selectedPlanIndex === undefined ||
+      selectedPlanIndex === null
+    ) {
       return;
     }
 
@@ -244,9 +254,14 @@ const AddCourse = ({
       }
     ).then((data) => {
       if (data.success) {
+        fetchCourses();
         dialogClose();
       } else {
-        console.log(data.message);
+        enqueueSnackbar({
+          message: data.message,
+          variant: "error",
+          autoHideDuration: 3000,
+        });
       }
     });
   };

@@ -44,7 +44,7 @@ export async function updateExamGroup({
   examGroupID,
   goalID,
   title,
-  isLive,
+  // isLive,
   isProTest,
   isAntiCheat,
   isFullScreenMode,
@@ -64,10 +64,10 @@ export async function updateExamGroup({
     updateExpressions.push("title = :title");
     expressionAttributeValues[":title"] = title;
   }
-  if (isLive !== undefined) {
-    updateExpressions.push("isLive = :isLive");
-    expressionAttributeValues[":isLive"] = isLive;
-  }
+  // if (isLive !== undefined) {
+  //   updateExpressions.push("isLive = :isLive");
+  //   expressionAttributeValues[":isLive"] = isLive;
+  // }
 
   if (isProTest !== undefined) {
     updateExpressions.push("settings.isProTest = :isProTest");
@@ -146,6 +146,62 @@ export async function updateExamGroup({
   }
 }
 
+export async function updateExamGroupLiveStatus({
+  examGroupID,
+  goalID,
+  isLive,
+}) {
+  if (isLive) {
+    const examList = await getExamListByGroupID(examGroupID);
+    if (examList.data.length === 0) {
+      return {
+        success: false,
+        message: "Exam is not available",
+      };
+    }
+    const isAnyExamLive = examList.data.some((exam) => exam.isLive);
+    if (!isAnyExamLive) {
+      return {
+        success: false,
+        message: "Any one exam should be live",
+      };
+    }
+    const params = {
+      TableName: `${process.env.AWS_DB_NAME}master`,
+      Key: {
+        pKey: `EXAM_GROUP#${examGroupID}`,
+        sKey: `EXAM_GROUPS@${goalID}`,
+      },
+      UpdateExpression: "SET isLive = :isLive",
+      ExpressionAttributeValues: {
+        ":isLive": isLive,
+      },
+    };
+    await dynamoDB.update(params).promise();
+    return {
+      success: true,
+      message: "Group is live now",
+    };
+  } else {
+    const params = {
+      TableName: `${process.env.AWS_DB_NAME}master`,
+      Key: {
+        pKey: `EXAM_GROUP#${examGroupID}`,
+        sKey: `EXAM_GROUPS@${goalID}`,
+      },
+      UpdateExpression: "SET isLive = :isLive",
+      ExpressionAttributeValues: {
+        ":isLive": isLive,
+      },
+    };
+    await dynamoDB.update(params).promise();
+    return {
+      success: true,
+      message: "Group is not live now",
+    };
+  }
+}
+
 export async function getExamGroupByGoalID(goalID) {
   const params = {
     TableName: `${process.env.AWS_DB_NAME}master`,
@@ -203,27 +259,27 @@ export async function getExamGroup(examGroupID) {
     },
   };
   try {
-  const { Items } = await dynamoDB.query(params).promise();
-  if (Items.length === 0) {
+    const { Items } = await dynamoDB.query(params).promise();
+    if (Items.length === 0) {
+      return {
+        success: false,
+        message: "Exam group not found",
+      };
+    }
     return {
-      success: false,
-      message: "Exam group not found",
+      success: true,
+      message: "Exam retrieved successfully",
+      data: {
+        id: Items[0].pKey.split("#")[1],
+        goalID: Items[0].sKey.split("@")[1],
+        isLive: Items[0].isLive,
+        ...Items[0],
+        pKey: undefined,
+        sKey: undefined,
+        "GSI1-pKey": undefined,
+        "GSI1-sKey": undefined,
+      },
     };
-  }
-  return {
-    success: true,
-    message: "Exam retrieved successfully",
-    data: {
-      id: Items[0].pKey.split("#")[1],
-      goalID: Items[0].sKey.split("@")[1],
-      isLive: Items[0].isLive,
-      ...Items[0],
-      pKey: undefined,
-      sKey: undefined,
-      "GSI1-pKey": undefined,
-      "GSI1-sKey": undefined,
-    },
-  };
   } catch (error) {
     throw new Error(error);
   }
@@ -256,6 +312,7 @@ export async function getExamListByGroupID(groupID) {
         goalID: item.sKey.split("@")[1],
         groupID: item.groupID,
         title: item.title,
+        isLive: item.isLive,
         startTimeStamp: item.startTimeStamp,
         duration: item.duration,
         totalQuestions: item.totalQuestions,

@@ -1,6 +1,7 @@
 "use server";
 import { dynamoDB } from "../awsAgent";
 import { randomUUID } from "crypto";
+import { updateSubject } from "../subjects/createSubject";
 
 const TABLE_NAME = `${process.env.AWS_DB_NAME}content`;
 
@@ -66,6 +67,11 @@ export async function addQuestion(questionData) {
       ConditionExpression: "attribute_not_exists(pKey)",
     })
     .promise();
+
+  await updateSubject({
+    subjectID,
+    totalQuestions: subjectResp.Item.totalQuestions + 1,
+  });
 
   return {
     success: true,

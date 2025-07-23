@@ -1,6 +1,16 @@
-import {dynamoDB} from "../awsAgent";
+import { dynamoDB } from "../awsAgent";
+import getSubject from "../subjects/getSubject";
 
-export default async function addSubject({ subjectID, goalID, title }) {
+export default async function addSubject({ subjectID, goalID }) {
+  const subject = await getSubject({ subjectID });
+  if (!subject.success) {
+    return {
+      success: false,
+      message: subject.message,
+    };
+  }
+  const { title, totalQuestions } = subject.data;
+
   // Step 1: Check if the subject already exists in the goal's subjectList
   const getParams = {
     TableName: `${process.env.AWS_DB_NAME}master`,
@@ -41,6 +51,7 @@ export default async function addSubject({ subjectID, goalID, title }) {
           {
             subjectID: subjectID,
             title: title,
+            totalQuestions: totalQuestions,
           },
         ],
       },

@@ -1,4 +1,4 @@
-import {dynamoDB} from "../awsAgent";
+import { dynamoDB } from "../awsAgent";
 
 export default async function getAllSubjects() {
   const params = {
@@ -19,6 +19,7 @@ export default async function getAllSubjects() {
           title: subject.title,
           createdAt: subject.createdAt,
           updatedAt: subject.updatedAt,
+          totalQuestions: subject.totalQuestions,
         })),
       },
     };

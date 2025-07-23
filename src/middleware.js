@@ -19,14 +19,18 @@ const publicRoutes = [
 
 export async function middleware(request) {
   const pathname = request.nextUrl.pathname;
+  console.log(pathname);
   const { device } = userAgent(request);
   const cookieStore = await cookies();
 
   // Check if the device is a mobile
   // if (device.type === "mobile") {
   //   // Redirect to the custom mobile-not-supported page
-  //   const mobileRedirectUrl = new URL("/mobile-not-supported", request.url);
-  //   return NextResponse.redirect(mobileRedirectUrl);
+  //   if (pathname !== "/mobile-not-supported") {
+  //     const mobileRedirectUrl = new URL("/mobile-not-supported", request.url);
+  //     return NextResponse.redirect(mobileRedirectUrl);
+  //   }
+  //   return NextResponse.next();
   // }
 
   try {
@@ -41,10 +45,13 @@ export async function middleware(request) {
         return NextResponse.next();
       }
       if (pathname.startsWith("/api/")) {
-        return new Response(JSON.stringify({ message: "Session expired", success: false }), {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify({ message: "Session expired", success: false }),
+          {
+            status: 401,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
       }
       return loginRedirect(request);
     }

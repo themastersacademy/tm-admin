@@ -26,6 +26,7 @@ export default function Home() {
         setIsLoading(false);
         if (data.success) {
           setGoalList(data.data.goals);
+          console.log(data.data.goals);
         } else {
           setGoalList([]);
         }
@@ -101,7 +102,9 @@ export default function Home() {
                     ? gate_cse.src
                     : item.icon === "org"
                     ? placements.src
-                    : banking.src
+                    : item.icon === "bank"
+                    ? banking.src
+                    : ""
                 }
                 title={item.title}
                 actionButton="View"

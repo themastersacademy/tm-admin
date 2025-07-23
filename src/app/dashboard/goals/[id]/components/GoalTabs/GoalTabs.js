@@ -1,9 +1,9 @@
 "use client";
 import { Box, Stack, styled, Tab, Tabs } from "@mui/material";
 import PropTypes from "prop-types";
-import Syllabus from "../Syllabus";
-import Exam from "../Exam";
-import Info from "../Info";
+import Syllabus from "@/src/app/dashboard/goals/[id]/components/Syllabus";
+import Exam from "@/src/app/dashboard/goals/[id]/components/Exam";
+import Info from "@/src/app/dashboard/goals/[id]/components/Info";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const StyledTabs = styled(Tabs)({

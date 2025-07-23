@@ -14,15 +14,15 @@ import PrimaryCard from "@/src/components/PrimaryCard/PrimaryCard";
 import calendar from "@/public/Icons/weekCalendar.svg";
 import { useParams, useRouter } from "next/navigation";
 import DialogBox from "@/src/components/DialogBox/DialogBox";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import StatusCard from "@/src/components/CreateExam/Components/StatusCard";
 import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
 import Header from "@/src/components/Header/Header";
 import { apiFetch } from "@/src/lib/apiFetch";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
 import PrimaryCardSkeleton from "@/src/components/PrimaryCardSkeleton/PrimaryCardSkeleton";
-import { useSnackbar } from "@/src/app/context/SnackbarContext";
 import StyledSwitch from "@/src/components/StyledSwitch/StyledSwitch";
+import { enqueueSnackbar } from "notistack";
 
 export default function ExamGroupID() {
   const params = useParams();
@@ -33,7 +33,6 @@ export default function ExamGroupID() {
   const [isSettingDialog, setIsSettingDialog] = useState(false);
   const [title, setTitle] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const { showSnackbar } = useSnackbar();
   const [exam, setExam] = useState({});
   const [examList, setExamList] = useState([]);
 
@@ -53,7 +52,10 @@ export default function ExamGroupID() {
 
   const createExam = ({ title }) => {
     if (!title) {
-      showSnackbar("Enter a title", "error", "", "3000");
+      enqueueSnackbar("Enter a title", {
+        variant: "error",
+        autoHideDuration: 3000,
+      });
       return;
     }
     apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/create`, {
@@ -69,17 +71,23 @@ export default function ExamGroupID() {
       }),
     }).then((data) => {
       if (data.success) {
-        showSnackbar(data.message, "success", "", "3000");
+        enqueueSnackbar(data.message, {
+          variant: "success",
+          autoHideDuration: 3000,
+        });
         dialogClose();
         setTitle("");
         fetchExam();
       } else {
-        showSnackbar(data.message, "error", "", "3000");
+        enqueueSnackbar(data.message, {
+          variant: "error",
+          autoHideDuration: 3000,
+        });
       }
     });
   };
 
-  const fetchExamData = async () => {
+  const fetchExamData = useCallback(async () => {
     setIsLoading(true);
     apiFetch(
       `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/group/${examGroupID}`
@@ -87,16 +95,19 @@ export default function ExamGroupID() {
       if (data.success) {
         setExam(data.data);
       } else {
-        showSnackbar(data.message, "error", "", "3000");
+        enqueueSnackbar(data.message, {
+          variant: "error",
+          autoHideDuration: 3000,
+        });
       }
       setIsLoading(false);
     });
-  };
+  }, [examGroupID]);
   useEffect(() => {
     fetchExamData();
-  }, [examGroupID, showSnackbar]);
+  }, [examGroupID, fetchExamData]);
 
-  const fetchExam = () => {
+  const fetchExam = useCallback(() => {
     apiFetch(
       `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/group/get-exam-list`,
       {
@@ -112,13 +123,16 @@ export default function ExamGroupID() {
       if (data.success) {
         setExamList(data.data);
       } else {
-        showSnackbar(data.message, "error", "", "3000");
+        enqueueSnackbar(data.message, {
+          variant: "error",
+          autoHideDuration: 3000,
+        });
       }
     });
-  };
+  }, [examGroupID]);
   useEffect(() => {
     fetchExam();
-  }, [examGroupID]);
+  }, [examGroupID, fetchExam]);
 
   const updateExamGroup = ({ params = {} }) => {
     apiFetch(
@@ -142,7 +156,10 @@ export default function ExamGroupID() {
         }));
         fetchExamData();
       } else {
-        showSnackbar(data.message, "error", "", "3000");
+        enqueueSnackbar(data.message, {
+          variant: "error",
+          autoHideDuration: 3000,
+        });
       }
     });
   };
@@ -158,6 +175,67 @@ export default function ExamGroupID() {
           )
         }
         back
+        button={[
+          <Stack
+            key="live"
+            flexDirection="row"
+            alignItems="center"
+            gap="20px"
+            sx={{ marginLeft: "auto" }}
+          >
+            <Typography sx={{ fontFamily: "Lato", fontSize: "14px" }}>
+              Live
+            </Typography>
+            <StyledSwitch
+              checked={exam.isLive || false}
+              onChange={(e) => {
+                apiFetch(
+                  `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/group/${examGroupID}/update-group-live`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      isLive: e.target.checked,
+                      goalID: goalID,
+                    }),
+                  }
+                ).then((data) => {
+                  if (data.success) {
+                    enqueueSnackbar(data.message, {
+                      variant: "success",
+                      autoHideDuration: 3000,
+                    });
+                    fetchExamData();
+                  } else {
+                    enqueueSnackbar(data.message, {
+                      variant: "error",
+                      autoHideDuration: 3000,
+                    });
+                  }
+                });
+              }}
+            />
+            <Settings
+              sx={{ color: "var(--primary-color)", cursor: "pointer" }}
+              onClick={settingDialogopen}
+            />
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={dialogOpen}
+              sx={{
+                backgroundColor: "var(--primary-color)",
+                textTransform: "none",
+                minWidth: "120px",
+              }}
+              disableElevation
+            >
+              Add
+            </Button>
+          </Stack>,
+        ]}
       />
       <Stack
         sx={{
@@ -170,39 +248,6 @@ export default function ExamGroupID() {
           minHeight: "100vh",
         }}
       >
-        <Stack
-          flexDirection="row"
-          alignItems="center"
-          gap="20px"
-          sx={{ marginLeft: "auto" }}
-        >
-          <Typography sx={{ fontFamily: "Lato", fontSize: "14px" }}>
-            Live
-          </Typography>
-          <StyledSwitch
-            checked={exam.isLive || false}
-            onChange={(e) => {
-              updateExamGroup({ params: { isLive: e.target.checked } });
-            }}
-          />
-          <Settings
-            sx={{ color: "var(--primary-color)", cursor: "pointer" }}
-            onClick={settingDialogopen}
-          />
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={dialogOpen}
-            sx={{
-              backgroundColor: "var(--primary-color)",
-              textTransform: "none",
-              minWidth: "120px",
-            }}
-            disableElevation
-          >
-            Add
-          </Button>
-        </Stack>
         <SettingsDialog
           isSettingDialog={isSettingDialog}
           settingDialogClose={settingDialogClose}

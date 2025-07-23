@@ -26,6 +26,7 @@ import {
   Stack,
 } from "@mui/material";
 import { useEffect, useState, useCallback, useMemo, useContext } from "react";
+import { enqueueSnackbar } from "notistack";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -116,6 +117,7 @@ export default function AllSubjects() {
         key={item.subjectID}
         icon={<InsertDriveFile sx={{ color: "var(--sec-color)" }} />}
         title={item.title}
+        subTitle={`${item.totalQuestions} questions`}
         cardWidth="350px"
         options={[
           <MenuItem
@@ -268,6 +270,44 @@ const SubjectCreateDialog = ({
     selectedSubject,
   ]);
 
+  const onSubjectUpdate = useCallback(async () => {
+    if (!title) {
+      enqueueSnackbar("Fill all data", {
+        variant: "error",
+        autoHideDuration: 3000,
+      });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const data = await apiFetch(`${BASE_URL}/api/subjects/update-title`, {
+        method: "POST",
+        body: JSON.stringify({ title, subjectID: selectedSubject }),
+      });
+      if (data.success) {
+        enqueueSnackbar(data.message, {
+          variant: "success",
+          autoHideDuration: 3000,
+        });
+        setTitle("");
+        dialogClose();
+        fetchSubject(true); // Force refresh after creation
+      } else {
+        enqueueSnackbar(data.message, {
+          variant: "error",
+          autoHideDuration: 3000,
+        });
+      }
+    } catch (error) {
+      enqueueSnackbar("An error occurred", {
+        variant: "error",
+        autoHideDuration: 3000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [title, setTitle, dialogClose, fetchSubject]);
+
   return (
     <DialogBox
       isOpen={isDialogOpen}
@@ -276,7 +316,7 @@ const SubjectCreateDialog = ({
         <Button
           variant="text"
           endIcon={<East />}
-          onClick={onSubjectCreate}
+          onClick={editSubject ? onSubjectUpdate : onSubjectCreate}
           sx={{ textTransform: "none", color: "var(--primary-color)" }}
           disabled={isLoading}
         >
