@@ -1,5 +1,6 @@
 "use client";
-import { Box, Button, Stack } from "@mui/material";
+import { Button, Stack } from "@mui/material";
+import * as XLSX from "xlsx";
 import StudentProgressCard from "./StudentProgressCard";
 import StatusCard from "./StatusCard";
 import SearchBox from "../../SearchBox/SearchBox";
@@ -51,6 +52,33 @@ export default function ExamStudents() {
   const filterOpen = () => {
     setIsOpen(!isOpen);
   };
+  const handleExport = () => {
+    // 1. Map over the JSON data to create a flat structure for the Excel sheet
+    // This structure mirrors the props of your StudentProgressCard
+    const dataToExport = examAttempts.map((item) => ({
+      Name: item.userMeta?.name,
+      Email: item.userMeta?.email,
+      "Exam Name": item.title,
+      College: item.batchMeta?.instituteMeta?.title,
+      Batch: item.batchMeta?.title,
+      Status: item.status,
+      "Date & Time": new Date(item.startTimeStamp).toLocaleString(),
+      Marks: `${item.obtainedMarks} / ${item.totalMarks}`,
+      "Percentage (%)": ((item.obtainedMarks / item.totalMarks) * 100).toFixed(
+        2
+      ),
+    }));
+
+    // 2. Create a new workbook and a worksheet
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+
+    // 3. Append the worksheet to the workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Results");
+
+    // 4. Trigger the download
+    XLSX.writeFile(workbook, `${dataToExport[0]["Exam Name"]}.xlsx`);
+  };
 
   const toggleDrawer = (open) => (event) => {
     if (
@@ -69,6 +97,7 @@ export default function ExamStudents() {
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/${examID}/get-exam-attempts`
       );
       if (response.success) {
+        console.log(response.data);
         setExamAttempts(response.data);
       }
       setIsLoading(false);
@@ -83,9 +112,15 @@ export default function ExamStudents() {
     <Stack marginTop="20px" gap="30px" padding="10px">
       <Stack flexDirection="row" justifyContent="space-between">
         <Stack flexDirection="row" gap="20px">
-          <StatusCard icon title="Attempted" count="25" />
-          <StatusCard icon title="Completed" count="20" />
-          <StatusCard icon title="Unattempted" count="18" />
+          <StatusCard icon title="Attempted" count={examAttempts.length} />
+          <StatusCard
+            icon
+            title="Completed"
+            count={
+              examAttempts.filter((item) => item.status === "COMPLETED").length
+            }
+          />
+          {/* <StatusCard icon title="Unattempted" count={examAttempts.filter(item => item.status === "unattempted").length} /> */}
         </Stack>
         <Stack justifyContent="space-between">
           <SearchBox />
@@ -100,6 +135,7 @@ export default function ExamStudents() {
                 backgroundColor: "var(--sec-color)",
               }}
               disableElevation
+              onClick={handleExport}
             >
               Export
             </Button>
@@ -130,7 +166,6 @@ export default function ExamStudents() {
         {!isLoading
           ? examAttempts.length > 0
             ? examAttempts.map((item, index) => {
-                console.log(item);
                 return (
                   item.type === "scheduled" && (
                     <StudentProgressCard
