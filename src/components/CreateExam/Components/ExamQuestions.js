@@ -5,21 +5,27 @@ import { Button, Stack, Tooltip, Typography } from "@mui/material";
 import question from "@/public/Icons/question.svg";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import NoDataFound from "../../NoDataFound/NoDataFound";
 import QuestionCardSkeleton from "../../QuestionCardSkeleton/QuestionCardSkeleton";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
 import { apiFetch } from "@/src/lib/apiFetch";
 
-export default function ExamQuestions({ type, isLive }) {
+export default function ExamQuestions({
+  type,
+  isLive,
+  sections,
+  setSections,
+  questionList,
+  setQuestionList,
+}) {
+  console.log(sections, questionList);
   const params = useParams();
   const goalID = params.id;
   const examID = params.examID;
   const menuOptions = ["Remove"];
   const { showSnackbar } = useSnackbar();
-  const [sections, setSections] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [questionList, setQuestionList] = useState([]);
 
   const createSection = async ({ params = {} }) => {
     try {
@@ -43,42 +49,46 @@ export default function ExamQuestions({ type, isLive }) {
     }
   };
 
-  const fetchExamData = async () => {
+  const fetchExamData = useCallback(async () => {
     setIsLoading(true);
-    try {
-      await apiFetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/${examID}`
-      ).then((data) => {
-        if (data.success) {
-          setSections(data.data.questionSection);
-        } else {
-          showSnackbar(data.message, "error", "", "3000");
+    if (sections.length === 0) {
+      try {
+        const response = await apiFetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/${examID}`
+        );
+        if (response.success) {
+          setSections(response.data.questionSection);
         }
-        setIsLoading(false);
-      });
-    } catch (error) {
-      showSnackbar("Error fetching sections", "error", "", "3000");
-    }
-  };
-
-  const fetchQuestions = () => {
-    setIsLoading(true);
-    apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/get`).then(
-      (data) => {
-        if (data.success) {
-          setQuestionList(data.data);
-        } else {
-          showSnackbar(data.message, "error", "", "3000");
-        }
-        setIsLoading(false);
+      } catch (error) {
+        showSnackbar("Error fetching sections", "error", "", "3000");
       }
-    );
-  };
+    } else {
+      setIsLoading(false);
+    }
+  }, [sections, setSections, examID, showSnackbar]);
+
+  const fetchQuestions = useCallback(async () => {
+    setIsLoading(true);
+    if (questionList.length === 0) {
+      try {
+        const response = await apiFetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/get`
+        );
+        if (response.success) {
+          setQuestionList(response.data);
+        }
+      } catch (error) {
+        showSnackbar("Error fetching questions", "error", "", "3000");
+      }
+    } else {
+      setIsLoading(false);
+    }
+  }, [questionList, setQuestionList, showSnackbar]);
 
   useEffect(() => {
     fetchExamData();
     fetchQuestions();
-  }, []);
+  }, [fetchExamData, fetchQuestions]);
 
   const deleteSection = (sectionIndex) => {
     try {

@@ -13,12 +13,24 @@ import { useParams } from "next/navigation";
 
 export default function TestID() {
   const [testList, setTestList] = useState([]);
+  const [examAttempts, setExamAttempts] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [questionList, setQuestionList] = useState([]);
   const params = useParams();
 
   const tabs = [
     {
       label: "Questions",
-      content: <ExamQuestions type="scheduled" isLive={testList.isLive} />,
+      content: (
+        <ExamQuestions
+          type="scheduled"
+          isLive={testList.isLive}
+          sections={sections}
+          setSections={setSections}
+          questionList={questionList}
+          setQuestionList={setQuestionList}
+        />
+      ),
     },
     {
       label: "Settings",
@@ -33,7 +45,12 @@ export default function TestID() {
     },
     {
       label: "Students",
-      content: <ExamStudents />,
+      content: (
+        <ExamStudents
+          examAttempts={examAttempts}
+          setExamAttempts={setExamAttempts}
+        />
+      ),
     },
   ];
   const totalQuestions = testList?.questionSection?.reduce(

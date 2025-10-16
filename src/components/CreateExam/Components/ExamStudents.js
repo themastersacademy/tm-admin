@@ -1,20 +1,20 @@
 "use client";
-import { Button, Stack } from "@mui/material";
+import { Button, Skeleton, Stack } from "@mui/material";
 import * as XLSX from "xlsx";
 import StudentProgressCard from "./StudentProgressCard";
 import StatusCard from "./StatusCard";
 import SearchBox from "../../SearchBox/SearchBox";
 import { FilterAlt, Logout } from "@mui/icons-material";
 import FilterSideNav from "../../FilterSideNav/FilterSideNav";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { apiFetch } from "@/src/lib/apiFetch";
 import { useParams } from "next/navigation";
 
-export default function ExamStudents() {
-  const menuOptions = "Remove";
+export default function ExamStudents({ examAttempts, setExamAttempts }) {
   const { examID } = useParams();
-  const [isLoading, setIsLoading] = useState(true);
-  const [examAttempts, setExamAttempts] = useState([]);
+  const [isLoading, setIsLoading] = useState(
+    examAttempts.length === 0 ? true : false
+  );
   const [isOpen, setIsOpen] = useState(false);
   const [filters, setFilters] = useState({});
 
@@ -90,23 +90,25 @@ export default function ExamStudents() {
     setIsOpen(open);
   };
 
-  const fetchExamAttempts = async () => {
+  const fetchExamAttempts = useCallback(async () => {
     setIsLoading(true);
-    try {
-      const response = await apiFetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/${examID}/get-exam-attempts`
-      );
-      if (response.success) {
-        console.log(response.data);
-        setExamAttempts(response.data);
-      }
+    if (examAttempts.length === 0) {
+      try {
+        const response = await apiFetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/${examID}/get-exam-attempts`
+        );
+        if (response.success) {
+          setExamAttempts(response.data);
+        }
+      } catch (error) {}
+    } else {
       setIsLoading(false);
-    } catch (error) {}
-  };
+    }
+  }, [examAttempts, examID, setExamAttempts]);
 
   useEffect(() => {
     fetchExamAttempts();
-  }, []);
+  }, [fetchExamAttempts]);
 
   return (
     <Stack marginTop="20px" gap="30px" padding="10px">
@@ -188,8 +190,81 @@ export default function ExamStudents() {
                 );
               })
             : ""
-          : ""}
+          : Array.from({ length: 5 }).map((_, index) => (
+              <StudentCardSkeleton key={index} />
+            ))}
       </Stack>
+    </Stack>
+  );
+}
+
+function StudentCardSkeleton() {
+  return (
+    <Stack
+      flexDirection="row"
+      padding="10px"
+      alignItems="center"
+      gap="10px"
+      width="100%"
+      sx={{
+        border: "1px solid var(--border-color)",
+        borderRadius: "10px",
+        minHeight: "80px",
+      }}
+    >
+      <Stack flexDirection="row" alignItems="center" gap="30px">
+        <Skeleton
+          variant="rectangular"
+          animation="wave"
+          sx={{ width: "50px", height: "50px", borderRadius: "10px" }}
+        />
+        <Stack flexDirection="column" gap="5px">
+          <Skeleton variant="text" animation="wave" sx={{ width: "100px" }} />
+          <Skeleton variant="text" animation="wave" sx={{ width: "160px" }} />
+        </Stack>
+        <Stack
+          flexDirection="column"
+          alignItems="center"
+          gap="10px"
+          marginLeft="70px"
+        >
+          <Skeleton
+            variant="text"
+            animation="wave"
+            sx={{ width: "100px", marginLeft: "auto" }}
+          />
+          <Skeleton
+            variant="text"
+            animation="wave"
+            sx={{ width: "100px", marginLeft: "auto" }}
+          />
+        </Stack>
+        <Stack
+          flexDirection="column"
+          // alignItems="center"
+          gap="10px"
+          marginLeft="10px"
+        >
+          <Skeleton variant="text" animation="wave" sx={{ width: "350px" }} />
+          <Skeleton variant="text" animation="wave" sx={{ width: "80px" }} />
+        </Stack>
+      </Stack>
+      <Skeleton
+        variant="text"
+        animation="wave"
+        sx={{ width: "30px", marginLeft: "50px" }}
+      />
+      <Skeleton variant="text" animation="wave" sx={{ width: "80px" }} />
+      <Skeleton
+        variant="rectangular"
+        animation="wave"
+        sx={{
+          width: "100px",
+          height: "30px",
+          borderRadius: "20px",
+          marginLeft: "auto",
+        }}
+      />
     </Stack>
   );
 }
