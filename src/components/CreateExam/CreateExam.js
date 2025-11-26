@@ -15,6 +15,17 @@ export default function CreateExam({ exam, setExam }) {
   const params = useParams();
   const examID = params.examID;
   const [examAttempts, setExamAttempts] = useState([]);
+  const [questionList, setQuestionList] = useState([]);
+
+  const setSections = (updater) => {
+    setExam((prev) => {
+      const currentSections = prev.questionSection || [];
+      const newSections =
+        typeof updater === "function" ? updater(currentSections) : updater;
+      return { ...prev, questionSection: newSections };
+    });
+  };
+
   const totalQuestions = exam?.questionSection?.reduce(
     (total, section) => total + (section.questions?.length || 0),
     0
@@ -39,7 +50,16 @@ export default function CreateExam({ exam, setExam }) {
   const tabs = [
     {
       label: "Questions",
-      content: <ExamQuestions type="group" isLive={exam.isLive} />,
+      content: (
+        <ExamQuestions
+          type="group"
+          isLive={exam.isLive}
+          sections={exam.questionSection || []}
+          setSections={setSections}
+          questionList={questionList}
+          setQuestionList={setQuestionList}
+        />
+      ),
     },
     {
       label: "Settings",

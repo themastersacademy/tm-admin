@@ -1,9 +1,15 @@
 "use client";
-import { Button, DialogContent, IconButton, Stack } from "@mui/material";
-import { Add, Close, East } from "@mui/icons-material";
-import SecondaryCard from "@/src/components/SecondaryCard/SecondaryCard";
+import {
+  Button,
+  DialogContent,
+  IconButton,
+  Stack,
+  TextField,
+} from "@mui/material";
+import { Add, Close, East, Quiz } from "@mui/icons-material";
+import ScheduledExamCard from "@/src/components/ScheduledExamCard/ScheduledExamCard";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { apiFetch } from "@/src/lib/apiFetch";
 import Header from "@/src/components/Header/Header";
 import DialogBox from "@/src/components/DialogBox/DialogBox";
@@ -11,8 +17,7 @@ import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
 import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
-import mocks from "@/public/Icons/series.svg";
-import Image from "next/image";
+import CreateExamDialog from "@/src/components/CreateExamDialog/CreateExamDialog";
 
 export default function TestSeries() {
   const [goal, setGoal] = useState({});
@@ -24,6 +29,7 @@ export default function TestSeries() {
   const { showSnackbar } = useSnackbar();
   const [mockList, setMockList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
 
   const dialogOpen = () => {
     setIsDialogOPen(true);
@@ -32,7 +38,7 @@ export default function TestSeries() {
     setIsDialogOPen(false);
   };
 
-  function fetchGoal() {
+  const fetchGoal = useCallback(() => {
     apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/goals/${id}`).then(
       (json) => {
         if (json.success) {
@@ -43,16 +49,33 @@ export default function TestSeries() {
         }
       }
     );
-  }
+  }, [id, router, showSnackbar]);
 
   useEffect(() => {
     fetchGoal();
-  }, []);
+  }, [fetchGoal]);
+
+  const fetchTestSeries = useCallback(() => {
+    setIsLoading(true);
+    apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/get`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ goalID: id, type: "mock" }),
+    }).then((data) => {
+      if (data.success) {
+        setMockList(data.data);
+      } else {
+        showSnackbar(data.message, "error", "", "3000");
+      }
+      setIsLoading(false);
+    });
+  }, [id, showSnackbar]);
 
   const createTestSeries = () => {
     if (!title) {
       return showSnackbar("Fill all data", "error", "", "3000");
     }
+    setIsCreating(true);
     apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/create`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -70,32 +93,33 @@ export default function TestSeries() {
       } else {
         showSnackbar(data.message, "error", "", "3000");
       }
-    });
-  };
-
-  const fetchTestSeries = () => {
-    setIsLoading(true);
-    apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/get`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ goalID: id, type: "mock" }),
-    }).then((data) => {
-      if (data.success) {
-        setMockList(data.data);
-      } else {
-        showSnackbar(data.message, "error", "", "3000");
-      }
-      setIsLoading(false);
+      setIsCreating(false);
     });
   };
 
   useEffect(() => {
     fetchTestSeries();
-  }, []);
+  }, [fetchTestSeries]);
+
+  const headerButtons = [
+    <Button
+      key="create-btn"
+      variant="contained"
+      startIcon={<Add />}
+      onClick={dialogOpen}
+      sx={{
+        backgroundColor: "var(--primary-color)",
+        textTransform: "none",
+      }}
+      disableElevation
+    >
+      Create
+    </Button>,
+  ];
 
   return (
     <Stack padding="20px" gap="15px">
-      <Header title="TMA Test series" back />
+      <Header title="TMA Test series" back button={headerButtons} />
       <Stack
         sx={{
           backgroundColor: "var(--white)",
@@ -106,26 +130,46 @@ export default function TestSeries() {
           minHeight: "100vh",
         }}
       >
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={dialogOpen}
-          sx={{
-            backgroundColor: "var(--primary-color)",
-            textTransform: "none",
-            marginLeft: "auto",
-          }}
-          disableElevation
+        <CreateExamDialog
+          isOpen={isDialogOpen}
+          onClose={dialogClose}
+          onCreate={createTestSeries}
+          isLoading={isCreating}
+          title="Create Test Series"
+          subtitle="Create a new test series to assess student performance."
+          icon={<Quiz />}
+          infoText="Test Series are great for regular practice and mock exams."
         >
-          Create
-        </Button>
-        <CreateDialog
-          isDialogOpen={isDialogOpen}
-          dialogClose={dialogClose}
-          createTestSeries={createTestSeries}
-          title={title}
-          setTitle={setTitle}
-        />
+          <TextField
+            fullWidth
+            placeholder="Enter Test Series Title"
+            label="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "8px",
+                backgroundColor: "#fff",
+                "& fieldset": {
+                  borderColor: "var(--border-color)",
+                },
+                "&:hover fieldset": {
+                  borderColor: "var(--primary-color)",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "var(--primary-color)",
+                  borderWidth: "2px",
+                },
+              },
+              "& .MuiInputLabel-root": {
+                color: "var(--text3)",
+                "&.Mui-focused": {
+                  color: "var(--primary-color)",
+                },
+              },
+            }}
+          />
+        </CreateExamDialog>
         <Stack
           flexWrap="wrap"
           flexDirection="row"
@@ -135,33 +179,12 @@ export default function TestSeries() {
           {!isLoading ? (
             mockList.length > 0 ? (
               mockList.map((item, index) => (
-                <SecondaryCard
+                <ScheduledExamCard
                   key={index}
-                  icon={
-                    <Image src={mocks.src} alt="mocks" width={24} height={24} />
-                  }
-                  title={item.title}
-                  cardWidth="500px"
-                  button={
-                    <Button
-                      variant="contained"
-                      sx={{
-                        textTransform: "none",
-                        backgroundColor: "var(--sec-color)",
-                        fontFamily: "Lato",
-                        fontSize: "12px",
-                      }}
-                      endIcon={<East />}
-                      onClick={() => {
-                        router.push(
-                          `/dashboard/goals/${id}/testseries/${item.id}`
-                        );
-                      }}
-                      disableElevation
-                    >
-                      View
-                    </Button>
-                  }
+                  exam={item}
+                  onClick={() => {
+                    router.push(`/dashboard/goals/${id}/testseries/${item.id}`);
+                  }}
                 />
               ))
             ) : (
@@ -184,41 +207,3 @@ export default function TestSeries() {
     </Stack>
   );
 }
-
-const CreateDialog = ({
-  isDialogOpen,
-  dialogClose,
-  createTestSeries,
-  title,
-  setTitle,
-}) => {
-  return (
-    <DialogBox
-      isOpen={isDialogOpen}
-      title="Test series"
-      icon={
-        <IconButton sx={{ borderRadius: "8px", padding: "4px" }}>
-          <Close onClick={dialogClose} />
-        </IconButton>
-      }
-      actionButton={
-        <Button
-          variant="text"
-          endIcon={<East />}
-          onClick={createTestSeries}
-          sx={{ textTransform: "none", color: "var(--primary-color)" }}
-        >
-          Create
-        </Button>
-      }
-    >
-      <DialogContent>
-        <StyledTextField
-          placeholder="Enter Test series"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-      </DialogContent>
-    </DialogBox>
-  );
-};

@@ -29,7 +29,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function ScheduledExamCard({ exam }) {
+export default function ScheduledExamCard({ exam, onClick }) {
   const router = useRouter();
   const [showBatchDialog, setShowBatchDialog] = useState(false);
   const {
@@ -125,7 +125,13 @@ export default function ScheduledExamCard({ exam }) {
             borderColor: "var(--primary-color)",
           },
         }}
-        onClick={() => router.push(`/dashboard/scheduleTest/${id}`)}
+        onClick={() => {
+          if (onClick) {
+            onClick();
+          } else {
+            router.push(`/dashboard/scheduleTest/${id}`);
+          }
+        }}
       >
         <Box sx={{ padding: "20px" }}>
           <Stack gap="16px">

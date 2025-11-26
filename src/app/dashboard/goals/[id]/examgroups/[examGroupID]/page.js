@@ -23,6 +23,8 @@ import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
 import PrimaryCardSkeleton from "@/src/components/PrimaryCardSkeleton/PrimaryCardSkeleton";
 import StyledSwitch from "@/src/components/StyledSwitch/StyledSwitch";
 import { enqueueSnackbar } from "notistack";
+import CreateExamDialog from "@/src/components/CreateExamDialog/CreateExamDialog";
+import ScheduledExamCard from "@/src/components/ScheduledExamCard/ScheduledExamCard";
 
 export default function ExamGroupID() {
   const params = useParams();
@@ -35,6 +37,7 @@ export default function ExamGroupID() {
   const [isLoading, setIsLoading] = useState(true);
   const [exam, setExam] = useState({});
   const [examList, setExamList] = useState([]);
+  const [isCreating, setIsCreating] = useState(false);
 
   const dialogOpen = () => {
     setIsDialogOPen(true);
@@ -58,6 +61,7 @@ export default function ExamGroupID() {
       });
       return;
     }
+    setIsCreating(true);
     apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/create`, {
       method: "POST",
       headers: {
@@ -84,6 +88,7 @@ export default function ExamGroupID() {
           autoHideDuration: 3000,
         });
       }
+      setIsCreating(false);
     });
   };
 
@@ -254,35 +259,22 @@ export default function ExamGroupID() {
           updateExamGroup={updateExamGroup}
           exam={exam}
         />
-        <DialogBox
+        <CreateExamDialog
           isOpen={isDialogOpen}
-          title="Add Test"
-          icon={
-            <IconButton sx={{ borderRadius: "8px", padding: "4px" }}>
-              <Close onClick={dialogClose} />
-            </IconButton>
-          }
-          actionButton={
-            <Button
-              variant="text"
-              endIcon={<East />}
-              onClick={() => createExam({ title })}
-              sx={{ textTransform: "none", color: "var(--primary-color)" }}
-            >
-              Add
-            </Button>
-          }
+          onClose={dialogClose}
+          onCreate={() => createExam({ title })}
+          isLoading={isCreating}
+          title="Add Exam to Group"
+          subtitle="Add a new exam to this exam group."
+          icon={<Add />}
+          infoText="This exam will be part of the group and share its settings."
         >
-          <DialogContent>
-            <Stack>
-              <StyledTextField
-                placeholder="Enter Test title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </Stack>
-          </DialogContent>
-        </DialogBox>
+          <StyledTextField
+            placeholder="Enter Test title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </CreateExamDialog>
         <Stack flexDirection="row" gap="30px">
           <StatusCard
             info
@@ -311,11 +303,9 @@ export default function ExamGroupID() {
           {!isLoading ? (
             examList?.length > 0 ? (
               examList.map((item, index) => (
-                <PrimaryCard
+                <ScheduledExamCard
                   key={index}
-                  icon={calendar}
-                  title={item.title}
-                  actionButton="View"
+                  exam={item}
                   onClick={() =>
                     router.push(
                       `/dashboard/goals/${goalID}/examgroups/${examGroupID}/${item.id}`

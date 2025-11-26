@@ -14,19 +14,16 @@ import {
 import {
   Stack,
   Button,
-  IconButton,
-  DialogContent,
-  Select,
-  FormControl,
   MenuItem,
-  InputLabel,
   Chip,
   Menu,
   TablePagination,
+  Typography,
+  TextField,
 } from "@mui/material";
 import Active from "./Components/Active";
 import { useEffect, useState, useCallback } from "react";
-import DialogBox from "@/src/components/DialogBox/DialogBox";
+import CreateExamDialog from "@/src/components/CreateExamDialog/CreateExamDialog";
 import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
 import { apiFetch } from "@/src/lib/apiFetch";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
@@ -45,6 +42,7 @@ export default function ScheduleTest() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(12);
+  const [isCreating, setIsCreating] = useState(false);
 
   const fetchScheduledTest = useCallback(() => {
     setIsLoading(true);
@@ -103,6 +101,7 @@ export default function ScheduleTest() {
       showSnackbar("Please Fill all data", "error", "", "3000");
       return;
     }
+    setIsCreating(true);
     try {
       await apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/create`, {
         method: "POST",
@@ -122,9 +121,11 @@ export default function ScheduleTest() {
         } else {
           showSnackbar("Something went wrong", "error", "", "3000");
         }
+        setIsCreating(false);
       });
     } catch (error) {
       console.error("Error creating exam:", error);
+      setIsCreating(false);
     }
   };
 
@@ -241,7 +242,6 @@ export default function ScheduleTest() {
           </Stack>,
         ]}
       />
-
       {/* Analytics Cards */}
       <Stack flexDirection="row" gap="20px" flexWrap="wrap">
         <SecondaryCard
@@ -269,7 +269,6 @@ export default function ScheduleTest() {
           cardWidth="200px"
         />
       </Stack>
-
       <Stack
         sx={{
           border: "1px solid var(--border-color)",
@@ -306,7 +305,6 @@ export default function ScheduleTest() {
           )}
         </Stack>
       </Stack>
-
       {/* Filter Menu */}
       <Menu
         anchorEl={filterAnchorEl}
@@ -365,102 +363,192 @@ export default function ScheduleTest() {
         </MenuItem>
       </Menu>
 
-      <DialogBox
+      <CreateExamDialog
         isOpen={isDialogOpen}
+        onClose={handleDialogClose}
         title="Create Exam"
-        icon={
-          <IconButton
-            onClick={handleDialogClose}
-            sx={{ borderRadius: "8px", padding: "4px" }}
-          >
-            <Close />
-          </IconButton>
-        }
-        actionButton={
-          <Button
-            variant="text"
-            endIcon={<East />}
-            onClick={() => handleCreateExam({ title })}
-            sx={{ color: "var(--primary-color)", textTransform: "none" }}
-          >
-            Create
-          </Button>
-        }
+        subtitle="Schedule an exam for specific batches."
+        icon={<Schedule />}
+        infoText="Scheduled exams will be visible to students in the selected batches."
+        isLoading={isCreating}
+        onCreate={() => handleCreateExam({ title })}
       >
-        <DialogContent>
-          <Stack gap="20px">
-            <FormControl size="small">
-              <InputLabel
-                sx={{
-                  "&.Mui-focused": {
-                    color: "var(--sec-color)",
-                  },
-                }}
-              >
-                Select Batch
-              </InputLabel>
-              <Select
-                multiple
-                size="small"
-                label="Select Batch"
-                value={selectedBatchIds}
-                onChange={(e) => handleBatchChange(e)}
-                renderValue={(selectedIds) => (
-                  <Stack flexDirection="row" flexWrap="wrap" gap="10px">
-                    {selectedIds.map((id) => {
-                      const match = batchOptions.find(
-                        (opt) => opt.value === id
-                      );
-                      return (
-                        <Chip
-                          key={id}
-                          label={match?.label || id}
-                          sx={{
-                            backgroundColor: "var(--sec-color-acc-2)",
-                            color: "var(--sec-color)",
-                          }}
-                        />
-                      );
-                    })}
-                  </Stack>
-                )}
-                sx={{
-                  "&:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "var(--sec-color)",
-                  },
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "var(--sec-color)",
-                  },
-                }}
-              >
-                {batchOptions.map((option) => (
-                  <MenuItem
+        <Stack gap="20px">
+          <Stack gap="8px">
+            <Typography
+              sx={{
+                fontSize: "14px",
+                fontWeight: "600",
+                color: "var(--text1)",
+                fontFamily: "Lato",
+              }}
+            >
+              Select Batches
+            </Typography>
+            <Stack
+              sx={{
+                maxHeight: "200px",
+                overflowY: "auto",
+                border: "1px solid var(--border-color)",
+                borderRadius: "8px",
+                padding: "8px",
+                backgroundColor: "#fafafa",
+              }}
+            >
+              {batchOptions.length > 0 ? (
+                batchOptions.map((option) => (
+                  <Stack
                     key={option.value}
-                    value={option.value}
+                    flexDirection="row"
+                    alignItems="center"
+                    gap="12px"
                     sx={{
-                      "&.Mui-selected": {
-                        backgroundColor: "var(--sec-color-acc-2)",
-                        color: "var(--sec-color)",
-                      },
-                      "&.Mui-selected:hover": {
-                        backgroundColor: "var(--sec-color-acc-2)",
+                      padding: "10px 12px",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        backgroundColor: "#e3f2fd",
                       },
                     }}
+                    onClick={() => {
+                      const isSelected = selectedBatchIds.includes(
+                        option.value
+                      );
+                      if (isSelected) {
+                        handleBatchChange({
+                          target: {
+                            value: selectedBatchIds.filter(
+                              (id) => id !== option.value
+                            ),
+                          },
+                        });
+                      } else {
+                        handleBatchChange({
+                          target: {
+                            value: [...selectedBatchIds, option.value],
+                          },
+                        });
+                      }
+                    }}
                   >
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <StyledTextField
-              placeholder="Enter Exam title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
+                    <Stack
+                      sx={{
+                        width: "20px",
+                        height: "20px",
+                        borderRadius: "4px",
+                        border: selectedBatchIds.includes(option.value)
+                          ? "2px solid var(--primary-color)"
+                          : "2px solid #ccc",
+                        backgroundColor: selectedBatchIds.includes(option.value)
+                          ? "var(--primary-color)"
+                          : "transparent",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      {selectedBatchIds.includes(option.value) && (
+                        <CheckCircle sx={{ fontSize: "14px", color: "#fff" }} />
+                      )}
+                    </Stack>
+                    <Typography
+                      sx={{
+                        fontSize: "14px",
+                        fontFamily: "Lato",
+                        color: "var(--text1)",
+                      }}
+                    >
+                      {option.label}
+                    </Typography>
+                  </Stack>
+                ))
+              ) : (
+                <Typography
+                  sx={{
+                    fontSize: "14px",
+                    color: "var(--text3)",
+                    padding: "20px",
+                    textAlign: "center",
+                  }}
+                >
+                  No batches available
+                </Typography>
+              )}
+            </Stack>
+            {selectedBatchIds.length > 0 && (
+              <Stack
+                flexDirection="row"
+                flexWrap="wrap"
+                gap="8px"
+                marginTop="8px"
+              >
+                {selectedBatchIds.map((id) => {
+                  const match = batchOptions.find((opt) => opt.value === id);
+                  return (
+                    <Chip
+                      key={id}
+                      label={match?.label || id}
+                      size="small"
+                      onDelete={() => {
+                        handleBatchChange({
+                          target: {
+                            value: selectedBatchIds.filter(
+                              (batchId) => batchId !== id
+                            ),
+                          },
+                        });
+                      }}
+                      sx={{
+                        backgroundColor: "var(--primary-color)",
+                        color: "#fff",
+                        "& .MuiChip-deleteIcon": {
+                          color: "#fff",
+                          "&:hover": {
+                            color: "#fff",
+                            opacity: 0.7,
+                          },
+                        },
+                      }}
+                    />
+                  );
+                })}
+              </Stack>
+            )}
           </Stack>
-        </DialogContent>
-      </DialogBox>
+
+          <TextField
+            fullWidth
+            placeholder="Enter Exam title"
+            label="Exam Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "8px",
+                backgroundColor: "#fff",
+                "& fieldset": {
+                  borderColor: "var(--border-color)",
+                },
+                "&:hover fieldset": {
+                  borderColor: "var(--primary-color)",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "var(--primary-color)",
+                  borderWidth: "2px",
+                },
+              },
+              "& .MuiInputLabel-root": {
+                color: "var(--text3)",
+                "&.Mui-focused": {
+                  color: "var(--primary-color)",
+                },
+              },
+            }}
+          />
+        </Stack>
+      </CreateExamDialog>
     </Stack>
   );
 }
