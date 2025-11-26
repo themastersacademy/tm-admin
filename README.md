@@ -20,7 +20,7 @@ Serverless Architecture (Vercel Functions)
 
 🛠️ Tech Stack
 
-Frontend: Next.js 14 (App Router)
+Frontend: Next.js 15 (App Router)
 
 Backend: AWS DynamoDB, AWS S3
 
@@ -145,25 +145,23 @@ Get all exams
 
 lms-project/
 │── app/
-│   ├── api/
-│   │   ├── auth/
-│   │   ├── courses/
-│   │   ├── exams/
-│   │   ├── goals/
-│   │   ├── resources/
+│ ├── api/
+│ │ ├── auth/
+│ │ ├── courses/
+│ │ ├── exams/
+│ │ ├── goals/
+│ │ ├── resources/
 │── lib/
-│   ├── dynamodb.js
-│   ├── s3.js
+│ ├── dynamodb.js
+│ ├── s3.js
 │── utils/
-│   ├── verifyFile.js
-│   ├── createFile.js
+│ ├── verifyFile.js
+│ ├── createFile.js
 │── .env.local
 │── package.json
 │── README.md
 
 🎯 Roadmap
-
-
 
 🤝 Contributing
 
@@ -184,4 +182,3 @@ MIT License © 2025 INCRIX
 🌟 Acknowledgments
 
 Built with ❤️ by Avinash & the INCRIX team.
-

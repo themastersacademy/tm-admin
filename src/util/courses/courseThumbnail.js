@@ -1,5 +1,7 @@
 import s3FileUpload from "@/src/lib/s3FileUpload";
 import { dynamoDB, s3 } from "@/src/util/awsAgent";
+import { UpdateCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { randomUUID } from "crypto";
 
 export async function createThumbnail({
@@ -42,7 +44,7 @@ export async function createThumbnail({
       },
     };
 
-    await dynamoDB.update(courseUpdateParams).promise();
+    await dynamoDB.send(new UpdateCommand(courseUpdateParams));
     await updateGoalCourseListThumb({
       courseID,
       goalID,
@@ -77,7 +79,7 @@ export async function deleteThumbnail({ courseID, goalID }) {
   };
 
   try {
-    const result = await dynamoDB.get(getParams).promise();
+    const result = await dynamoDB.send(new GetCommand(getParams));
     if (!result.Item) {
       throw new Error("Course not found");
     }
@@ -99,7 +101,7 @@ export async function deleteThumbnail({ courseID, goalID }) {
         Bucket: process.env.AWS_BUCKET_NAME,
         Key: s3Key,
       };
-      await s3.deleteObject(s3DeleteParams).promise();
+      await s3.send(new DeleteObjectCommand(s3DeleteParams));
     }
 
     // 3. Update the course record in DynamoDB to remove the thumbnail.
@@ -116,7 +118,7 @@ export async function deleteThumbnail({ courseID, goalID }) {
       },
     };
 
-    await dynamoDB.update(updateParams).promise();
+    await dynamoDB.send(new UpdateCommand(updateParams));
 
     // 4. Update the goal record's coursesList to clear the thumbnail.
     await updateGoalCourseListThumb({ courseID, goalID, thumbnail: "" });
@@ -145,7 +147,7 @@ async function updateGoalCourseListThumb({ courseID, goalID, thumbnail }) {
   };
 
   try {
-    const result = await dynamoDB.get(getParams).promise();
+    const result = await dynamoDB.send(new GetCommand(getParams));
     if (!result.Item) {
       throw new Error("Goal not found");
     }
@@ -170,7 +172,7 @@ async function updateGoalCourseListThumb({ courseID, goalID, thumbnail }) {
       },
     };
 
-    await dynamoDB.update(updateParams).promise();
+    await dynamoDB.send(new UpdateCommand(updateParams));
     return { success: true, message: "Goal courses list updated successfully" };
   } catch (error) {
     console.error("Error updating goal courses list thumbnail:", error);

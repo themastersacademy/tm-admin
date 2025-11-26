@@ -1,4 +1,13 @@
 import { dynamoDB, s3 } from "../awsAgent";
+import {
+  PutCommand,
+  TransactWriteCommand,
+  QueryCommand,
+  UpdateCommand,
+  GetCommand,
+  BatchGetCommand,
+} from "@aws-sdk/lib-dynamodb";
+import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { randomUUID } from "crypto";
 import { getExamGroup } from "./groupExamController";
 
@@ -109,9 +118,11 @@ export async function createExam({
   }
   // --- 4. Save exam to database ---
   try {
-    await dynamoDB.put(params).promise();
+    await dynamoDB.send(new PutCommand(params));
     if (type === "scheduled") {
-      await dynamoDB.transactWrite({ TransactItems: transactItems }).promise();
+      await dynamoDB.send(
+        new TransactWriteCommand({ TransactItems: transactItems })
+      );
     }
     return {
       success: true,
@@ -141,7 +152,7 @@ export async function getExamByID(examID) {
   };
 
   try {
-    const result = await dynamoDB.query(params).promise();
+    const result = await dynamoDB.send(new QueryCommand(params));
     if (!result.Items || result.Items.length === 0) {
       return {
         success: false,
@@ -185,7 +196,7 @@ export async function getExamByGoalID({ goalID, type }) {
   };
 
   try {
-    const result = await dynamoDB.query(params).promise();
+    const result = await dynamoDB.send(new QueryCommand(params));
     console.log("result", result);
     return {
       success: true,
@@ -327,7 +338,7 @@ export async function updateExamBasicInfo({
   // }
 
   try {
-    await dynamoDB.update(params).promise();
+    await dynamoDB.send(new UpdateCommand(params));
     return {
       success: true,
       message: "Exam updated successfully",
@@ -428,8 +439,8 @@ export async function updateBatchListExamBasicInfo({ batchList, examID }) {
   console.log("TransactItems", TransactItems);
 
   try {
-    await dynamoDB.transactWrite({ TransactItems }).promise();
-    await dynamoDB.update(updateExamParams).promise();
+    await dynamoDB.send(new TransactWriteCommand({ TransactItems }));
+    await dynamoDB.send(new UpdateCommand(updateExamParams));
     return { success: true, message: "Batch list updated successfully" };
   } catch (error) {
     throw new Error(error);
@@ -513,7 +524,7 @@ export async function createAndUpdateExamSection({
 
   try {
     console.log(params);
-    await dynamoDB.update(params).promise();
+    await dynamoDB.send(new UpdateCommand(params));
     return {
       success: true,
       message:
@@ -549,7 +560,7 @@ export async function addQuestionToExamSection({
       sKey: `EXAMS@${type}`,
     },
   };
-  const examResult = await dynamoDB.get(examParams).promise();
+  const examResult = await dynamoDB.send(new GetCommand(examParams));
   const examData = examResult.Item;
   if (!examData) {
     throw new Error("Exam not found");
@@ -602,7 +613,7 @@ export async function addQuestionToExamSection({
   };
 
   try {
-    await dynamoDB.update(updateParams).promise();
+    await dynamoDB.send(new UpdateCommand(updateParams));
     return {
       success: true,
       message: "Questions added to exam successfully",
@@ -622,7 +633,7 @@ export async function getQuestionListBySection({ examID, type, sectionIndex }) {
   };
 
   try {
-    const examResult = await dynamoDB.get(examParams).promise();
+    const examResult = await dynamoDB.send(new GetCommand(examParams));
     const examItem = examResult.Item;
     if (!examItem) {
       throw new Error("Exam not found");
@@ -662,7 +673,9 @@ export async function getQuestionListBySection({ examID, type, sectionIndex }) {
       },
     };
 
-    const questionResult = await dynamoDB.batchGet(questionParams).promise();
+    const questionResult = await dynamoDB.send(
+      new BatchGetCommand(questionParams)
+    );
     return {
       success: true,
       message: "Questions retrieved successfully",
@@ -700,7 +713,7 @@ export async function removeQuestionsFromSection({
   };
 
   try {
-    const examResult = await dynamoDB.get(examParams).promise();
+    const examResult = await dynamoDB.send(new GetCommand(examParams));
     const examItem = examResult.Item;
     if (!examItem) {
       throw new Error("Exam not found");
@@ -730,7 +743,7 @@ export async function removeQuestionsFromSection({
       },
       ConditionExpression: "attribute_exists(pKey) AND isLive = :isLive",
     };
-    await dynamoDB.update(updateParams).promise();
+    await dynamoDB.send(new UpdateCommand(updateParams));
     return {
       success: true,
       message: "Questions removed from section successfully",
@@ -750,7 +763,7 @@ export async function deleteSection({ examID, type, sectionIndex }) {
     },
   };
   try {
-    const examResult = await dynamoDB.get(examParams).promise();
+    const examResult = await dynamoDB.send(new GetCommand(examParams));
     const examItem = examResult.Item;
     if (!examItem) {
       throw new Error("Exam not found");
@@ -780,7 +793,7 @@ export async function deleteSection({ examID, type, sectionIndex }) {
       },
       ConditionExpression: "attribute_exists(pKey) AND isLive = :isLive",
     };
-    await dynamoDB.update(updateParams).promise();
+    await dynamoDB.send(new UpdateCommand(updateParams));
     return {
       success: true,
       message: "Section deleted successfully",
@@ -885,12 +898,12 @@ export async function markExamAsLive({ examID, type }) {
   const sKey = `EXAMS@${type}`;
 
   // 1) Fetch the raw exam record
-  const { Item: examItem } = await dynamoDB
-    .get({
+  const { Item: examItem } = await dynamoDB.send(
+    new GetCommand({
       TableName: MASTER,
       Key: { pKey: `EXAM#${examID}`, sKey },
     })
-    .promise();
+  );
 
   if (!examItem) {
     throw new Error("Exam not found");
@@ -903,14 +916,14 @@ export async function markExamAsLive({ examID, type }) {
   // if the blob was updated after the exam was updated, we don't need to create a new blob
   if (examItem.blobUpdatedAt >= examItem.updatedAt) {
     console.log("Exam re-activated without new blob");
-    await dynamoDB
-      .update({
+    await dynamoDB.send(
+      new UpdateCommand({
         TableName: MASTER,
         Key: { pKey: `EXAM#${examID}`, sKey },
         UpdateExpression: "SET isLive = :live",
         ExpressionAttributeValues: { ":live": true },
       })
-      .promise();
+    );
     return { success: true, message: "Exam re-activated without new blob" };
   }
 
@@ -934,8 +947,8 @@ export async function markExamAsLive({ examID, type }) {
   const questionItems = [];
   for (let i = 0; i < keys.length; i += 100) {
     const chunk = keys.slice(i, i + 100);
-    const resp = await dynamoDB
-      .batchGet({
+    const resp = await dynamoDB.send(
+      new BatchGetCommand({
         RequestItems: {
           [CONTENT]: {
             Keys: chunk,
@@ -947,7 +960,7 @@ export async function markExamAsLive({ examID, type }) {
           },
         },
       })
-      .promise();
+    );
     questionItems.push(...(resp.Responses?.[CONTENT] || []));
   }
   const byId = Object.fromEntries(
@@ -1026,14 +1039,14 @@ export async function markExamAsLive({ examID, type }) {
 
   // 8) Upload to S3
   try {
-    await s3
-      .putObject({
+    await s3.send(
+      new PutObjectCommand({
         Bucket: bucket,
         Key: blobKey,
         Body: JSON.stringify(blob),
         ContentType: "application/json",
       })
-      .promise();
+    );
   } catch (err) {
     console.error("🔴 S3 upload failed:", err);
     throw new Error("Failed to upload exam blob");
@@ -1041,8 +1054,8 @@ export async function markExamAsLive({ examID, type }) {
 
   // 9) Persist newVersion + blobKey + answerList + totals + isLive
   try {
-    await dynamoDB
-      .update({
+    await dynamoDB.send(
+      new UpdateCommand({
         TableName: MASTER,
         Key: { pKey: `EXAM#${examID}`, sKey },
         UpdateExpression:
@@ -1060,12 +1073,12 @@ export async function markExamAsLive({ examID, type }) {
           ":updatedAt": now,
         },
       })
-      .promise();
+    );
   } catch (err) {
     console.error("🔴 DynamoDB update failed:", err);
     // clean up the blob we just wrote
     try {
-      await s3.deleteObject({ Bucket: bucket, Key: blobKey }).promise();
+      await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: blobKey }));
     } catch (cleanupErr) {
       console.error("⚠️ Failed to clean up stale blob:", cleanupErr);
     }
@@ -1097,7 +1110,7 @@ export async function makeExamAsUnLive({ examID, type }) {
   };
 
   try {
-    await dynamoDB.update(params).promise();
+    await dynamoDB.send(new UpdateCommand(params));
     return {
       success: true,
       message: "Exam marked as un-live successfully",

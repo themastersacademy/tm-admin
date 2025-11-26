@@ -1,4 +1,11 @@
-import { dynamoDB } from "../awsAgent";
+import { dynamoDB } from "../awsAgent.js";
+import {
+  PutCommand,
+  ScanCommand,
+  GetCommand,
+  UpdateCommand,
+  DeleteCommand,
+} from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 
 export async function createSubscriptionPlan({
@@ -39,7 +46,7 @@ export async function createSubscriptionPlan({
   };
 
   try {
-    await dynamoDB.put(params).promise();
+    await dynamoDB.send(new PutCommand(params));
     return {
       status: true,
       message: "Subscription plan created successfully",
@@ -71,7 +78,7 @@ export async function getAllSubscriptionPlan() {
   };
 
   try {
-    const response = await dynamoDB.scan(params).promise();
+    const response = await dynamoDB.send(new ScanCommand(params));
     return {
       status: true,
       message: "Subscription plans fetched successfully",
@@ -97,7 +104,7 @@ export async function getSubscriptionPlanByID(id) {
     },
   };
 
-  const response = await dynamoDB.get(params).promise();
+  const response = await dynamoDB.send(new GetCommand(params));
   return {
     success: true,
     message: "Subscription plan fetched successfully",
@@ -136,7 +143,7 @@ export async function updateSubscriptionPlan(
   };
 
   try {
-    const response = await dynamoDB.update(params).promise();
+    const response = await dynamoDB.send(new UpdateCommand(params));
     return {
       status: true,
       message: "Subscription plan updated successfully",
@@ -169,7 +176,7 @@ export async function deleteSubscriptionPlan(id) {
   };
 
   try {
-    await dynamoDB.delete(params).promise();
+    await dynamoDB.send(new DeleteCommand(params));
     return {
       status: true,
       message: "Subscription plan deleted successfully",

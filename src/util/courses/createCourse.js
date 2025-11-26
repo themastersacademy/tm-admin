@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 
 export default async function createCourse({ title, goalID }) {
@@ -42,7 +43,7 @@ export default async function createCourse({ title, goalID }) {
 
   try {
     // Fetch the goal record to ensure it exists.
-    const goal = await dynamoDB.get(goalParams).promise();
+    const goal = await dynamoDB.send(new GetCommand(goalParams));
     if (!goal.Item) {
       return {
         success: false,
@@ -80,9 +81,9 @@ export default async function createCourse({ title, goalID }) {
     };
 
     // Create the course record.
-    await dynamoDB.put(params).promise();
+    await dynamoDB.send(new PutCommand(params));
     // Update the goal with the new course information.
-    await dynamoDB.update(goalUpdateParams).promise();
+    await dynamoDB.send(new UpdateCommand(goalUpdateParams));
 
     return {
       success: true,

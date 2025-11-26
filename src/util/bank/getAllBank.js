@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 export default async function getAllBank() {
   const params = {
@@ -9,14 +10,14 @@ export default async function getAllBank() {
     },
   };
   try {
-    const response = await dynamoDB.scan(params).promise();
+    const response = await dynamoDB.send(new ScanCommand(params));
     return {
       success: true,
       message: "All banks fetched successfully",
       data: {
         banks: response.Items.map((bank) => {
           const { pKey, title } = bank;
-          return { bankID: pKey.split("#")[1], title,};
+          return { bankID: pKey.split("#")[1], title };
         }),
       },
     };

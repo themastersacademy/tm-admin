@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import getCourse from "./getCourse";
 
 export default async function liveUnliveCourse({ courseID, goalID }) {
@@ -18,7 +19,7 @@ export default async function liveUnliveCourse({ courseID, goalID }) {
         ":isLive": false,
       },
     };
-    await dynamoDB.update(params).promise();
+    await dynamoDB.send(new UpdateCommand(params));
     return {
       success: true,
       message: "Course unlive successfully",
@@ -62,7 +63,7 @@ export default async function liveUnliveCourse({ courseID, goalID }) {
       ":isLive": true,
     },
   };
-  await dynamoDB.update(params).promise();
+  await dynamoDB.send(new UpdateCommand(params));
   return {
     success: true,
     message: "Course live successfully",

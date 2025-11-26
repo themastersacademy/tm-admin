@@ -7,9 +7,9 @@ import {
   CircularProgress,
   IconButton,
 } from "@mui/material";
-import { Add, AccountBalance, East, Close } from "@mui/icons-material";
+import { Add, East, Close } from "@mui/icons-material";
 import Header from "@/src/components/Header/Header";
-import SecondaryCard from "@/src/components/SecondaryCard/SecondaryCard";
+import InstituteCard from "@/src/components/InstituteCard/InstituteCard";
 import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
 import DialogBox from "@/src/components/DialogBox/DialogBox";
@@ -68,7 +68,8 @@ export default function Institute() {
   return (
     <Stack padding="20px" gap="20px">
       <Header
-        title="Institute"
+        title="Institute Management"
+        subtitle="Manage all your institutes and their details here"
         button={[
           <Button
             key="addInstitute"
@@ -98,21 +99,7 @@ export default function Institute() {
           {!isLoading ? (
             instituteList.length > 0 ? (
               instituteList.map((item, index) => (
-                <SecondaryCard
-                  key={index}
-                  title={
-                    <span
-                      onClick={() => {
-                        router.push(`/dashboard/institute/${item.id}`);
-                      }}
-                      style={{ cursor: "pointer" }}
-                    >
-                      {item.title}
-                    </span>
-                  }
-                  icon={<AccountBalance sx={{ color: "var(--sec-color)" }} />}
-                  cardWidth="350px"
-                />
+                <InstituteCard key={index} institute={item} />
               ))
             ) : (
               <Stack width="100%" height="70vh">

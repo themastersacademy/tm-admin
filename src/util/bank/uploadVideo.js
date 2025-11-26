@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID, createHash } from "crypto";
 
 export async function createVideo({ title, bankID }) {
@@ -13,7 +14,7 @@ export async function createVideo({ title, bankID }) {
     },
   };
   try {
-    bankResponse = await dynamoDB.get(bankParams).promise();
+    bankResponse = await dynamoDB.send(new GetCommand(bankParams));
     if (!bankResponse.Item) {
       return { success: false, message: "Bank not found" };
     }
@@ -33,7 +34,7 @@ export async function createVideo({ title, bankID }) {
         linkedLessons: [],
       },
     };
-    await dynamoDB.put(resourceParams).promise();
+    await dynamoDB.send(new PutCommand(resourceParams));
     const { signature, expirationTime } = createSignature({ videoID });
     return {
       success: true,
@@ -132,7 +133,7 @@ export async function verifyUpload({ resourceID, bankID, videoID }) {
             data.status === 2,
         },
       };
-      await dynamoDB.update(params).promise();
+      await dynamoDB.send(new UpdateCommand(params));
       return {
         success: true,
         message: "Upload verified",

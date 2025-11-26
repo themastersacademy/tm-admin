@@ -1,6 +1,13 @@
-import { dynamoDB } from "../awsAgent";
-import { getInstitute } from "./instituteControllers";
-import { getUserByID } from "../user/userController";
+import { dynamoDB } from "../awsAgent.js";
+import {
+  PutCommand,
+  QueryCommand,
+  GetCommand,
+  TransactWriteCommand,
+  UpdateCommand,
+} from "@aws-sdk/lib-dynamodb";
+import { getInstitute } from "./instituteControllers.js";
+import { getUserByID } from "../user/userController.js";
 import { randomUUID } from "crypto";
 
 const MASTER_TABLE = `${process.env.AWS_DB_NAME}master`;
@@ -40,13 +47,13 @@ export async function createBatch({ instituteID, title }) {
   };
 
   try {
-    await dynamoDB
-      .put({
+    await dynamoDB.send(
+      new PutCommand({
         TableName: MASTER_TABLE,
         Item: newItem,
         ConditionExpression: "attribute_not_exists(pKey)", // ensure no overwrite
       })
-      .promise();
+    );
 
     return {
       success: true,
@@ -96,7 +103,7 @@ export async function getAllBatchesByInstituteID({ instituteID }) {
   };
 
   try {
-    const result = await dynamoDB.query(params).promise();
+    const result = await dynamoDB.send(new QueryCommand(params));
     const batchList = result.Items.map((item) => ({
       id: item.pKey.split("#")[1],
       batchCode: item.batchCode,
@@ -141,7 +148,7 @@ export async function getAllBatches() {
   };
 
   try {
-    const result = await dynamoDB.query(params).promise();
+    const result = await dynamoDB.send(new QueryCommand(params));
     const data = result.Items.map((item) => ({
       id: item.pKey.split("#")[1],
       batchCode: item.batchCode,
@@ -179,7 +186,7 @@ export async function getBatch({ batchID }) {
     },
   };
   try {
-    const result = await dynamoDB.get(params).promise();
+    const result = await dynamoDB.send(new GetCommand(params));
     if (!result.Item) {
       throw new Error("Batch not found");
     }
@@ -238,8 +245,8 @@ export async function enrollStudentInBatch(userID, batchID) {
   const batchData = batchResp.data;
 
   try {
-    await dynamoDB
-      .transactWrite({
+    await dynamoDB.send(
+      new TransactWriteCommand({
         TransactItems: [
           {
             Put: {
@@ -288,7 +295,7 @@ export async function enrollStudentInBatch(userID, batchID) {
           },
         ],
       })
-      .promise();
+    );
 
     return { success: true, message: "Student enrolled in batch" };
   } catch (err) {
@@ -333,8 +340,8 @@ export async function enrollStudentInBatch(userID, batchID) {
  */
 export async function removeStudentFromBatch(userID, batchID) {
   try {
-    await dynamoDB
-      .transactWrite({
+    await dynamoDB.send(
+      new TransactWriteCommand({
         TransactItems: [
           // 1) Delete the join record
           {
@@ -369,7 +376,7 @@ export async function removeStudentFromBatch(userID, batchID) {
           },
         ],
       })
-      .promise();
+    );
 
     return { success: true, message: "Student removed from batch" };
   } catch (err) {
@@ -410,7 +417,7 @@ export async function getStudentsForBatch(batchID) {
   };
 
   try {
-    const result = await dynamoDB.query(params).promise();
+    const result = await dynamoDB.send(new QueryCommand(params));
     const data = result.Items.map((item) => ({
       id: item.pKey.split("#")[1], // studentID
       userID: item.userID,
@@ -467,7 +474,7 @@ export async function setBatchLockState(batchID, shouldLock) {
   };
 
   try {
-    const resp = await dynamoDB.update(params).promise();
+    const resp = await dynamoDB.send(new UpdateCommand(params));
     return { success: true, updatedAttributes: resp.Attributes };
   } catch (err) {
     if (
@@ -507,9 +514,11 @@ export async function updateBatchCapacity(batchID, newCapacity) {
       sKey: "BATCHES",
     },
     UpdateExpression: "SET #capacity = :newCap, updatedAt = :u",
-    ConditionExpression: "attribute_exists(pKey) AND #capacity <= :newCap",
+    ConditionExpression:
+      "attribute_exists(pKey) AND (attribute_not_exists(#enrolled) OR #enrolled <= :newCap)",
     ExpressionAttributeNames: {
       "#capacity": "capacity",
+      "#enrolled": "enrolledStudentCount",
     },
     ExpressionAttributeValues: {
       ":newCap": newCapacity,
@@ -519,7 +528,7 @@ export async function updateBatchCapacity(batchID, newCapacity) {
   };
 
   try {
-    const resp = await dynamoDB.update(params).promise();
+    const resp = await dynamoDB.send(new UpdateCommand(params));
     return { success: true, updatedAttributes: resp.Attributes };
   } catch (err) {
     if (

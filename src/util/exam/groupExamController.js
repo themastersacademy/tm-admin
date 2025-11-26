@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { PutCommand, UpdateCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 
 export async function createExamGroup({ goalID, title }) {
@@ -30,7 +31,7 @@ export async function createExamGroup({ goalID, title }) {
     },
   };
   try {
-    await dynamoDB.put(params).promise();
+    await dynamoDB.send(new PutCommand(params));
     return {
       success: true,
       message: "Exam group created successfully",
@@ -135,7 +136,7 @@ export async function updateExamGroup({
   };
 
   try {
-    await dynamoDB.update(params).promise();
+    await dynamoDB.send(new UpdateCommand(params));
     return {
       success: true,
       message: "Exam group updated successfully",
@@ -177,7 +178,7 @@ export async function updateExamGroupLiveStatus({
         ":isLive": isLive,
       },
     };
-    await dynamoDB.update(params).promise();
+    await dynamoDB.send(new UpdateCommand(params));
     return {
       success: true,
       message: "Group is live now",
@@ -194,7 +195,7 @@ export async function updateExamGroupLiveStatus({
         ":isLive": isLive,
       },
     };
-    await dynamoDB.update(params).promise();
+    await dynamoDB.send(new UpdateCommand(params));
     return {
       success: true,
       message: "Group is not live now",
@@ -220,7 +221,7 @@ export async function getExamGroupByGoalID(goalID) {
     // ProjectionExpression: "pKey, title, isLive, mCoin, isProTest, examList",
   };
   try {
-    const { Items } = await dynamoDB.query(params).promise();
+    const { Items } = await dynamoDB.send(new QueryCommand(params));
     console.log(Items[0]);
     return {
       success: true,
@@ -259,7 +260,7 @@ export async function getExamGroup(examGroupID) {
     },
   };
   try {
-    const { Items } = await dynamoDB.query(params).promise();
+    const { Items } = await dynamoDB.send(new QueryCommand(params));
     if (Items.length === 0) {
       return {
         success: false,
@@ -303,7 +304,7 @@ export async function getExamListByGroupID(groupID) {
     },
   };
   try {
-    const { Items } = await dynamoDB.query(params).promise();
+    const { Items } = await dynamoDB.send(new QueryCommand(params));
     return {
       success: true,
       message: "Exam list retrieved successfully",

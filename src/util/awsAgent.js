@@ -1,5 +1,7 @@
 "server only";
-import AWS from "aws-sdk";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import { S3Client } from "@aws-sdk/client-s3";
 
 if (
   !process.env.AWS_ACCESS_KEY_ID ||
@@ -11,15 +13,22 @@ if (
   );
 }
 
-// Configure AWS SDK
-AWS.config.update({
+const dbClient = new DynamoDBClient({
   region: process.env.AWS_REGION,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_IAM_SECRET_KEY,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_IAM_SECRET_KEY,
+  },
 });
 
-const dynamoDB = new AWS.DynamoDB.DocumentClient();
+const dynamoDB = DynamoDBDocument.from(dbClient);
 
-const s3 = new AWS.S3();
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_IAM_SECRET_KEY,
+  },
+});
 
 export { dynamoDB, s3 };

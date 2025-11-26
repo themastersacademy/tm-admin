@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { GetCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 export default async function getAllResources({ bankID }) {
   const bankParams = {
@@ -16,10 +17,10 @@ export default async function getAllResources({ bankID }) {
     },
   };
   try {
-    const bankResponse = await dynamoDB.get(bankParams).promise();
+    const bankResponse = await dynamoDB.send(new GetCommand(bankParams));
     console.log("bankResponse", bankResponse);
 
-    const response = await dynamoDB.scan(params).promise();
+    const response = await dynamoDB.send(new ScanCommand(params));
     return {
       success: true,
       message: "All resources fetched successfully",
@@ -28,8 +29,16 @@ export default async function getAllResources({ bankID }) {
         bankTitle: bankResponse.Item.title,
         videoCollectionID: bankResponse.Item.videoCollectionID,
         resources: response.Items.map((resource) => {
-          const { pKey, name, isUploaded, type, thumbnail, url, videoID, path } =
-            resource;
+          const {
+            pKey,
+            name,
+            isUploaded,
+            type,
+            thumbnail,
+            url,
+            videoID,
+            path,
+          } = resource;
           return {
             resourceID: pKey.split("#")[1],
             type,
@@ -38,7 +47,7 @@ export default async function getAllResources({ bankID }) {
             thumbnail,
             videoID,
             url,
-            path
+            path,
           };
         }),
       },

@@ -1,12 +1,13 @@
 import DialogBox from "@/src/components/DialogBox/DialogBox";
 import SecondaryCard from "@/src/components/SecondaryCard/SecondaryCard";
 import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
-import { Add, PlaylistAddCheck } from "@mui/icons-material";
+import { Add, PlaylistAddCheck, Close } from "@mui/icons-material";
 import {
   Button,
   DialogContent,
   FormControl,
   InputLabel,
+  IconButton,
   MenuItem,
   Select,
   Stack,
@@ -71,7 +72,7 @@ export default function Settings() {
         <SecondaryCard
           icon={
             <PlaylistAddCheck
-              sx={{ color: "var(--sec-color)", fontSize: "30px" }}
+              sx={{ color: "var(--primary-color)", fontSize: "30px" }}
             />
           }
           title="Monthly Subscription (1 month)"
@@ -84,9 +85,26 @@ export default function Settings() {
         isOpen={isDialogOpen}
         onClose={dialogClose}
         title="Create Subscription"
-        actionText="Create"
+        actionButton={
+          <Button
+            variant="contained"
+            sx={{
+              backgroundColor: "var(--primary-color)",
+              textTransform: "none",
+              width: "100%",
+            }}
+            disableElevation
+          >
+            Create
+          </Button>
+        }
+        icon={
+          <IconButton onClick={dialogClose}>
+            <Close />
+          </IconButton>
+        }
       >
-        <DialogContent>
+        <DialogContent sx={{ minHeight: "unset", paddingBottom: "20px" }}>
           <Stack gap="20px">
             <FormControl
               sx={{
@@ -94,7 +112,15 @@ export default function Settings() {
               }}
               size="small"
             >
-              <InputLabel>Select type</InputLabel>
+              <InputLabel
+                sx={{
+                  "&.Mui-focused": {
+                    color: "var(--primary-color)",
+                  },
+                }}
+              >
+                Select type
+              </InputLabel>
               <Select
                 label="Select type"
                 value={selectType}
@@ -102,10 +128,10 @@ export default function Settings() {
                 onChange={handleChangeSelect}
                 sx={{
                   "&:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "var(--sec-color)",
+                    borderColor: "var(--primary-color)",
                   },
                   "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "var(--sec-color)",
+                    borderColor: "var(--primary-color)",
                   },
                 }}
               >
@@ -114,19 +140,31 @@ export default function Settings() {
                 <MenuItem value="30">three</MenuItem>
               </Select>
             </FormControl>
-            <Stack flexDirection="row" justifyContent="space-between">
+            <Stack
+              flexDirection="row"
+              justifyContent="space-between"
+              gap="20px"
+            >
               <FormControl sx={{ width: "50%" }} size="small">
-                <InputLabel>No of type</InputLabel>
+                <InputLabel
+                  sx={{
+                    "&.Mui-focused": {
+                      color: "var(--primary-color)",
+                    },
+                  }}
+                >
+                  No of type
+                </InputLabel>
                 <Select
                   label="No of type"
                   value={noOfType}
                   onChange={handleChangeNum}
                   sx={{
                     "&:hover .MuiOutlinedInput-notchedOutline": {
-                      borderColor: "var(--sec-color)",
+                      borderColor: "var(--primary-color)",
                     },
                     "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                      borderColor: "var(--sec-color)",
+                      borderColor: "var(--primary-color)",
                     },
                   }}
                 >
@@ -137,7 +175,7 @@ export default function Settings() {
               </FormControl>
               <StyledTextField
                 placeholder="Enter Price"
-                sx={{ width: "260px" }}
+                sx={{ width: "50%" }}
               />
             </Stack>
           </Stack>

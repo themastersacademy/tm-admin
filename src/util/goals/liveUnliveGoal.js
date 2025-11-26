@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import getGoal from "./getGoal";
 import { getGoalContent } from "./goalContent";
 
@@ -19,7 +20,7 @@ export default async function liveUnliveGoal({ goalID }) {
         ":isLive": !goal.data.isLive,
       },
     };
-    await dynamoDB.update(params).promise();
+    await dynamoDB.send(new UpdateCommand(params));
     return {
       success: true,
       message: "Goal unlive successfully",
@@ -51,7 +52,7 @@ export default async function liveUnliveGoal({ goalID }) {
     },
   };
 
-  await dynamoDB.update(params).promise();
+  await dynamoDB.send(new UpdateCommand(params));
   return {
     success: true,
     message: "Goal live successfully",

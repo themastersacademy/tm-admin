@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { QueryCommand, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 import { updateGoalCoursesList } from "./updateCourse";
 
@@ -16,7 +17,7 @@ export default async function createLesson({ courseID }) {
   };
 
   try {
-    const courseResult = await dynamoDB.query(courseParams).promise();
+    const courseResult = await dynamoDB.send(new QueryCommand(courseParams));
     if (!courseResult.Items || courseResult.Items.length === 0) {
       return { success: false, message: "Course not found" };
     }
@@ -80,7 +81,7 @@ export default async function createLesson({ courseID }) {
       ],
     };
 
-    await dynamoDB.transactWrite(transactParams).promise();
+    await dynamoDB.send(new TransactWriteCommand(transactParams));
     await updateGoalCoursesList({
       courseID,
       goalID,

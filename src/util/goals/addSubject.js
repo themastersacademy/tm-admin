@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import getSubject from "../subjects/getSubject";
 
 export default async function addSubject({ subjectID, goalID }) {
@@ -22,7 +23,7 @@ export default async function addSubject({ subjectID, goalID }) {
 
   try {
     // Get the current goal item
-    const data = await dynamoDB.get(getParams).promise();
+    const data = await dynamoDB.send(new GetCommand(getParams));
     const subjectList = data.Item?.subjectList || [];
 
     // Step 2: Check if the subject is already in the list
@@ -58,7 +59,7 @@ export default async function addSubject({ subjectID, goalID }) {
     };
 
     // Update the goal to add the subject
-    await dynamoDB.update(updateParams).promise();
+    await dynamoDB.send(new UpdateCommand(updateParams));
 
     return {
       success: true,

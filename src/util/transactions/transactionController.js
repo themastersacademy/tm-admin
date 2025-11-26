@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { ScanCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import Razorpay from "razorpay";
 
 const USER_TABLE = `${process.env.AWS_DB_NAME}users`;
@@ -18,7 +19,7 @@ export async function getAllTransactions() {
   };
 
   try {
-    const result = await dynamoDB.scan(params).promise();
+    const result = await dynamoDB.send(new ScanCommand(params));
     return {
       success: true,
       message: "Transactions fetched successfully",
@@ -59,7 +60,7 @@ export async function refundTransaction(paymentId, amount) {
       },
     };
 
-    const scanResult = await dynamoDB.scan(scanParams).promise();
+    const scanResult = await dynamoDB.send(new ScanCommand(scanParams));
     if (!scanResult.Items || scanResult.Items.length === 0) {
       throw new Error("Transaction not found");
     }
@@ -108,9 +109,9 @@ export async function refundTransaction(paymentId, amount) {
       ReturnValues: "ALL_NEW",
     };
 
-    const updatedTransaction = await dynamoDB
-      .update(updateTransactionParams)
-      .promise();
+    const updatedTransaction = await dynamoDB.send(
+      new UpdateCommand(updateTransactionParams)
+    );
 
     // Update course enrollment status to inactive and set expiresAt to null
     if (
@@ -137,7 +138,7 @@ export async function refundTransaction(paymentId, amount) {
         ReturnValues: "ALL_NEW",
       };
 
-      await dynamoDB.update(updateCourseEnrollParams).promise();
+      await dynamoDB.send(new UpdateCommand(updateCourseEnrollParams));
     }
 
     return {

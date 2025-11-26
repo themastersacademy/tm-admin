@@ -1,4 +1,5 @@
 import { dynamoDB } from "@/src/util/awsAgent";
+import { QueryCommand, BatchGetCommand } from "@aws-sdk/lib-dynamodb";
 
 // Fisher–Yates shuffle
 function shuffleArray(arr) {
@@ -65,7 +66,7 @@ export async function getRandomQuestions({
   let lastKey = undefined;
   do {
     if (lastKey) queryParams.ExclusiveStartKey = lastKey;
-    const resp = await dynamoDB.query(queryParams).promise();
+    const resp = await dynamoDB.send(new QueryCommand(queryParams));
     allIDs.push(...(resp.Items || []).map((i) => i.pKey));
     lastKey = resp.LastEvaluatedKey;
   } while (lastKey);
@@ -91,7 +92,7 @@ export async function getRandomQuestions({
         },
       },
     };
-    const batchResp = await dynamoDB.batchGet(batchParams).promise();
+    const batchResp = await dynamoDB.send(new BatchGetCommand(batchParams));
     const items = batchResp.Responses?.[TABLE] || [];
     questionItems.push(...items);
   }

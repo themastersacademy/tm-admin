@@ -1,4 +1,9 @@
 import { dynamoDB } from "@/src/util/awsAgent";
+import {
+  TransactWriteCommand,
+  GetCommand,
+  BatchGetCommand,
+} from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 
 const TABLE = `${process.env.AWS_DB_NAME}master`;
@@ -53,11 +58,11 @@ export async function createGoalContent({ goalID, content }) {
   };
 
   try {
-    await dynamoDB
-      .transactWrite({
+    await dynamoDB.send(
+      new TransactWriteCommand({
         TransactItems: [{ Put: putParams }, { Update: updateParams }],
       })
-      .promise();
+    );
 
     return {
       success: true,
@@ -112,7 +117,9 @@ export async function deleteGoalContent({ goalID, contentIndex }) {
   ];
 
   try {
-    await dynamoDB.transactWrite({ TransactItems: transactItems }).promise();
+    await dynamoDB.send(
+      new TransactWriteCommand({ TransactItems: transactItems })
+    );
     return { success: true, message: "Content deleted successfully" };
   } catch (err) {
     console.error("Error deleting goal content:", err);
@@ -171,14 +178,14 @@ export async function updateGoalContent({ goalID, contentIndex, content }) {
   };
 
   try {
-    await dynamoDB
-      .transactWrite({
+    await dynamoDB.send(
+      new TransactWriteCommand({
         TransactItems: [
           { Update: updateBlogParams },
           { Update: updateGoalParams },
         ],
       })
-      .promise();
+    );
 
     return { success: true, message: "Content updated successfully" };
   } catch (err) {
@@ -201,7 +208,7 @@ export async function getGoalContent({ goalID }) {
   };
 
   try {
-    const goalResp = await dynamoDB.get(goalParams).promise();
+    const goalResp = await dynamoDB.send(new GetCommand(goalParams));
     const refs = goalResp.Item?.blogList || [];
     if (!refs.length) {
       return { success: true, data: [] };
@@ -212,9 +219,11 @@ export async function getGoalContent({ goalID }) {
       sKey: `BLOGS@${goalID}`,
     }));
 
-    const batchResp = await dynamoDB
-      .batchGet({ RequestItems: { [TABLE]: { Keys: keys } } })
-      .promise();
+    const batchResp = await dynamoDB.send(
+      new BatchGetCommand({
+        RequestItems: { [TABLE]: { Keys: keys } },
+      })
+    );
 
     const items = batchResp.Responses?.[TABLE] || [];
     const byId = items.reduce((acc, it) => {

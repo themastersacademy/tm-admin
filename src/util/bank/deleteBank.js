@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { GetCommand, ScanCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 
 export default async function deleteBank({ bankID }) {
   // 1. Check if the bank exists.
@@ -11,7 +12,7 @@ export default async function deleteBank({ bankID }) {
   };
 
   try {
-    const bank = await dynamoDB.get(bankGetParams).promise();
+    const bank = await dynamoDB.send(new GetCommand(bankGetParams));
     if (!bank.Item) {
       return {
         success: false,
@@ -28,7 +29,7 @@ export default async function deleteBank({ bankID }) {
       },
     };
 
-    const resources = await dynamoDB.scan(resourceParams).promise();
+    const resources = await dynamoDB.send(new ScanCommand(resourceParams));
     console.log("Resources:", resources);
     if (resources.Items && resources.Items.length > 0) {
       return {
@@ -53,7 +54,7 @@ export default async function deleteBank({ bankID }) {
       },
     };
 
-    await dynamoDB.delete(deleteParams).promise();
+    await dynamoDB.send(new DeleteCommand(deleteParams));
 
     return {
       success: true,

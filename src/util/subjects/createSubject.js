@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 
 export default async function createSubject({ title }) {
@@ -15,7 +16,7 @@ export default async function createSubject({ title }) {
     },
   };
   try {
-    await dynamoDB.put(params).promise();
+    await dynamoDB.send(new PutCommand(params));
     return {
       success: true,
       message: "Subject created successfully",
@@ -73,7 +74,7 @@ export async function updateSubject({ subjectID, totalQuestions, title }) {
 
   try {
     console.log(params);
-    await dynamoDB.update(params).promise();
+    await dynamoDB.send(new UpdateCommand(params));
     return {
       success: true,
       message: "Subject updated successfully",

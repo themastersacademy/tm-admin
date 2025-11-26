@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { GetCommand, ScanCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 
 export default async function deleteSubject(subjectId) {
   if (!subjectId) {
@@ -18,7 +19,7 @@ export default async function deleteSubject(subjectId) {
   };
 
   try {
-    const subjectResult = await dynamoDB.get(subjectParams).promise();
+    const subjectResult = await dynamoDB.send(new GetCommand(subjectParams));
     if (!subjectResult.Item) {
       return {
         success: false,
@@ -37,7 +38,7 @@ export default async function deleteSubject(subjectId) {
       Select: "COUNT",
     };
 
-    const questionResult = await dynamoDB.scan(questionParams).promise();
+    const questionResult = await dynamoDB.send(new ScanCommand(questionParams));
     console.log("questionResult", questionResult);
 
     if (questionResult.Count && questionResult.Count > 0) {
@@ -56,7 +57,7 @@ export default async function deleteSubject(subjectId) {
       },
     };
 
-    await dynamoDB.delete(deleteParams).promise();
+    await dynamoDB.send(new DeleteCommand(deleteParams));
 
     return {
       success: true,

@@ -1,4 +1,5 @@
-import {dynamoDB} from "../awsAgent";
+import { dynamoDB } from "../awsAgent";
+import { GetCommand } from "@aws-sdk/lib-dynamodb";
 
 export default async function getSubject({ subjectID }) {
   const params = {
@@ -9,7 +10,7 @@ export default async function getSubject({ subjectID }) {
     },
   };
   try {
-    const response = await dynamoDB.get(params).promise();
+    const response = await dynamoDB.send(new GetCommand(params));
     if (!response.Item) {
       return {
         success: false,

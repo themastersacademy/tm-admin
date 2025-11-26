@@ -4,7 +4,15 @@ import SearchBox from "../SearchBox/SearchBox";
 import { ArrowBackIosRounded } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 
-export default function Header({ title, button = [], search, back }) {
+export default function Header({
+  title,
+  subtitle,
+  button = [],
+  search,
+  back,
+  searchValue,
+  onSearchChange,
+}) {
   const router = useRouter();
   return (
     <Stack
@@ -35,14 +43,28 @@ export default function Header({ title, button = [], search, back }) {
             }}
           />
         )}
-        <Typography
-          sx={{ fontFamily: "Lato", fontSize: "20px", fontWeight: "700" }}
-        >
-          {title}
-        </Typography>
+        <Stack>
+          <Typography
+            sx={{ fontFamily: "Lato", fontSize: "20px", fontWeight: "700" }}
+          >
+            {title}
+          </Typography>
+          {subtitle && (
+            <Typography
+              sx={{
+                fontFamily: "Lato",
+                fontSize: "12px",
+                fontWeight: "400",
+                color: "var(--text3)",
+              }}
+            >
+              {subtitle}
+            </Typography>
+          )}
+        </Stack>
       </Stack>
       <Stack flexDirection="row" gap="15px" alignItems="center">
-        {search && <SearchBox />}
+        {search && <SearchBox value={searchValue} onChange={onSearchChange} />}
         <Stack flexDirection="row" gap="10px" alignItems="center">
           {button.map((buttons, index) => (
             <Stack key={index}>{buttons}</Stack>

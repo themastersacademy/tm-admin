@@ -1,6 +1,13 @@
-import { dynamoDB } from "../awsAgent";
-import getCourse from "../courses/getCourse";
-import { getSubscriptionPlanByID } from "../subscription/subscriptionController";
+import { dynamoDB } from "../awsAgent.js";
+import {
+  ScanCommand,
+  GetCommand,
+  UpdateCommand,
+  QueryCommand,
+  PutCommand,
+} from "@aws-sdk/lib-dynamodb";
+import getCourse from "../courses/getCourse.js";
+import { getSubscriptionPlanByID } from "../subscription/subscriptionController.js";
 import { randomUUID } from "crypto";
 
 const USER_TABLE = `${process.env.AWS_DB_NAME}users`;
@@ -8,7 +15,14 @@ const USER_GSI_INDEX = "GSI1-index";
 
 // This function is used to create a new user in the database
 
-export async function getAllUsers() {
+export async function getAllUsers({
+  search,
+  status,
+  gender,
+  emailVerified,
+  page = 1,
+  limit = 10,
+} = {}) {
   const params = {
     TableName: `${process.env.AWS_DB_NAME}users`,
     IndexName: "GSI1-index",
@@ -26,11 +40,57 @@ export async function getAllUsers() {
     // Limit: 10,
   };
 
+  if (search) {
+    params.FilterExpression +=
+      " AND (contains(email, :search) OR contains(#name, :search))";
+    params.ExpressionAttributeValues[":search"] = search;
+  }
+
+  if (status) {
+    params.FilterExpression += " AND #status = :status";
+    params.ExpressionAttributeValues[":status"] = status;
+  }
+
+  if (gender) {
+    params.FilterExpression += " AND #gender = :gender";
+    params.ExpressionAttributeValues[":gender"] = gender;
+  }
+
+  if (emailVerified) {
+    // Convert string "true"/"false" to boolean if needed, or keep as is if stored as string.
+    // Assuming boolean in DB based on typical usage.
+    const isVerified = emailVerified === "true";
+    params.FilterExpression += " AND emailVerified = :emailVerified";
+    params.ExpressionAttributeValues[":emailVerified"] = isVerified;
+  }
+
   try {
-    const response = await dynamoDB.scan(params).promise();
+    const response = await dynamoDB.send(new ScanCommand(params));
+    const allItems = response.Items || [];
+    const totalItems = allItems.length;
+    const totalPages = Math.ceil(totalItems / limit);
+    const currentPage = Number(page);
+
+    // Slice for pagination
+    const startIndex = (currentPage - 1) * limit;
+    const endIndex = startIndex + Number(limit);
+    const paginatedItems = allItems.slice(startIndex, endIndex);
+
+    // Calculate global stats
+    const totalVerified = allItems.filter((u) => u.emailVerified).length;
+    const totalActive = allItems.filter((u) => u.status === "active").length;
+
     return {
       success: true,
-      data: response.Items,
+      data: paginatedItems,
+      pagination: {
+        totalItems,
+        totalPages,
+        currentPage,
+        limit: Number(limit),
+        totalVerified,
+        totalActive,
+      },
     };
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -50,8 +110,8 @@ export async function getUserByID(id) {
   };
 
   try {
-    // const response = await dynamoDB.query(params).promise();
-    const response = await dynamoDB.get(params).promise();
+    // const response = await dynamoDB.send(new GetCommand(params));
+    const response = await dynamoDB.send(new GetCommand(params));
     if (response.Item) {
       return {
         success: true,
@@ -106,7 +166,7 @@ export async function updateUser({ id, name, phone, gender, address }) {
   };
 
   try {
-    const response = await dynamoDB.update(params).promise();
+    const response = await dynamoDB.send(new UpdateCommand(params));
     return {
       success: true,
       data: {
@@ -150,7 +210,7 @@ export async function updateUserStatus(id, status) {
     ReturnValues: "ALL_NEW",
   };
   try {
-    const response = await dynamoDB.update(params).promise();
+    const response = await dynamoDB.send(new UpdateCommand(params));
     return {
       success: true,
       data: {
@@ -191,7 +251,7 @@ export async function getExamAttemptsByUserID(id) {
                             totalWrongAnswers, totalSkippedAnswers, totalSections, startTimeStamp, 
                             blobVersion, #duration, createdAt, settings, #type, totalQuestions`,
   };
-  const response = await dynamoDB.query(params).promise();
+  const response = await dynamoDB.send(new QueryCommand(params));
   return {
     success: true,
     data: response.Items,
@@ -213,7 +273,7 @@ export async function getCourseEnrollByUserID(id) {
     },
   };
 
-  const result = await dynamoDB.query(params).promise();
+  const result = await dynamoDB.send(new QueryCommand(params));
   console.log("result", result);
   const courseEnrollments = result.Items;
   // const courseIDs = courseEnrollments.map((item) => item.courseID);
@@ -287,7 +347,7 @@ export async function createCourseEnrollment(
     ConditionExpression: "attribute_not_exists(pKey)",
   };
 
-  const response = await dynamoDB.put(params).promise();
+  const response = await dynamoDB.send(new PutCommand(params));
   return {
     success: true,
     message: "Course enrollment created successfully",
@@ -327,7 +387,7 @@ export async function makeCourseEnrollmentActiveOrInactive(
   };
 
   try {
-    await dynamoDB.update(params).promise();
+    await dynamoDB.send(new UpdateCommand(params));
     return {
       success: true,
       message: `Course enrollment ${status}.`,
@@ -359,7 +419,7 @@ export async function getProSubscriptionByUserID(id) {
     },
   };
 
-  const result = await dynamoDB.query(params).promise();
+  const result = await dynamoDB.send(new QueryCommand(params));
   const proSubscriptions = result.Items;
 
   if (proSubscriptions.length === 0) {
@@ -437,7 +497,7 @@ export async function createProSubscriptionAdmin({
     Item: item,
     ConditionExpression: "attribute_not_exists(pKey)",
   };
-  const response = await dynamoDB.put(params).promise();
+  const response = await dynamoDB.send(new PutCommand(params));
   return {
     success: true,
     message: "Pro subscription created successfully",
@@ -452,7 +512,7 @@ export async function getProSubscriptionByID(id) {
       sKey: `PRO_SUBSCRIPTIONS`,
     },
   };
-  const response = await dynamoDB.get(params).promise();
+  const response = await dynamoDB.send(new GetCommand(params));
   return {
     success: true,
     data: response.Item,
@@ -494,7 +554,7 @@ export async function makeProSubscriptionActiveOrInactive(id, status) {
     },
     ConditionExpression: "attribute_exists(pKey)",
   };
-  const response = await dynamoDB.update(params).promise();
+  const response = await dynamoDB.send(new UpdateCommand(params));
   return {
     success: true,
     message: `Pro subscription ${status} successfully`,

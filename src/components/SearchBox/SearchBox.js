@@ -1,9 +1,11 @@
 import { Search } from "@mui/icons-material";
 import { IconButton, InputAdornment, TextField } from "@mui/material";
 
-export default function SearchBox() {
+export default function SearchBox({ value, onChange }) {
   return (
     <TextField
+      value={value}
+      onChange={onChange}
       sx={{
         width: "100%",
         "& .MuiOutlinedInput-root": {

@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { UpdateCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 
 export async function updateLesson({
   lessonID,
@@ -48,7 +49,9 @@ export async function updateLesson({
       Select: "ALL_ATTRIBUTES",
     };
 
-    const resourceResult = await dynamoDB.query(resourceQueryParams).promise();
+    const resourceResult = await dynamoDB.send(
+      new QueryCommand(resourceQueryParams)
+    );
     console.log("Resource result:", resourceResult);
 
     if (!resourceResult.Items || resourceResult.Items.length === 0) {
@@ -113,10 +116,10 @@ export async function updateLesson({
 
   try {
     // Update the lesson.
-    await dynamoDB.update(lessonUpdateParams).promise();
+    await dynamoDB.send(new UpdateCommand(lessonUpdateParams));
     // If resource update is needed, update the resource's linkedLessons.
     if (resourceID !== undefined && resourceUpdateParams) {
-      await dynamoDB.update(resourceUpdateParams).promise();
+      await dynamoDB.send(new UpdateCommand(resourceUpdateParams));
     }
     return { success: true, message: "Lesson updated successfully" };
   } catch (error) {
@@ -167,10 +170,12 @@ export async function unlinkResource({ lessonID, courseID, resourceID }) {
 
   try {
     // Update lesson item first.
-    await dynamoDB.update(lessonUpdateParams).promise();
+    await dynamoDB.send(new UpdateCommand(lessonUpdateParams));
 
     // Get the resource item.
-    const resourceResult = await dynamoDB.query(resourceQueryParams).promise();
+    const resourceResult = await dynamoDB.send(
+      new QueryCommand(resourceQueryParams)
+    );
     if (!resourceResult.Items || resourceResult.Items.length === 0) {
       return { success: false, message: "Resource not found" };
     }
@@ -195,7 +200,7 @@ export async function unlinkResource({ lessonID, courseID, resourceID }) {
       },
     };
 
-    await dynamoDB.update(resourceUpdateParams).promise();
+    await dynamoDB.send(new UpdateCommand(resourceUpdateParams));
 
     return {
       success: true,

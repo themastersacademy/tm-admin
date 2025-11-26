@@ -1,5 +1,6 @@
 "use server";
 import { dynamoDB } from "../awsAgent";
+import { ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 /**
  * Fetches questions with optional filters for type, difficulty, subjectID, and title search.
@@ -71,7 +72,7 @@ export default async function getQuestions({
 
   try {
     // Execute the scan operation.
-    const result = await dynamoDB.scan(params).promise();
+    const result = await dynamoDB.send(new ScanCommand(params));
     console.log(result);
     // Sort the items by createdAt in descending order so that the most recent questions appear first.
     const sortedItems = result.Items.sort((a, b) => b.createdAt - a.createdAt);

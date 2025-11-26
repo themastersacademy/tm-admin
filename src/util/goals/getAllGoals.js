@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 export default async function getAllGoals() {
   const params = {
@@ -10,7 +11,7 @@ export default async function getAllGoals() {
     ReturnConsumedCapacity: "TOTAL",
   };
   try {
-    const response = await dynamoDB.scan(params).promise();
+    const response = await dynamoDB.send(new ScanCommand(params));
     return {
       success: true,
       message: "All goals fetched successfully",

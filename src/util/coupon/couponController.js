@@ -1,4 +1,10 @@
 import { dynamoDB } from "../awsAgent";
+import {
+  PutCommand,
+  ScanCommand,
+  UpdateCommand,
+  DeleteCommand,
+} from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 
 const TABLE_NAME = `${process.env.AWS_DB_NAME}master`;
@@ -45,14 +51,14 @@ export async function createCoupon({
   validateCoupon(coupon, now);
 
   try {
-    await dynamoDB
-      .put({
+    await dynamoDB.send(
+      new PutCommand({
         TableName: TABLE_NAME,
         IndexName: INDEX_NAME,
         Item: coupon,
         ConditionExpression: "attribute_not_exists(pKey)",
       })
-      .promise();
+    );
 
     return {
       success: true,
@@ -70,7 +76,6 @@ export async function createCoupon({
   }
 }
 
-
 export async function getAllCoupons() {
   const params = {
     TableName: TABLE_NAME,
@@ -81,7 +86,7 @@ export async function getAllCoupons() {
   };
 
   try {
-    const response = await dynamoDB.scan(params).promise();
+    const response = await dynamoDB.send(new ScanCommand(params));
     return {
       success: true,
       data: response.Items.map((item) => ({
@@ -188,7 +193,7 @@ export async function updateCoupon({
   };
 
   try {
-    const response = await dynamoDB.update(params).promise();
+    const response = await dynamoDB.send(new UpdateCommand(params));
     return {
       success: true,
       message: "Coupon updated successfully",
@@ -209,7 +214,7 @@ export async function deleteCoupon(id) {
   };
 
   try {
-    await dynamoDB.delete(params).promise();
+    await dynamoDB.send(new DeleteCommand(params));
     return {
       success: true,
       message: "Coupon deleted successfully",

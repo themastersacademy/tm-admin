@@ -10,11 +10,11 @@ const StyledTextField = styled(TextField)(() => ({
     fontWeight: "400",
     fontSize: "16px",
     "&.Mui-focused fieldset": {
-      borderColor: "var(--sec-color)",
+      borderColor: "var(--primary-color)",
       borderWidth: "1px",
     },
     "&:hover fieldset": {
-      borderColor: "var(--sec-color)",
+      borderColor: "var(--primary-color)",
     },
   },
   "& .MuiInputBase-input::placeholder": {

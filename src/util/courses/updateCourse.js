@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { UpdateCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import {
   validateSubscription,
   sortSubscriptionPlans,
@@ -47,7 +48,7 @@ export async function updateBasicCourseInfo({
   };
 
   try {
-    await dynamoDB.update(params).promise();
+    await dynamoDB.send(new UpdateCommand(params));
     // Update the goal's coursesList for consistency.
     await updateGoalCoursesList({
       courseID,
@@ -107,7 +108,7 @@ export async function updateCourseSubscription({
   };
 
   try {
-    await dynamoDB.update(params).promise();
+    await dynamoDB.send(new UpdateCommand(params));
     return {
       success: true,
       message: "Course subscription updated",
@@ -149,7 +150,7 @@ export async function updateGoalCoursesList({
   };
 
   try {
-    const goalResult = await dynamoDB.get(getParams).promise();
+    const goalResult = await dynamoDB.send(new GetCommand(getParams));
     if (!goalResult.Item) {
       throw new Error("Goal not found");
     }
@@ -215,7 +216,7 @@ export async function updateGoalCoursesList({
       },
     };
 
-    await dynamoDB.update(updateParams).promise();
+    await dynamoDB.send(new UpdateCommand(updateParams));
   } catch (error) {
     console.error("Error updating goal courses list:", error);
     throw new Error("Error updating goal courses list");

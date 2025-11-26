@@ -16,6 +16,7 @@ import CustomTabs from "@/src/components/CustomTabs/CustomTabs";
 import BatchCourse from "./Components/Courses";
 import BatchStudents from "./Components/Students";
 import BatchHistory from "./Components/History";
+import ScheduledExams from "./Components/ScheduledExams";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
 import DialogBox from "@/src/components/DialogBox/DialogBox";
 import StyledSwitch from "@/src/components/StyledSwitch/StyledSwitch";
@@ -35,6 +36,10 @@ export default function BatchPage() {
     {
       label: "Courses",
       content: <BatchCourse />,
+    },
+    {
+      label: "Scheduled Exams",
+      content: <ScheduledExams />,
     },
     // {
     //   label: "History",
@@ -73,9 +78,21 @@ export default function BatchPage() {
     <Stack padding="20px" gap="20px">
       <Header
         title={batch.title || <Skeleton variant="text" width={100} />}
+        subtitle={
+          batch.instituteMeta?.title || <Skeleton variant="text" width={150} />
+        }
         button={[
-          <IconButton key="copy" onClick={() => setOpenDialog(true)}>
-            <Settings sx={{ color: "var(--text3)" }} />
+          <IconButton
+            key="copy"
+            onClick={() => setOpenDialog(true)}
+            sx={{
+              "&:hover": {
+                color: "var(--primary-color)",
+                backgroundColor: "var(--primary-color-acc-2)",
+              },
+            }}
+          >
+            <Settings sx={{ color: "var(--text3)", transition: "all 0.2s" }} />
           </IconButton>,
           <Button
             key="add"
@@ -107,35 +124,50 @@ export default function BatchPage() {
           </IconButton>
         }
       >
-        <DialogContent>
-          <BatchSettings batch={batch} handleCopy={handleCopy} />
+        <DialogContent sx={{ minHeight: "unset", paddingBottom: "20px" }}>
+          <BatchSettings
+            batch={batch}
+            handleCopy={handleCopy}
+            fetchBatch={fetchBatch}
+          />
         </DialogContent>
       </DialogBox>
     </Stack>
   );
 }
 
-function BatchSettings({ batch, handleCopy }) {
+function BatchSettings({ batch, handleCopy, fetchBatch }) {
   const [shouldLock, setShouldLock] = useState(batch.status === "LOCKED");
   const [capacity, setCapacity] = useState(batch.capacity);
   const params = useParams();
-  const fetchBatch = useCallback(() => {
-    apiFetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/institute/${params.instituteID}/${params.batchID}`
-    ).then((data) => {
-      if (data.success) {
-        setBatch(data.data);
-        setCapacity(data.data.capacity);
-        setShouldLock(data.data.status === "LOCKED");
-      }
-    });
-  }, [params.instituteID, params.batchID]);
+
+  useEffect(() => {
+    setShouldLock(batch.status === "LOCKED");
+    setCapacity(batch.capacity);
+  }, [batch]);
+
   return (
-    <Stack gap="20px">
-      <Stack gap="10px" direction="row" alignItems="center">
-        <Typography fontSize="16px" fontWeight="600" width="150px">
-          Batch Locked
-        </Typography>
+    <Stack gap="25px" padding="10px 0">
+      {/* Batch Status */}
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{
+          padding: "15px",
+          border: "1px solid var(--border-color)",
+          borderRadius: "8px",
+          backgroundColor: "var(--bg-color)",
+        }}
+      >
+        <Stack>
+          <Typography fontSize="16px" fontWeight="600" color="var(--text1)">
+            Lock Batch
+          </Typography>
+          <Typography fontSize="12px" color="var(--text3)">
+            Prevent new students from enrolling
+          </Typography>
+        </Stack>
         <StyledSwitch
           checked={shouldLock}
           onChange={(e) => {
@@ -156,48 +188,88 @@ function BatchSettings({ batch, handleCopy }) {
           }}
         />
       </Stack>
-      <Stack gap="10px" direction="row" alignItems="center">
-        <Typography fontSize="16px" fontWeight="600" width="150px">
-          Capacity
+
+      {/* Capacity */}
+      <Stack gap="8px">
+        <Typography fontSize="14px" fontWeight="600" color="var(--text2)">
+          Batch Capacity
         </Typography>
-        <Stack>
-          <StyledTextField
-            placeholder="Enter Capacity"
-            value={capacity}
-            onChange={(e) => setCapacity(e.target.value)}
-            onBlur={() => {
-              if (capacity !== batch.capacity) {
-                apiFetch(
-                  `${process.env.NEXT_PUBLIC_BASE_URL}/api/institute/${params.instituteID}/${params.batchID}/update-capacity`,
-                  {
-                    method: "POST",
-                    body: JSON.stringify({
-                      capacity: Number(capacity),
-                    }),
-                  }
-                ).then((data) => {
-                  if (data.success) {
-                    enqueueSnackbar("Capacity Updated", {
-                      variant: "success",
-                    });
-                    fetchBatch();
-                  }
-                });
-              }
-            }}
-            type="number"
-            sx={{ width: "100px" }}
-          />
-        </Stack>
+        <StyledTextField
+          placeholder="Enter Capacity"
+          value={capacity}
+          onChange={(e) => setCapacity(e.target.value)}
+          onBlur={() => {
+            if (capacity !== batch.capacity) {
+              apiFetch(
+                `${process.env.NEXT_PUBLIC_BASE_URL}/api/institute/${params.instituteID}/${params.batchID}/update-capacity`,
+                {
+                  method: "POST",
+                  body: JSON.stringify({
+                    capacity: Number(capacity),
+                  }),
+                }
+              ).then((data) => {
+                if (data.success) {
+                  enqueueSnackbar("Capacity Updated", {
+                    variant: "success",
+                  });
+                  fetchBatch();
+                }
+              });
+            }
+          }}
+          type="number"
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "var(--white)",
+            },
+          }}
+        />
+        <Typography fontSize="12px" color="var(--text3)">
+          Maximum number of students allowed in this batch
+        </Typography>
       </Stack>
-      <Stack gap="10px" direction="row" alignItems="center">
-        <Typography fontSize="16px" fontWeight="600" width="150px">
+
+      {/* Batch Code */}
+      <Stack gap="8px">
+        <Typography fontSize="14px" fontWeight="600" color="var(--text2)">
           Batch Code
         </Typography>
-        <Typography>{batch.batchCode}</Typography>
-        <IconButton onClick={handleCopy}>
-          <FileCopy />
-        </IconButton>
+        <Stack
+          direction="row"
+          alignItems="center"
+          sx={{
+            border: "1px solid var(--border-color)",
+            borderRadius: "5px",
+            padding: "0 5px 0 15px",
+            height: "45px",
+            backgroundColor: "var(--white)",
+            justifyContent: "space-between",
+          }}
+        >
+          <Typography
+            fontSize="16px"
+            fontWeight="500"
+            color="var(--text1)"
+            sx={{ letterSpacing: "1px" }}
+          >
+            {batch.batchCode}
+          </Typography>
+          <Button
+            onClick={handleCopy}
+            startIcon={<FileCopy />}
+            sx={{
+              textTransform: "none",
+              color: "var(--primary-color)",
+              fontWeight: "600",
+            }}
+          >
+            Copy
+          </Button>
+        </Stack>
+        <Typography fontSize="12px" color="var(--text3)">
+          Share this code with students to join the batch
+        </Typography>
       </Stack>
     </Stack>
   );

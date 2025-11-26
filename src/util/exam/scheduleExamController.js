@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import { dynamoDB } from "../awsAgent";
+import { QueryCommand, BatchGetCommand } from "@aws-sdk/lib-dynamodb";
 
 const MASTER_TABLE = `${process.env.AWS_DB_NAME}master`;
 const MASTER_TABLE_INDEX = "masterTableIndex";
@@ -21,25 +22,81 @@ export async function getAllScheduledExams() {
     },
   };
   try {
-    const result = await dynamoDB.query(params).promise();
+    const result = await dynamoDB.send(new QueryCommand(params));
+
+    // For each exam, fetch batch metadata
+    const examsWithBatchMeta = await Promise.all(
+      result.Items.map(async (item) => {
+        const batchList = item.batchList || [];
+
+        if (batchList.length === 0) {
+          return {
+            id: item.pKey.split("#")[1],
+            goalID: item.sKey.split("@")[2],
+            isLive: item.isLive,
+            title: item.title,
+            startTimeStamp: item.startTimeStamp,
+            duration: item.duration,
+            totalQuestions: item.totalQuestions,
+            totalSections: item.totalSections,
+            totalMarks: item.totalMarks,
+            isLifeTime: item.isLifeTime,
+            endTimeStamp: item.endTimeStamp,
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+            batchList: [],
+            batchMeta: [],
+          };
+        }
+
+        // Fetch batch metadata
+        const batchKeys = batchList.map((id) => ({
+          pKey: `BATCH#${id}`,
+          sKey: `BATCH#${id}`,
+        }));
+
+        const batchGetParams = {
+          RequestItems: {
+            [MASTER_TABLE]: {
+              Keys: batchKeys,
+            },
+          },
+        };
+
+        const batchResult = await dynamoDB.send(
+          new BatchGetCommand(batchGetParams)
+        );
+
+        const batches = batchResult.Responses[MASTER_TABLE] || [];
+        const batchMeta = batches.map((batch) => ({
+          id: batch.pKey.split("#")[1],
+          title: batch.title,
+        }));
+
+        return {
+          id: item.pKey.split("#")[1],
+          goalID: item.sKey.split("@")[2],
+          isLive: item.isLive,
+          title: item.title,
+          startTimeStamp: item.startTimeStamp,
+          duration: item.duration,
+          totalQuestions: item.totalQuestions,
+          totalSections: item.totalSections,
+          totalMarks: item.totalMarks,
+          isLifeTime: item.isLifeTime,
+          endTimeStamp: item.endTimeStamp,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+          batchList,
+          batchMeta,
+        };
+      })
+    );
+
     return {
       success: true,
       message: "Scheduled exams retrieved successfully",
-      data: result.Items.map((item) => ({
-        id: item.pKey.split("#")[1],
-        goalID: item.sKey.split("@")[2],
-        isLive: item.isLive,
-        title: item.title,
-        startTimeStamp: item.startTimeStamp,
-        duration: item.duration,
-        totalQuestions: item.totalQuestions,
-        totalSections: item.totalSections,
-        totalMarks: item.totalMarks,
-        pKey: undefined,
-        sKey: undefined,
-        "GSI1-pKey": undefined,
-        "GSI1-sKey": undefined,
-      })),
+      data: examsWithBatchMeta,
     };
   } catch (error) {
     throw new Error(error);

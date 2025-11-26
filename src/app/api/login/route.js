@@ -1,4 +1,5 @@
-import {dynamoDB} from "@/src/util/awsAgent";
+import { dynamoDB } from "@/src/util/awsAgent";
+import { ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { comparePassword } from "@/src/lib/jwtToken";
 import { createSession } from "@/src/lib/session";
 
@@ -12,7 +13,7 @@ export async function POST(request) {
   };
 
   try {
-    const user = await dynamoDB.scan(params).promise();
+    const user = await dynamoDB.send(new ScanCommand(params));
     if (user.Items.length == 0) {
       return Response.json({
         status: 401,

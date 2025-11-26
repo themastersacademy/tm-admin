@@ -1,6 +1,14 @@
 import { s3, dynamoDB } from "../awsAgent";
 import { randomUUID } from "crypto";
 import s3FileUpload from "@/src/lib/s3FileUpload";
+import {
+  ScanCommand,
+  PutCommand,
+  QueryCommand,
+  UpdateCommand,
+  DeleteCommand,
+} from "@aws-sdk/lib-dynamodb";
+import { HeadObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 export async function getAllBanners() {
   const TableName = `${process.env.AWS_DB_NAME}master`;
@@ -13,7 +21,7 @@ export async function getAllBanners() {
   };
 
   try {
-    const result = await dynamoDB.scan(params).promise();
+    const result = await dynamoDB.send(new ScanCommand(params));
     return {
       success: true,
       message: "Banners fetched successfully",
@@ -65,7 +73,7 @@ export async function createBanner({ fileName, fileType, title }) {
   };
 
   try {
-    const result = await dynamoDB.put(params).promise();
+    const result = await dynamoDB.send(new PutCommand(params));
     return {
       success: true,
       message: "Banner created successfully",
@@ -118,7 +126,7 @@ export async function verifyBannerUpload({ bannerID }) {
   };
 
   try {
-    const result = await dynamoDB.query(queryParams).promise();
+    const result = await dynamoDB.send(new QueryCommand(queryParams));
     if (!result.Items || result.Items.length === 0) {
       return {
         success: false,
@@ -132,10 +140,10 @@ export async function verifyBannerUpload({ bannerID }) {
       Bucket: process.env.AWS_BUCKET_NAME,
       Key: banner.path,
     };
-    await s3.headObject(s3Params).promise();
+    await s3.send(new HeadObjectCommand(s3Params));
 
     // Update the banner record to mark it as uploaded.
-    await dynamoDB.update(updateParams).promise();
+    await dynamoDB.send(new UpdateCommand(updateParams));
 
     return {
       success: true,
@@ -144,7 +152,7 @@ export async function verifyBannerUpload({ bannerID }) {
   } catch (error) {
     // Attempt to delete the banner record if any error occurred.
     try {
-      await dynamoDB.delete(deleteParams).promise();
+      await dynamoDB.send(new DeleteCommand(deleteParams));
     } catch (delError) {
       console.error("Error deleting banner record:", delError);
     }
@@ -173,8 +181,8 @@ export async function deleteBanner({ bannerID, path }) {
   };
 
   try {
-    await s3.deleteObject(s3Params).promise();
-    await dynamoDB.delete(bannerParams).promise();
+    await s3.send(new DeleteObjectCommand(s3Params));
+    await dynamoDB.send(new DeleteCommand(bannerParams));
     return {
       success: true,
       message: "Banner deleted successfully",

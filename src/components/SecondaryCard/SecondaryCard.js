@@ -27,7 +27,8 @@ export default function SecondaryCard({
     <Card
       sx={{
         width: cardWidth,
-        height: "80px",
+        minHeight: "80px",
+        height: "auto",
         border: "1px solid",
         borderColor: "var(--border-color)",
         borderRadius: "10px",

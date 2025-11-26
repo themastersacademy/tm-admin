@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { PutCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 
 export default async function createBank({ title }) {
@@ -19,7 +20,7 @@ export default async function createBank({ title }) {
   };
 
   try {
-    await dynamoDB.put(params).promise();
+    await dynamoDB.send(new PutCommand(params));
     return {
       success: true,
       message: "Bank created successfully",

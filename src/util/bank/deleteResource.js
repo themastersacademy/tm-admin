@@ -1,4 +1,6 @@
 import { dynamoDB, s3 } from "../awsAgent";
+import { GetCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 export async function deleteResource({ resourceID, bankID }) {
   const params = {
@@ -9,7 +11,7 @@ export async function deleteResource({ resourceID, bankID }) {
     },
   };
   try {
-    const response = await dynamoDB.get(params).promise();
+    const response = await dynamoDB.send(new GetCommand(params));
     console.log("Response", response);
 
     if (!response.Item) {
@@ -25,13 +27,13 @@ export async function deleteResource({ resourceID, bankID }) {
         Bucket: process.env.AWS_BUCKET_NAME,
         Key: response.Item.path,
       };
-      await s3.deleteObject(fileParams).promise();
+      await s3.send(new DeleteObjectCommand(fileParams));
     } else if (type === "VIDEO") {
       await deleteBunnyVideo(response.Item.videoID);
     } else {
       throw new Error("Invalid resource type");
     }
-    await dynamoDB.delete(params).promise();
+    await dynamoDB.send(new DeleteCommand(params));
     return { success: true, message: "Resource deleted successfully" };
   } catch (err) {
     console.error("DynamoDB Error:", err);

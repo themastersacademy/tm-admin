@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { QueryCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 export async function getAllCoursesByGoalID({ goalID }) {
   const params = {
@@ -9,7 +10,7 @@ export async function getAllCoursesByGoalID({ goalID }) {
     },
   };
   try {
-    const { Items } = await dynamoDB.query(params).promise();
+    const { Items } = await dynamoDB.send(new QueryCommand(params));
     return {
       success: true,
       message: "Courses fetched successfully",
@@ -38,7 +39,7 @@ export async function getALLCourse() {
     },
   };
   try {
-    const { Items } = await dynamoDB.scan(params).promise();
+    const { Items } = await dynamoDB.send(new ScanCommand(params));
     return {
       success: true,
       message: "Courses fetched successfully",

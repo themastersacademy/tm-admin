@@ -1,4 +1,13 @@
 import { dynamoDB, s3 } from "../awsAgent";
+import {
+  GetCommand,
+  PutCommand,
+  DeleteCommand,
+  QueryCommand,
+  UpdateCommand,
+} from "@aws-sdk/lib-dynamodb";
+import { PutObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
 
 // 📌 Create a new file record in DynamoDB and generate a pre-signed URL for S3 upload
@@ -18,7 +27,7 @@ export async function createFile({ title, bankID, fileName, fileType }) {
       Key: { pKey: `BANK#${bankID}`, sKey: `BANKS` },
     };
 
-    const bankResponse = await dynamoDB.get(bankParams).promise();
+    const bankResponse = await dynamoDB.send(new GetCommand(bankParams));
     if (!bankResponse.Item) {
       return { success: false, message: "Bank not found" };
     }
@@ -40,7 +49,7 @@ export async function createFile({ title, bankID, fileName, fileType }) {
     };
 
     // 📌 Upload resource record to DynamoDB
-    await dynamoDB.put(resourceParams).promise();
+    await dynamoDB.send(new PutCommand(resourceParams));
 
     // 📂 Generate a pre-signed upload URL from S3
     const fileParams = {
@@ -50,7 +59,8 @@ export async function createFile({ title, bankID, fileName, fileType }) {
       ContentType: fileType,
     };
 
-    const url = await s3.getSignedUrlPromise("putObject", fileParams);
+    const command = new PutObjectCommand(fileParams);
+    const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
 
     return {
       success: true,
@@ -70,7 +80,7 @@ export async function createFile({ title, bankID, fileName, fileType }) {
       TableName: `${process.env.AWS_DB_NAME}content`,
       Key: { pKey: `RESOURCE#${fileName}`, sKey: `RESOURCE@${bankID}` },
     };
-    await dynamoDB.delete(deleteParams).promise();
+    await dynamoDB.send(new DeleteCommand(deleteParams));
 
     throw new Error("Internal server error");
   }
@@ -86,7 +96,7 @@ export async function verifyFile(resourceID, path) {
 
   try {
     // 1️⃣ Check if file exists in S3
-    await s3.headObject(s3Params).promise();
+    await s3.send(new HeadObjectCommand(s3Params));
 
     // 2️⃣ Query DynamoDB to find the correct `sKey`
     const queryParams = {
@@ -95,7 +105,7 @@ export async function verifyFile(resourceID, path) {
       ExpressionAttributeValues: { ":pKeyVal": `RESOURCE#${resourceID}` },
     };
 
-    const queryResult = await dynamoDB.query(queryParams).promise();
+    const queryResult = await dynamoDB.send(new QueryCommand(queryParams));
     if (!queryResult.Items || queryResult.Items.length === 0) {
       return { success: false, message: "Resource not found in database" };
     }
@@ -110,7 +120,7 @@ export async function verifyFile(resourceID, path) {
       ExpressionAttributeValues: { ":val": true },
     };
 
-    await dynamoDB.update(updateParams).promise();
+    await dynamoDB.send(new UpdateCommand(updateParams));
 
     return {
       success: true,

@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
 
 export async function reorderLesson({ courseID, goalID, lessonIDs }) {
   if (!courseID || !lessonIDs) {
@@ -20,7 +21,7 @@ export async function reorderLesson({ courseID, goalID, lessonIDs }) {
   };
 
   try {
-    await dynamoDB.update(params).promise();
+    await dynamoDB.send(new UpdateCommand(params));
     return { success: true, message: "Lesson order updated" };
   } catch (error) {
     console.error("Error updating lesson order:", error);

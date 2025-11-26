@@ -1,13 +1,13 @@
 "use client";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
+import BatchCard from "@/src/components/BatchCard/BatchCard";
 import DialogBox from "@/src/components/DialogBox/DialogBox";
 import Header from "@/src/components/Header/Header";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
-import SecondaryCard from "@/src/components/SecondaryCard/SecondaryCard";
 import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
 import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
 import { apiFetch } from "@/src/lib/apiFetch";
-import { Add, Close, East, GroupsSharp } from "@mui/icons-material";
+import { Add, Close, East } from "@mui/icons-material";
 import {
   Button,
   DialogContent,
@@ -92,6 +92,11 @@ export default function InstituteID() {
             <Skeleton variant="text" width="100px" />
           )
         }
+        subtitle={
+          batch?.instituteMeta?.email || (
+            <Skeleton variant="text" width="150px" />
+          )
+        }
         search
         button={[
           <Button
@@ -168,27 +173,10 @@ export default function InstituteID() {
             {!isLoading ? (
               batchList.length > 0 ? (
                 batchList.map((item, index) => (
-                  <SecondaryCard
+                  <BatchCard
                     key={index}
-                    icon={
-                      <GroupsSharp
-                        fontSize="large"
-                        sx={{ color: "var(--sec-color)" }}
-                      />
-                    }
-                    title={
-                      <span
-                        style={{ cursor: "pointer" }}
-                        onClick={() => {
-                          router.push(
-                            `/dashboard/institute/${instituteID}/${item.id}`
-                          );
-                        }}
-                      >
-                        {item.title}
-                      </span>
-                    }
-                    cardWidth="500px"
+                    batch={item}
+                    instituteID={instituteID}
                   />
                 ))
               ) : (

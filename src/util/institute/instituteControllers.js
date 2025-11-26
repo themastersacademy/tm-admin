@@ -1,4 +1,10 @@
-import { dynamoDB } from "../awsAgent";
+import { dynamoDB } from "../awsAgent.js";
+import {
+  PutCommand,
+  ScanCommand,
+  GetCommand,
+  QueryCommand,
+} from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 
 const MASTER_TABLE = `${process.env.AWS_DB_NAME}master`;
@@ -21,7 +27,7 @@ export async function createInstitute({ title, email }) {
     },
   };
   try {
-    await dynamoDB.put(params).promise();
+    await dynamoDB.send(new PutCommand(params));
     return { success: true, message: "Institute created successfully" };
   } catch (error) {
     throw new Error(error);
@@ -36,18 +42,47 @@ export async function getAllInstitutes() {
       ":sKey": "INSTITUTES",
     },
   };
+
+  const batchParams = {
+    TableName: `${process.env.AWS_DB_NAME}master`,
+    IndexName: "masterTableIndex",
+    KeyConditionExpression: "#gsi1pk = :pKey",
+    ExpressionAttributeNames: {
+      "#gsi1pk": "GSI1-pKey",
+    },
+    ExpressionAttributeValues: {
+      ":pKey": "BATCHES",
+    },
+    ProjectionExpression: "instituteID",
+  };
+
   try {
-    const result = await dynamoDB.scan(params).promise();
+    const [instituteResult, batchResult] = await Promise.all([
+      dynamoDB.send(new ScanCommand(params)),
+      dynamoDB.send(new QueryCommand(batchParams)),
+    ]);
+
+    const batches = batchResult.Items || [];
+    const batchCounts = batches.reduce((acc, batch) => {
+      const id = batch.instituteID;
+      acc[id] = (acc[id] || 0) + 1;
+      return acc;
+    }, {});
+
     return {
       success: true,
       message: "Institute fetched successfully",
-      data: result.Items.map((institute) => {
-        const { pKey, title, email, batchList } = institute;
+      data: instituteResult.Items.map((institute) => {
+        const { pKey, title, email, batchList, status, createdAt } = institute;
+        const id = pKey.split("#")[1];
         return {
-          id: pKey.split("#")[1],
+          id,
           title,
           email,
           batchList,
+          batchCount: batchCounts[id] || 0,
+          status,
+          createdAt,
         };
       }),
     };
@@ -62,7 +97,7 @@ export async function getInstitute({ instituteID }) {
     Key: { pKey: `INSTITUTE#${instituteID}`, sKey: "INSTITUTES" },
   };
   try {
-    const result = await dynamoDB.get(params).promise();
+    const result = await dynamoDB.send(new GetCommand(params));
     if (!result.Item) {
       return {
         success: false,

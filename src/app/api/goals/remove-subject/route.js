@@ -1,4 +1,5 @@
 import { dynamoDB } from "@/src/util/awsAgent";
+import { GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 
 export async function POST(request) {
   const { goalID, subjectID } = await request.json();
@@ -20,7 +21,7 @@ export async function POST(request) {
 
   try {
     // Retrieve the current goal item
-    const result = await dynamoDB.get(params).promise();
+    const result = await dynamoDB.send(new GetCommand(params));
     if (!result.Item) {
       return Response.json(
         { success: false, message: "Goal not found" },
@@ -49,7 +50,7 @@ export async function POST(request) {
       },
     };
 
-    await dynamoDB.update(updateParams).promise();
+    await dynamoDB.send(new UpdateCommand(updateParams));
     return Response.json(
       { success: true, message: "Subject removed successfully" },
       { status: 200 }

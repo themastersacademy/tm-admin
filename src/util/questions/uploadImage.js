@@ -1,5 +1,7 @@
 "use server";
 import { s3 } from "../awsAgent";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
 
 export default async function uploadImage({ filename, fileType }) {
@@ -13,14 +15,13 @@ export default async function uploadImage({ filename, fileType }) {
   const awsFileName = `${
     process.env.AWS_QUESTION_PATH
   }${randomUUID()}.${fileExtension}`;
-  const params = {
+  const command = new PutObjectCommand({
     Bucket: process.env.AWS_BUCKET_NAME,
     Key: awsFileName,
-    // Body: image,
     ContentType: fileType,
-  };
+  });
   try {
-    const url = await s3.getSignedUrlPromise("putObject", params);
+    const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
     return {
       success: true,
       message: "Image signed URL generated successfully",

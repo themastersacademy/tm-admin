@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 import { updateSubject } from "../subjects/createSubject";
 
@@ -58,9 +59,9 @@ export async function batchAddQuestions(questions) {
       [TABLE_NAME]: batch.map(toPutRequest),
     };
     try {
-      const resp = await dynamoDB
-        .batchWrite({ RequestItems: requestItems })
-        .promise();
+      const resp = await dynamoDB.send(
+        new BatchWriteCommand({ RequestItems: requestItems })
+      );
 
       // Unprocessed items, if any
       const unproc = resp.UnprocessedItems?.[TABLE_NAME] || [];

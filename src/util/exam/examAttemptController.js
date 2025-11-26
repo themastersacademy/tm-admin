@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { QueryCommand } from "@aws-sdk/lib-dynamodb";
 
 const USER_TABLE = `${process.env.AWS_DB_NAME}users`;
 const USER_GSI_INDEX = "GSI1-index";
@@ -29,19 +30,18 @@ export async function getAllExamAttemptsByExamID(examID) {
                             totalWrongAnswers, totalSkippedAnswers, totalSections, startTimeStamp,
                             blobVersion, #duration, createdAt, #type, totalQuestions`,
       // Add ExclusiveStartKey for subsequent calls
-      ExclusiveStartKey: ExclusiveStartKey, 
+      ExclusiveStartKey: ExclusiveStartKey,
     };
 
     // Use a try-catch block for better error handling
     try {
-      const response = await dynamoDB.query(params).promise();
-      
+      const response = await dynamoDB.send(new QueryCommand(params));
+
       // Add the items from the current page to the allItems array
       allItems.push(...response.Items);
 
       // Get the key to start the next query from (if one exists)
       ExclusiveStartKey = response.LastEvaluatedKey;
-
     } catch (error) {
       console.error("Error querying DynamoDB:", error);
       return {
@@ -49,7 +49,6 @@ export async function getAllExamAttemptsByExamID(examID) {
         error: error.message,
       };
     }
-    
   } while (ExclusiveStartKey); // Continue loop if LastEvaluatedKey is present
 
   console.log(allItems.length + " exam attempts (after pagination)");

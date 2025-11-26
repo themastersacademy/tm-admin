@@ -1,4 +1,9 @@
 import { dynamoDB } from "../awsAgent";
+import {
+  GetCommand,
+  QueryCommand,
+  TransactWriteCommand,
+} from "@aws-sdk/lib-dynamodb";
 import { updateGoalCoursesList } from "./updateCourse";
 
 export default async function deleteLesson({ lessonID, courseID, goalID }) {
@@ -18,7 +23,7 @@ export default async function deleteLesson({ lessonID, courseID, goalID }) {
         sKey: `LESSONS@${courseID}`,
       },
     };
-    const lessonResult = await dynamoDB.get(lessonParams).promise();
+    const lessonResult = await dynamoDB.send(new GetCommand(lessonParams));
     if (!lessonResult.Item) {
       return { success: false, message: "Lesson not found" };
     }
@@ -32,7 +37,7 @@ export default async function deleteLesson({ lessonID, courseID, goalID }) {
         sKey: `COURSES@${goalID}`,
       },
     };
-    const courseResult = await dynamoDB.get(courseParams).promise();
+    const courseResult = await dynamoDB.send(new GetCommand(courseParams));
     if (!courseResult.Item) {
       return { success: false, message: "Course not found" };
     }
@@ -87,9 +92,9 @@ export default async function deleteLesson({ lessonID, courseID, goalID }) {
         },
         Select: "ALL_ATTRIBUTES",
       };
-      const resourceResult = await dynamoDB
-        .query(resourceQueryParams)
-        .promise();
+      const resourceResult = await dynamoDB.send(
+        new QueryCommand(resourceQueryParams)
+      );
       if (resourceResult.Items && resourceResult.Items.length > 0) {
         const resourceItem = resourceResult.Items[0];
         // Remove lessonID from the resource's linkedLessons array.
@@ -117,7 +122,7 @@ export default async function deleteLesson({ lessonID, courseID, goalID }) {
     const transactParams = {
       TransactItems: transactItems,
     };
-    await dynamoDB.transactWrite(transactParams).promise();
+    await dynamoDB.send(new TransactWriteCommand(transactParams));
 
     await updateGoalCoursesList({
       courseID,

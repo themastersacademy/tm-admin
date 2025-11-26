@@ -1,4 +1,5 @@
 import { dynamoDB } from "../awsAgent";
+import { QueryCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 export default async function getLessons(courseID) {
   if (!courseID) {
@@ -18,7 +19,7 @@ export default async function getLessons(courseID) {
 
   let courseData;
   try {
-    courseData = await dynamoDB.query(courseParams).promise();
+    courseData = await dynamoDB.send(new QueryCommand(courseParams));
   } catch (error) {
     console.error("Error querying course:", error);
     throw new Error("Could not query course");
@@ -38,7 +39,7 @@ export default async function getLessons(courseID) {
 
   let lessonsData;
   try {
-    lessonsData = await dynamoDB.scan(lessonParams).promise();
+    lessonsData = await dynamoDB.send(new ScanCommand(lessonParams));
   } catch (error) {
     console.error("Error querying lessons:", error);
     throw new Error("Could not query lessons");

@@ -1,4 +1,5 @@
 import { dynamoDB } from "@/src/util/awsAgent";
+import { ScanCommand, BatchGetCommand } from "@aws-sdk/lib-dynamodb";
 
 export default async function getQuestions({
   subjectID,
@@ -54,7 +55,7 @@ export default async function getQuestions({
       Limit: limit,
       ...(lastEvaluatedKey && { ExclusiveStartKey: lastEvaluatedKey }),
     };
-    const page = await dynamoDB.scan(params).promise();
+    const page = await dynamoDB.send(new ScanCommand(params));
 
     const questions = (page.Items || []).map((it) => ({
       id: it.pKey.split("#")[1],
@@ -79,13 +80,13 @@ export default async function getQuestions({
   let allIDs = [];
   let lek = null;
   do {
-    const page = await dynamoDB
-      .scan({
+    const page = await dynamoDB.send(
+      new ScanCommand({
         ...baseParams,
         ProjectionExpression: "pKey, sKey",
         ...(lek && { ExclusiveStartKey: lek }),
       })
-      .promise();
+    );
     allIDs.push(
       ...(page.Items || []).map((i) => ({ pKey: i.pKey, sKey: i.sKey }))
     );
@@ -112,8 +113,8 @@ export default async function getQuestions({
 
   const detailed = [];
   for (const chunk of chunks) {
-    const resp = await dynamoDB
-      .batchGet({
+    const resp = await dynamoDB.send(
+      new BatchGetCommand({
         RequestItems: {
           [TABLE]: {
             Keys: chunk.map(({ pKey, sKey }) => ({ pKey, sKey })),
@@ -125,7 +126,7 @@ export default async function getQuestions({
           },
         },
       })
-      .promise();
+    );
     detailed.push(...(resp.Responses?.[TABLE] || []));
   }
 

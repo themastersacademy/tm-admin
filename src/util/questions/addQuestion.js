@@ -1,5 +1,6 @@
 "use server";
 import { dynamoDB } from "../awsAgent";
+import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 import { updateSubject } from "../subjects/createSubject";
 
@@ -24,12 +25,12 @@ export async function addQuestion(questionData) {
     solution,
   } = questionData;
 
-  const subjectResp = await dynamoDB
-    .get({
+  const subjectResp = await dynamoDB.send(
+    new GetCommand({
       TableName: TABLE_NAME,
       Key: { pKey: `SUBJECT#${subjectID}`, sKey: "SUBJECTS" },
     })
-    .promise();
+  );
   if (!subjectResp.Item) {
     throw new Error("Subject not found");
   }
@@ -60,13 +61,13 @@ export async function addQuestion(questionData) {
     updatedAt: now,
   };
 
-  await dynamoDB
-    .put({
+  await dynamoDB.send(
+    new PutCommand({
       TableName: TABLE_NAME,
       Item: item,
       ConditionExpression: "attribute_not_exists(pKey)",
     })
-    .promise();
+  );
 
   await updateSubject({
     subjectID,
