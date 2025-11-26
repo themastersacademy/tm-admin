@@ -1,5 +1,5 @@
 "use client";
-import PrimaryCard from "@/src/components/PrimaryCard/PrimaryCard";
+import ExamCard from "./ExamCard";
 import { Stack } from "@mui/material";
 import weekcalendar from "@/public/Icons/weekCalendar.svg";
 import series from "@/public/Icons/series.svg";
@@ -19,26 +19,28 @@ export default function Exam({ goal }) {
         borderRadius: "10px",
         padding: "20px",
         gap: "20px",
-        minHeight: "100vh",
       }}
     >
-      <Stack flexDirection="row" gap="20px">
-        <PrimaryCard
+      <Stack flexDirection="row" gap="20px" flexWrap="wrap">
+        <ExamCard
           icon={weekcalendar.src}
           title="Exam Groups"
-          actionButton="View"
+          description="Create and manage groups of exams. Organize tests by subject, topic, or difficulty level for structured learning."
           onClick={() => {
             router.push(`/dashboard/goals/${goal.goalID}/examgroups`);
           }}
+          color="#1976d2"
+          bgColor="#e3f2fd"
         />
-        <PrimaryCard
+        <ExamCard
           icon={series.src}
-          title="TMA Test series"
-          actionButton="View"
+          title="TMA Test Series"
+          description="Design comprehensive test series packages. Bundle multiple exams together to offer complete preparation courses."
           onClick={() => {
             router.push(`/dashboard/goals/${goal.goalID}/testseries`);
           }}
-          goal={goal}
+          color="#7b1fa2"
+          bgColor="#f3e5f5"
         />
       </Stack>
     </Stack>

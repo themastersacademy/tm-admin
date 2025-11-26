@@ -2,7 +2,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
 import { apiFetch } from "@/src/lib/apiFetch";
-import { Button, CircularProgress, Stack } from "@mui/material";
+import { Button, CircularProgress, Stack, Typography } from "@mui/material";
+import { Add } from "@mui/icons-material";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import LectureCard from "@/src/components/LectureCard/LectureCard";
@@ -183,24 +184,118 @@ export default function Videos({ course }) {
   );
 
   return (
-    <Stack mt="20px" gap="20px">
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
+    <Stack gap="24px" sx={{ position: "relative" }}>
+      {/* Sticky Header Section */}
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          backgroundColor: "rgba(255, 255, 255, 0.9)",
+          backdropFilter: "blur(8px)",
+          padding: "16px 0",
+          borderBottom: "1px solid var(--border-color)",
+        }}
+      >
+        <Stack gap="4px">
+          <Typography
+            sx={{
+              fontFamily: "Lato",
+              fontSize: "20px",
+              fontWeight: 700,
+              color: "var(--text1)",
+            }}
+          >
+            Course Content
+          </Typography>
+          <Typography
+            sx={{ fontFamily: "Lato", fontSize: "14px", color: "var(--text3)" }}
+          >
+            Manage your course lessons and structure
+          </Typography>
+        </Stack>
         <Button
           variant="contained"
           onClick={onAddLesson}
+          startIcon={<Add />}
           sx={{
-            backgroundColor: "var(--sec-color-acc-1)",
-            color: "var(--sec-color)",
+            backgroundColor: "var(--primary-color)",
             textTransform: "none",
-            height: "30px",
-            ml: "auto",
+            borderRadius: "8px",
+            padding: "8px 24px",
+            fontWeight: 600,
+            fontFamily: "Lato",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
           }}
           disableElevation
         >
-          Add Component
+          Add Lesson
         </Button>
       </Stack>
-      <Stack gap="10px">
+
+      {/* Stats Bar */}
+      <Stack
+        direction="row"
+        gap="24px"
+        sx={{
+          padding: "16px",
+          backgroundColor: "var(--bg-color)",
+          borderRadius: "12px",
+          border: "1px solid var(--border-color)",
+        }}
+      >
+        <Stack direction="row" gap="12px" alignItems="center">
+          <Typography
+            sx={{
+              fontFamily: "Lato",
+              fontSize: "14px",
+              fontWeight: 700,
+              color: "var(--text3)",
+            }}
+          >
+            Total Lessons:
+          </Typography>
+          <Typography
+            sx={{
+              fontFamily: "Lato",
+              fontSize: "16px",
+              fontWeight: 800,
+              color: "var(--text1)",
+            }}
+          >
+            {lessons?.length || 0}
+          </Typography>
+        </Stack>
+        <Stack direction="row" gap="12px" alignItems="center">
+          <Typography
+            sx={{
+              fontFamily: "Lato",
+              fontSize: "14px",
+              fontWeight: 700,
+              color: "var(--text3)",
+            }}
+          >
+            Total Duration:
+          </Typography>
+          <Typography
+            sx={{
+              fontFamily: "Lato",
+              fontSize: "16px",
+              fontWeight: 800,
+              color: "var(--text1)",
+            }}
+          >
+            {/* Calculate duration if available, otherwise placeholder or course duration */}
+            {course.duration ? `${course.duration} Hours` : "N/A"}
+          </Typography>
+        </Stack>
+      </Stack>
+
+      {/* Lessons List */}
+      <Stack gap="16px" sx={{ minHeight: "300px" }}>
         <DndProvider backend={HTML5Backend}>
           {!isLoading ? (
             lessons?.length ? (
@@ -224,10 +319,13 @@ export default function Videos({ course }) {
                 )
               )
             ) : (
-              <NoDataFound info="No lesson created" />
+              <NoDataFound
+                info="No lessons created yet"
+                subInfo="Click 'Add Lesson' to start building your course content."
+              />
             )
           ) : (
-            Array.from({ length: 4 }, (_, index) => (
+            Array.from({ length: 3 }, (_, index) => (
               <LessonCardSkeleton key={index} />
             ))
           )}

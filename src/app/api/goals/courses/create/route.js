@@ -2,7 +2,8 @@ import createCourse from "@/src/util/courses/createCourse";
 import checkUUID from "@/src/lib/checkUUID";
 
 export async function POST(request) {
-  const { title, goalID } = await request.json();
+  const { title, goalID, description, thumbnail, language } =
+    await request.json();
   if (!title || !goalID) {
     return Response.json({ message: "Title is required" }, { status: 400 });
   }
@@ -18,7 +19,13 @@ export async function POST(request) {
     return Response.json({ message: "Invalid goal ID" }, { status: 400 });
   }
   try {
-    const result = await createCourse({ title, goalID });
+    const result = await createCourse({
+      title,
+      goalID,
+      description,
+      thumbnail,
+      language,
+    });
     return Response.json(result, { status: 200 });
   } catch (error) {
     return Response.json({ message: "Error creating course" }, { status: 500 });

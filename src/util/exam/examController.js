@@ -937,10 +937,20 @@ export async function markExamAsLive({ examID, type }) {
 
   // 3) Collect question keys
   const questionRefs = examItem.questionSection.flatMap((sec) => sec.questions);
-  const keys = questionRefs.map((q) => ({
-    pKey: `QUESTION#${q.questionID}`,
-    sKey: `QUESTIONS@${q.subjectID}`,
-  }));
+
+  // Deduplicate keys using a Map to prevent BatchGetCommand error
+  const uniqueKeysMap = new Map();
+  questionRefs.forEach((q) => {
+    const pKey = `QUESTION#${q.questionID}`;
+    if (!uniqueKeysMap.has(pKey)) {
+      uniqueKeysMap.set(pKey, {
+        pKey,
+        sKey: `QUESTIONS@${q.subjectID}`,
+      });
+    }
+  });
+
+  const keys = Array.from(uniqueKeysMap.values());
 
   // 4) Batch‐get all question details (only pull what we need)
   // type is reserved keyword in dynamoDB, so we need to use the alias "type"

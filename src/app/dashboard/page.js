@@ -1,8 +1,8 @@
 "use client";
-import PrimaryCard from "@/src/components/PrimaryCard/PrimaryCard";
-import { Add, East } from "@mui/icons-material";
-import { Button, Stack } from "@mui/material";
-import { useState, useEffect } from "react";
+import GoalCard from "@/src/components/GoalCard/GoalCard";
+import { Add } from "@mui/icons-material";
+import { Button, Stack, Typography, Chip } from "@mui/material";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/src/components/Header/Header";
 import GoalDialogBox from "./goals/[id]/components/GoalDialogBox/GoalDialogBox";
@@ -37,6 +37,14 @@ export default function Home() {
       });
   }, []);
 
+  // Calculate statistics
+  const statistics = useMemo(() => {
+    const total = goalList.length;
+    const live = goalList.filter((g) => g.isLive).length;
+    const draft = total - live;
+    return { total, live, draft };
+  }, [goalList]);
+
   const dialogOpen = () => {
     setIsDialogOpen(true);
   };
@@ -46,56 +54,169 @@ export default function Home() {
   };
 
   return (
-    <Stack padding="20px" gap="10px">
-      <Header
-        title="Goals"
-        button={[
-          <Button
-            key="goal"
-            variant="contained"
-            onClick={dialogOpen}
-            startIcon={<Add />}
-            sx={{
-              backgroundColor: "var(--primary-color)",
-              textTransform: "none",
-            }}
-            disableElevation
-          >
-            Goal
-          </Button>,
-        ]}
-      />
-      <Stack flexDirection="row" justifyContent="space-between">
-        <GoalDialogBox
-          isOpen={isDialogOpen}
-          onClose={dialogClose}
-          actionButton={
+    <Stack padding="20px" gap="24px">
+      <Stack gap="16px">
+        <Header
+          title="Goals"
+          button={[
             <Button
-              variant="text"
-              endIcon={<East />}
-              sx={{ textTransform: "none", color: "var(--primary-color)" }}
+              key="goal"
+              variant="contained"
+              onClick={dialogOpen}
+              startIcon={<Add />}
+              sx={{
+                backgroundColor: "var(--primary-color)",
+                textTransform: "none",
+                borderRadius: "8px",
+                fontWeight: 600,
+                padding: "8px 24px",
+                boxShadow: "none",
+                "&:hover": {
+                  backgroundColor: "var(--primary-color-dark)",
+                  boxShadow: "0 4px 12px rgba(var(--primary-rgb), 0.3)",
+                },
+              }}
+              disableElevation
             >
-              Create
-            </Button>
-          }
+              Create Goal
+            </Button>,
+          ]}
         />
+
+        {/* Statistics Overview */}
+        {!isLoading && goalList.length > 0 && (
+          <Stack
+            direction="row"
+            gap="16px"
+            flexWrap="wrap"
+            sx={{
+              padding: "20px",
+              backgroundColor: "var(--white)",
+              borderRadius: "12px",
+              border: "1px solid var(--border-color)",
+            }}
+          >
+            <Stack
+              direction="row"
+              alignItems="center"
+              gap="12px"
+              padding="12px 20px"
+              sx={{
+                backgroundColor: "rgba(var(--primary-rgb), 0.05)",
+                borderRadius: "8px",
+                border: "1px solid rgba(var(--primary-rgb), 0.1)",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "var(--text3)",
+                }}
+              >
+                Total Goals:
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "20px",
+                  fontWeight: 700,
+                  color: "var(--primary-color)",
+                  fontFamily: "Lato",
+                }}
+              >
+                {statistics.total}
+              </Typography>
+            </Stack>
+
+            <Stack
+              direction="row"
+              alignItems="center"
+              gap="12px"
+              padding="12px 20px"
+              sx={{
+                backgroundColor: "rgba(76, 175, 80, 0.05)",
+                borderRadius: "8px",
+                border: "1px solid rgba(76, 175, 80, 0.1)",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "var(--text3)",
+                }}
+              >
+                Published:
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "20px",
+                  fontWeight: 700,
+                  color: "var(--success-color)",
+                  fontFamily: "Lato",
+                }}
+              >
+                {statistics.live}
+              </Typography>
+            </Stack>
+
+            <Stack
+              direction="row"
+              alignItems="center"
+              gap="12px"
+              padding="12px 20px"
+              sx={{
+                backgroundColor: "rgba(158, 158, 158, 0.05)",
+                borderRadius: "8px",
+                border: "1px solid rgba(158, 158, 158, 0.1)",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "var(--text3)",
+                }}
+              >
+                Drafts:
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "20px",
+                  fontWeight: 700,
+                  color: "var(--text3)",
+                  fontFamily: "Lato",
+                }}
+              >
+                {statistics.draft}
+              </Typography>
+            </Stack>
+          </Stack>
+        )}
       </Stack>
+
+      <GoalDialogBox
+        isOpen={isDialogOpen}
+        onClose={dialogClose}
+        setGoalList={setGoalList}
+      />
+
       <Stack
         flexDirection="row"
-        gap="20px"
+        gap="24px"
         flexWrap="wrap"
+        alignItems="flex-start"
         sx={{
           border: "1px solid var(--border-color)",
           backgroundColor: "var(--white)",
-          borderRadius: "10px",
-          padding: "20px",
-          minHeight: "80vh",
+          borderRadius: "12px",
+          padding: "24px",
         }}
       >
         {!isLoading ? (
           goalList.length > 0 ? (
             goalList.map((item, index) => (
-              <PrimaryCard
+              <GoalCard
                 key={index}
                 icon={
                   item.icon === "castle"
@@ -107,21 +228,28 @@ export default function Home() {
                     : ""
                 }
                 title={item.title}
-                actionButton="View"
+                actionButton="View Details"
                 onClick={() => {
                   router.push(`dashboard/goals/${item.goalID}`);
                 }}
                 isLive={item.isLive === true ? "Live" : "Draft"}
+                coursesCount={item.coursesCount}
+                subjectsCount={item.subjectsCount}
+                blogsCount={item.blogsCount}
+                updatedAt={item.updatedAt}
               />
             ))
           ) : (
             <Stack
               width="100%"
-              minHeight={"60vh"}
+              minHeight="60vh"
               justifyContent="center"
-              alignItems={"center"}
+              alignItems="center"
             >
-              <NoDataFound info="No goal Created yet" />
+              <NoDataFound
+                info="No goals created yet"
+                subInfo="Click 'Create Goal' to get started"
+              />
             </Stack>
           )
         ) : (

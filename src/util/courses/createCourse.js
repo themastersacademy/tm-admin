@@ -2,7 +2,13 @@ import { dynamoDB } from "../awsAgent";
 import { GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 
-export default async function createCourse({ title, goalID }) {
+export default async function createCourse({
+  title,
+  goalID,
+  description = "",
+  thumbnail = "",
+  language = [],
+}) {
   // Prepare parameters to fetch the goal record.
   const goalParams = {
     TableName: `${process.env.AWS_DB_NAME}master`,
@@ -24,10 +30,10 @@ export default async function createCourse({ title, goalID }) {
       "GSI1-sKey": `COURSES@${goalID}`,
       title,
       titleLower: title.toLowerCase(),
-      description: "",
+      description,
       isLive: false,
-      thumbnail: "",
-      language: [],
+      thumbnail,
+      language,
       lessons: 0,
       duration: 0,
       lessonIDs: [],
@@ -70,9 +76,9 @@ export default async function createCourse({ title, goalID }) {
             id: courseID.split("#")[1], // Use the newly generated courseID
             title,
             titleLower: title.toLowerCase(),
-            thumbnail: "",
-            description: "",
-            language: [],
+            thumbnail,
+            description,
+            language,
             lessons: 0,
             duration: 0,
           },

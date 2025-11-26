@@ -134,55 +134,81 @@ export default function LectureCard({
         ref={dragDropRef}
         sx={{
           border: "1px solid var(--border-color)",
-          height: "60px",
-          borderRadius: "3px",
+          borderRadius: "12px",
           backgroundColor: isDragging
             ? "var(--sec-color-acc-1)"
-            : "var(--sec-color-acc-2)",
-          padding: "10px",
+            : "var(--white)",
+          padding: "16px 24px",
           opacity: isDragging ? 0.5 : 1,
+          transition: "all 0.2s ease",
+          "&:hover": {
+            boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+            borderColor: "var(--primary-color)",
+          },
         }}
       >
-        <Stack direction="row" justifyContent="space-between">
-          <Stack direction="row" gap="10px">
-            <IconButton disableRipple>
-              <Menu />
-            </IconButton>
-            <Stack sx={{ minWidth: "280px" }}>
-              <StyledTextField
-                placeholder="Enter Lesson Title"
-                value={lesson.title}
-                onFocus={(e) => {
-                  setInitialTitle(e.target.value);
-                  e.target.select();
-                }}
-                onBlur={(e) => {
-                  const newTitle = e.target.value;
-                  if (newTitle !== initialTitle) {
-                    handleLessonUpdate(e, lesson.id, lesson.courseID, {
-                      title: newTitle,
-                    });
-                  }
-                }}
-                onChange={(e) => {
-                  const newTitle = e.target.value;
-                  setLessons((prev) =>
-                    prev.map((l) =>
-                      l.id === lesson.id ? { ...l, title: newTitle } : l
-                    )
-                  );
-                }}
-              />
-            </Stack>
+        <Stack direction="row" alignItems="center" gap="16px">
+          {/* Drag Handle */}
+          <IconButton
+            disableRipple
+            sx={{
+              cursor: "grab",
+              color: "var(--text3)",
+              "&:hover": { color: "var(--text1)" },
+            }}
+          >
+            <Menu fontSize="small" />
+          </IconButton>
+
+          {/* Title Input */}
+          <Stack flex={1}>
+            <StyledTextField
+              placeholder="Enter Lesson Title"
+              value={lesson.title}
+              onFocus={(e) => {
+                setInitialTitle(e.target.value);
+                e.target.select();
+              }}
+              onBlur={(e) => {
+                const newTitle = e.target.value;
+                if (newTitle !== initialTitle) {
+                  handleLessonUpdate(e, lesson.id, lesson.courseID, {
+                    title: newTitle,
+                  });
+                }
+              }}
+              onChange={(e) => {
+                const newTitle = e.target.value;
+                setLessons((prev) =>
+                  prev.map((l) =>
+                    l.id === lesson.id ? { ...l, title: newTitle } : l
+                  )
+                );
+              }}
+              sx={{
+                "& .MuiInputBase-input": {
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  color: "var(--text1)",
+                  padding: "8px 0",
+                },
+                "& fieldset": { border: "none" },
+              }}
+            />
           </Stack>
-          <Stack direction="row" alignItems="center">
-            <Stack direction="row" alignItems="center">
+
+          {/* Actions Group */}
+          <Stack direction="row" alignItems="center" gap="16px">
+            {/* Preview Toggle */}
+            <Stack direction="row" alignItems="center" gap="8px">
               <Typography
                 sx={{
                   fontFamily: "Lato",
                   fontSize: "12px",
-                  fontWeight: "700",
+                  fontWeight: 700,
                   color: "var(--text3)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
                 }}
               >
                 Preview
@@ -204,65 +230,132 @@ export default function LectureCard({
                 }}
               />
             </Stack>
-            {lesson.isLinked &&
-              (lesson.type === "VIDEO" ? (
-                <Tooltip title="Play Video">
-                  <IconButton
+
+            <div
+              style={{
+                width: "1px",
+                height: "24px",
+                backgroundColor: "var(--border-color)",
+              }}
+            />
+
+            {/* Resource Actions */}
+            <Stack direction="row" gap="8px">
+              {lesson.isLinked &&
+                (lesson.type === "VIDEO" ? (
+                  <Button
+                    startIcon={<PlayCircleRounded />}
                     onClick={() => {
                       playVideo({ videoID: lesson.resourceID });
                       videoPlayerOpen();
                     }}
-                    disableRipple
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      textTransform: "none",
+                      borderColor: "var(--primary-color)",
+                      color: "var(--primary-color)",
+                      fontWeight: 600,
+                      borderRadius: "6px",
+                      "&:hover": {
+                        backgroundColor: "rgba(var(--primary-rgb), 0.05)",
+                        borderColor: "var(--primary-color)",
+                      },
+                    }}
                   >
-                    <PlayCircleRounded sx={{ color: "var(--sec-color)" }} />
-                  </IconButton>
-                </Tooltip>
-              ) : (
-                <Tooltip title="Download File">
-                  <IconButton
+                    Play Video
+                  </Button>
+                ) : (
+                  <Button
+                    startIcon={<SaveAlt />}
                     onClick={() => downloadFile({ path: lesson.path })}
-                    disableRipple
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      textTransform: "none",
+                      borderColor: "var(--primary-color)",
+                      color: "var(--primary-color)",
+                      fontWeight: 600,
+                      borderRadius: "6px",
+                      "&:hover": {
+                        backgroundColor: "rgba(var(--primary-rgb), 0.05)",
+                        borderColor: "var(--primary-color)",
+                      },
+                    }}
                   >
-                    <SaveAlt sx={{ color: "var(--sec-color)" }} />
-                  </IconButton>
-                </Tooltip>
-              ))}
-            <IconButton
-              onClick={() => {
-                if (lesson.isLinked) {
-                  setIsUnlinkLoading(true);
-                  handleUnlink(
-                    setIsUnlinkLoading,
-                    lesson.id,
-                    lesson.courseID,
-                    lesson.resourceID
-                  );
-                } else {
-                  dialogOpen();
-                }
-              }}
-              disableRipple
-            >
-              {isUnlinkLoading ? (
-                <CircularProgress
-                  size={20}
-                  sx={{ color: "var(--secondary)" }}
-                />
-              ) : lesson.isLinked ? (
-                <Tooltip title="Unlink">
-                  <LinkOff sx={{ color: "var(--sec-color)" }} />
-                </Tooltip>
-              ) : (
-                <Tooltip title="Link">
-                  <Link sx={{ color: "var(--sec-color)" }} />
-                </Tooltip>
-              )}
-            </IconButton>
-            <Tooltip title="Delete">
-              <IconButton onClick={openDeleteDialog} disableRipple>
-                <Delete sx={{ color: "var(--delete-color)" }} />
-              </IconButton>
-            </Tooltip>
+                    Download
+                  </Button>
+                ))}
+
+              <Button
+                startIcon={lesson.isLinked ? <LinkOff /> : <Link />}
+                onClick={() => {
+                  if (lesson.isLinked) {
+                    setIsUnlinkLoading(true);
+                    handleUnlink(
+                      setIsUnlinkLoading,
+                      lesson.id,
+                      lesson.courseID,
+                      lesson.resourceID
+                    );
+                  } else {
+                    dialogOpen();
+                  }
+                }}
+                variant={lesson.isLinked ? "outlined" : "contained"}
+                size="small"
+                sx={{
+                  textTransform: "none",
+                  backgroundColor: lesson.isLinked
+                    ? "transparent"
+                    : "var(--sec-color)",
+                  borderColor: lesson.isLinked
+                    ? "var(--warning-color)"
+                    : "transparent",
+                  color: lesson.isLinked
+                    ? "var(--warning-color)"
+                    : "var(--white)",
+                  fontWeight: 600,
+                  borderRadius: "6px",
+                  boxShadow: "none",
+                  "&:hover": {
+                    backgroundColor: lesson.isLinked
+                      ? "rgba(255, 152, 0, 0.05)"
+                      : "var(--sec-color-dark)",
+                    borderColor: lesson.isLinked
+                      ? "var(--warning-color)"
+                      : "transparent",
+                    boxShadow: "none",
+                  },
+                }}
+                disabled={isUnlinkLoading}
+              >
+                {isUnlinkLoading ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : lesson.isLinked ? (
+                  "Unlink"
+                ) : (
+                  "Link Resource"
+                )}
+              </Button>
+
+              <Tooltip title="Delete Lesson">
+                <IconButton
+                  onClick={openDeleteDialog}
+                  size="small"
+                  sx={{
+                    color: "var(--text3)",
+                    marginLeft: "8px",
+                    "&:hover": {
+                      color: "var(--delete-color)",
+                      backgroundColor: "rgba(255, 0, 0, 0.05)",
+                    },
+                  }}
+                >
+                  <Delete />
+                </IconButton>
+              </Tooltip>
+            </Stack>
           </Stack>
         </Stack>
 
@@ -300,30 +393,32 @@ export default function LectureCard({
                 sx={{
                   textTransform: "none",
                   backgroundColor: "var(--delete-color)",
-                  borderRadius: "5px",
-                  width: "130px",
+                  borderRadius: "8px",
+                  width: "120px",
+                  fontWeight: 600,
                 }}
                 disableElevation
               >
                 {loading ? (
-                  <CircularProgress
-                    size={24}
-                    sx={{ color: "var(--white)", fontSize: "10px" }}
-                  />
+                  <CircularProgress size={20} sx={{ color: "var(--white)" }} />
                 ) : (
                   "Delete"
                 )}
               </Button>
               <Button
-                variant="contained"
+                variant="outlined"
                 onClick={closeDeleteDialog}
                 sx={{
                   textTransform: "none",
-                  borderRadius: "5px",
-                  backgroundColor: "white",
+                  borderRadius: "8px",
+                  borderColor: "var(--border-color)",
                   color: "var(--text2)",
-                  border: "1px solid var(--border-color)",
-                  width: "130px",
+                  width: "120px",
+                  fontWeight: 600,
+                  "&:hover": {
+                    borderColor: "var(--text2)",
+                    backgroundColor: "transparent",
+                  },
                 }}
                 disableElevation
               >

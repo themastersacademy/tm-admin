@@ -70,16 +70,40 @@ export default function ExamQuestions({
         );
 
         if (response.success) {
-          // Optimistically add the new section to state
-          const newSection = {
-            sectionIndex: sections.length,
-            sectionTitle:
-              params.sectionTitle || `Section ${sections.length + 1}`,
-            questions: [],
-            ...params,
-          };
-          setSections([...sections, newSection]);
-          showSnackbar("Section created successfully", "success", "", "3000");
+          if (
+            params.sectionIndex !== undefined &&
+            params.sectionIndex !== null
+          ) {
+            // Update existing section
+            const updatedSections = [...sections];
+            if (updatedSections[params.sectionIndex]) {
+              updatedSections[params.sectionIndex] = {
+                ...updatedSections[params.sectionIndex],
+                ...params,
+                title:
+                  params.sectionTitle ||
+                  updatedSections[params.sectionIndex].title,
+              };
+              setSections(updatedSections);
+              showSnackbar(
+                "Section updated successfully",
+                "success",
+                "",
+                "3000"
+              );
+            }
+          } else {
+            // Create new section
+            const newSection = {
+              sectionIndex: sections.length,
+              sectionTitle:
+                params.sectionTitle || `Section ${sections.length + 1}`,
+              questions: [],
+              ...params,
+            };
+            setSections([...sections, newSection]);
+            showSnackbar("Section created successfully", "success", "", "3000");
+          }
         } else {
           showSnackbar(response.message, "error", "", "3000");
         }
@@ -89,7 +113,6 @@ export default function ExamQuestions({
     },
     [examID, type, sections, setSections, showSnackbar]
   );
-
   const fetchQuestions = useCallback(async () => {
     if (hasFetchedQuestions.current && questionList.length > 0) {
       setIsLoading(false);
@@ -250,7 +273,7 @@ export default function ExamQuestions({
                       height={24}
                     />
                   }
-                  sectionTitle={section.title}
+                  sectionTitle={section.sectionTitle}
                   selected={section.selected || "0"}
                   nMark={section.nMark}
                   pMark={section.pMark}
@@ -266,6 +289,7 @@ export default function ExamQuestions({
                   deleteSection={deleteSection}
                   type={type}
                   isLive={isLive}
+                  allSections={sections}
                 />
               ))}
             </Stack>

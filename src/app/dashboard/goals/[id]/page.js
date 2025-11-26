@@ -34,7 +34,11 @@ export default function Goals() {
     fetchGoal();
   }, [fetchGoal]);
 
-  const tabs = [{ label: "Syllabus" }, { label: "Exam" }, { label: "Blogs" }];
+  const tabs = [
+    { label: "Study Material" },
+    { label: "Exam" },
+    { label: "Blogs" },
+  ];
 
   return (
     <Stack sx={{ padding: "20px", gap: "15px" }}>

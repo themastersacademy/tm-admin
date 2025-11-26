@@ -22,6 +22,7 @@ import {
   TextField,
 } from "@mui/material";
 import Active from "./Components/Active";
+import ScheduleTestHeader from "./Components/ScheduleTestHeader";
 import { useEffect, useState, useCallback } from "react";
 import CreateExamDialog from "@/src/components/CreateExamDialog/CreateExamDialog";
 import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
@@ -202,73 +203,18 @@ export default function ScheduleTest() {
 
   return (
     <Stack padding="20px" gap="20px">
-      <Header
-        title="Schedule Test"
-        button={[
-          <Stack key="head" flexDirection="row" alignItems="center" gap="10px">
-            <SearchBox
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={handleDialogOpen}
-              sx={{
-                backgroundColor: "var(--primary-color)",
-                textTransform: "none",
-                width: "100px",
-              }}
-              disableElevation
-            >
-              Exam
-            </Button>
-            <Button
-              variant="contained"
-              endIcon={<ExpandMore />}
-              onClick={handleFilterClick}
-              sx={{
-                backgroundColor:
-                  statusFilter !== "all"
-                    ? "var(--sec-color)"
-                    : "var(--primary-color)",
-                textTransform: "none",
-                width: "100px",
-              }}
-              disableElevation
-            >
-              Filter
-            </Button>
-          </Stack>,
-        ]}
+      <ScheduleTestHeader
+        searchQuery={searchQuery}
+        onSearchChange={(e) => setSearchQuery(e.target.value)}
+        statusFilter={statusFilter}
+        onFilterClick={handleFilterClick}
+        onCreateClick={handleDialogOpen}
+        filteredCount={filteredTestList.length}
+        totalCount={testList.length}
+        stats={calculatedStats}
+        onClearFilter={() => handleStatusFilterChange("all")}
+        isLoading={isLoading}
       />
-      {/* Analytics Cards */}
-      <Stack flexDirection="row" gap="20px" flexWrap="wrap">
-        <SecondaryCard
-          icon={<Quiz sx={{ color: "var(--primary-color)" }} />}
-          title="Total Exams"
-          subTitle={calculatedStats.total}
-          cardWidth="200px"
-        />
-        <SecondaryCard
-          icon={<CheckCircle sx={{ color: "var(--primary-color)" }} />}
-          title="Live Exams"
-          subTitle={calculatedStats.live}
-          cardWidth="200px"
-        />
-        <SecondaryCard
-          icon={<Schedule sx={{ color: "var(--primary-color)" }} />}
-          title="Scheduled"
-          subTitle={calculatedStats.scheduled}
-          cardWidth="200px"
-        />
-        <SecondaryCard
-          icon={<Cancel sx={{ color: "var(--primary-color)" }} />}
-          title="Ended Exams"
-          subTitle={calculatedStats.ended}
-          cardWidth="200px"
-        />
-      </Stack>
       <Stack
         sx={{
           border: "1px solid var(--border-color)",

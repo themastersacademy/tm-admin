@@ -15,7 +15,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import FilterQuestions from "./FilterQuestions";
 
 export default function AddQuestionDialog({
@@ -28,6 +28,7 @@ export default function AddQuestionDialog({
   tempTitle,
   fetchQuestions,
   type,
+  allSections,
 }) {
   const [selectedQuestions, setSelectedQuestions] = useState([]);
   const [isPreviewDialog, setIsPreviewDialog] = useState(false);
@@ -58,6 +59,33 @@ export default function AddQuestionDialog({
       showSnackbar("Please select at least one question", "error", "", "3000");
       return;
     }
+
+    // Check for duplicate questions in other sections
+    if (allSections && allSections.length > 0) {
+      const existingQuestionIds = new Set();
+      allSections.forEach((section, idx) => {
+        if (idx !== sectionIndex && section.questions) {
+          section.questions.forEach((q) => {
+            existingQuestionIds.add(q.questionID || q.id);
+          });
+        }
+      });
+
+      const duplicates = selectedQuestions.filter((q) =>
+        existingQuestionIds.has(q.id)
+      );
+
+      if (duplicates.length > 0) {
+        showSnackbar(
+          `${duplicates.length} question(s) already exist in another section. Please deselect them.`,
+          "error",
+          "",
+          "5000"
+        );
+        return;
+      }
+    }
+
     apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/add-questions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -73,17 +101,54 @@ export default function AddQuestionDialog({
       }),
     }).then((data) => {
       if (data.success) {
-        setSelectedQuestions((prevSelected) => {
-          return prevSelected;
-        });
+        setSelectedQuestions([]);
         showSnackbar(data.message, "success", "", "3000");
         handleDialogClose();
         fetchQuestions();
       } else {
-        showSnackbar(data.message, "error", "", "3000");
+        // Check if this is a duplicate question error
+        if (
+          data.message?.includes("duplicate") ||
+          data.message?.includes("already exists")
+        ) {
+          showSnackbar(
+            "One or more questions already exist in another section",
+            "error",
+            "",
+            "5000"
+          );
+        } else {
+          showSnackbar(data.message, "error", "", "3000");
+        }
       }
     });
   };
+
+  const questionsInOtherSections = useMemo(() => {
+    const ids = new Set();
+    if (allSections && allSections.length > 0) {
+      allSections.forEach((section, idx) => {
+        if (idx !== sectionIndex && section.questions) {
+          section.questions.forEach((q) => {
+            ids.add(q.questionID || q.id);
+          });
+        }
+      });
+    }
+    return ids;
+  }, [allSections, sectionIndex]);
+
+  // Auto-deselect questions that are already in other sections
+  useEffect(() => {
+    if (questionsInOtherSections.size > 0 && selectedQuestions.length > 0) {
+      const filtered = selectedQuestions.filter(
+        (q) => !questionsInOtherSections.has(q.id)
+      );
+      if (filtered.length !== selectedQuestions.length) {
+        setSelectedQuestions(filtered);
+      }
+    }
+  }, [questionsInOtherSections, selectedQuestions]);
 
   return (
     <Stack>
@@ -116,53 +181,80 @@ export default function AddQuestionDialog({
                 </Typography>
               ) : (
                 (isFilterApplied ? filteredQuestions : questionList).map(
-                  (item, index) => (
-                    <QuestionCard
-                      key={index}
-                      questionNumber={`Q${index + 1}`}
-                      questionType={item.type || ""}
-                      Subject={item.subjectTitle || "Unknown"}
-                      question={<MDPreview value={item.title || ""} />}
-                      difficulty={item.difficultyLevel}
-                      preview={
-                        <Chip
-                          icon={<Visibility sx={{ fontSize: "small" }} />}
-                          label="Preview"
-                          onClick={() => previewDialogOpen(item)}
-                          sx={{
-                            fontSize: "10px",
-                            fontFamily: "Lato",
-                            fontWeight: "700",
-                            height: "20px",
-                            backgroundColor: "var(--border-color)",
-                            color: "var(--text3)",
-                          }}
-                        />
-                      }
-                      check={
-                        <Checkbox
-                          checked={
-                            Array.isArray(selectedQuestions) &&
-                            selectedQuestions.some((q) => q.id === item.id)
-                          }
-                          onChange={() => handleSelectQuestion(item)}
-                          sx={{
-                            color: "var(--sec-color)",
-                            "&.Mui-checked": { color: "var(--sec-color)" },
-                            "&.MuiCheckbox-root": {
-                              padding: "0px",
-                            },
-                          }}
-                        />
-                      }
-                      isSelected={
-                        Array.isArray(selectedQuestions) &&
-                        selectedQuestions.some((q) => q.id === item.id)
-                      }
-                      onSelect={() => handleSelectQuestion(item)}
-                      subjectID={item.subjectID}
-                    />
-                  )
+                  (item, index) => {
+                    const isAlreadyAdded = questionsInOtherSections.has(
+                      item.id
+                    );
+                    return (
+                      <QuestionCard
+                        key={index}
+                        questionNumber={`Q${index + 1}`}
+                        questionType={item.type || ""}
+                        Subject={item.subjectTitle || "Unknown"}
+                        question={<MDPreview value={item.title || ""} />}
+                        difficulty={item.difficultyLevel}
+                        preview={
+                          <Stack
+                            flexDirection="row"
+                            gap="10px"
+                            alignItems="center"
+                          >
+                            {isAlreadyAdded && (
+                              <Chip
+                                label="Already Added"
+                                size="small"
+                                color="warning"
+                                sx={{
+                                  height: "20px",
+                                  fontSize: "10px",
+                                  fontWeight: "700",
+                                }}
+                              />
+                            )}
+                            <Chip
+                              icon={<Visibility sx={{ fontSize: "small" }} />}
+                              label="Preview"
+                              onClick={() => previewDialogOpen(item)}
+                              sx={{
+                                fontSize: "10px",
+                                fontFamily: "Lato",
+                                fontWeight: "700",
+                                height: "20px",
+                                backgroundColor: "var(--border-color)",
+                                color: "var(--text3)",
+                              }}
+                            />
+                          </Stack>
+                        }
+                        check={
+                          <Checkbox
+                            checked={
+                              Array.isArray(selectedQuestions) &&
+                              selectedQuestions.some((q) => q.id === item.id)
+                            }
+                            onChange={() => handleSelectQuestion(item)}
+                            disabled={isAlreadyAdded}
+                            sx={{
+                              color: "var(--sec-color)",
+                              "&.Mui-checked": { color: "var(--sec-color)" },
+                              "&.MuiCheckbox-root": {
+                                padding: "0px",
+                              },
+                              "&.Mui-disabled": {
+                                color: "var(--text3)",
+                              },
+                            }}
+                          />
+                        }
+                        isSelected={
+                          Array.isArray(selectedQuestions) &&
+                          selectedQuestions.some((q) => q.id === item.id)
+                        }
+                        onSelect={() => handleSelectQuestion(item)}
+                        subjectID={item.subjectID}
+                      />
+                    );
+                  }
                 )
               )}
             </Stack>

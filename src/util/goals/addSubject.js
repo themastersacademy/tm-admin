@@ -46,15 +46,17 @@ export default async function addSubject({ subjectID, goalID }) {
         pKey: `GOAL#${goalID}`,
         sKey: "GOALS",
       },
-      UpdateExpression: "SET subjectList = list_append(subjectList, :subject)",
+      UpdateExpression:
+        "SET subjectList = list_append(if_not_exists(subjectList, :empty_list), :subject)",
       ExpressionAttributeValues: {
         ":subject": [
           {
             subjectID: subjectID,
-            title: title,
-            totalQuestions: totalQuestions,
+            title: title || "",
+            totalQuestions: totalQuestions || 0,
           },
         ],
+        ":empty_list": [],
       },
     };
 

@@ -17,12 +17,30 @@ export default async function getAllGoals() {
       message: "All goals fetched successfully",
       data: {
         goals: response.Items.map((goal) => {
-          const { pKey, title, icon, isLive } = goal;
-          return { goalID: pKey.split("#")[1], title, icon, isLive };
+          const {
+            pKey,
+            title,
+            icon,
+            isLive,
+            coursesList = [],
+            subjectList = [],
+            blogList = [],
+            createdAt,
+            updatedAt,
+          } = goal;
+          return {
+            goalID: pKey.split("#")[1],
+            title,
+            icon,
+            isLive,
+            coursesCount: coursesList.length,
+            subjectsCount: subjectList.length,
+            blogsCount: blogList.length,
+            updatedAt,
+          };
         }),
       },
     };
-    // return response.Items;
   } catch (err) {
     console.error("DynamoDB Error:", err);
     throw new Error("Internal server error");

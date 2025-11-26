@@ -5,12 +5,23 @@ import {
   Skeleton,
   Stack,
   Typography,
+  Chip,
+  Divider,
+  Breadcrumbs,
+  Link,
 } from "@mui/material";
 import Image from "next/image";
 import gate_cse from "@/public/Icons/gate_cse.svg";
 import placements from "@/public/Icons/placements.svg";
 import banking from "@/public/Icons/banking.svg";
-import { ArrowBackIosRounded } from "@mui/icons-material";
+import {
+  ArrowBackIosRounded,
+  Home,
+  School,
+  MenuBook,
+  Article,
+  Quiz,
+} from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/src/lib/apiFetch";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
@@ -20,6 +31,7 @@ export default function GoalHead({ goal, goalLoading, fetchGoal }) {
   const router = useRouter();
   const { showSnackbar } = useSnackbar();
   const [isLoading, setIsLoading] = useState(false);
+
   const handleLive = () => {
     setIsLoading(true);
     try {
@@ -41,94 +53,289 @@ export default function GoalHead({ goal, goalLoading, fetchGoal }) {
     }
   };
 
+  // Calculate stats
+  const coursesCount = goal?.coursesList?.length || 0;
+  const subjectsCount = goal?.subjectList?.length || 0;
+  const blogsCount = goal?.blogList?.length || 0;
+
   return (
     <Stack
       sx={{
-        width: "100%",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexDirection: "row",
-        border: "1px solid var(--border-color)",
-        borderRadius: "10px",
         backgroundColor: "var(--white)",
-        padding: "20px",
-        height: "60px",
+        border: "1px solid var(--border-color)",
+        borderRadius: "12px",
+        overflow: "hidden",
       }}
     >
-      <Stack flexDirection="row" alignItems="center" gap="15px">
-        <ArrowBackIosRounded
-          onClick={() => {
-            router.back();
-          }}
+      {/* Top Section: Breadcrumbs & Actions */}
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        padding="16px 24px"
+        sx={{
+          borderBottom: "1px solid var(--border-color)",
+          backgroundColor: "#F8F9FA",
+        }}
+      >
+        {/* Breadcrumbs */}
+        <Stack direction="row" alignItems="center" gap="12px">
+          <ArrowBackIosRounded
+            onClick={() => router.back()}
+            sx={{
+              fontSize: "18px",
+              cursor: "pointer",
+              color: "var(--text3)",
+              "&:hover": {
+                color: "var(--primary-color)",
+              },
+            }}
+          />
+          <Breadcrumbs
+            separator="›"
+            sx={{
+              fontSize: "13px",
+              "& .MuiBreadcrumbs-separator": {
+                color: "var(--text3)",
+              },
+            }}
+          >
+            <Link
+              underline="hover"
+              color="inherit"
+              href="/dashboard"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                color: "var(--text3)",
+                fontSize: "13px",
+                cursor: "pointer",
+                "&:hover": {
+                  color: "var(--primary-color)",
+                },
+              }}
+            >
+              <Home sx={{ fontSize: "16px" }} />
+              Dashboard
+            </Link>
+            <Typography
+              sx={{ fontSize: "13px", color: "var(--text2)", fontWeight: 600 }}
+            >
+              {goalLoading ? (
+                <Skeleton variant="text" width="80px" height="20px" />
+              ) : (
+                goal.title || "Goal"
+              )}
+            </Typography>
+          </Breadcrumbs>
+        </Stack>
+
+        {/* Publish/Draft Button */}
+        <Button
+          variant="contained"
+          onClick={handleLive}
+          disabled={isLoading || goalLoading}
           sx={{
-            fontSize: "20px",
-            cursor: "pointer",
-            fontWeight: "700",
+            textTransform: "none",
+            backgroundColor: goal.isLive ? "#FFA726" : "#4CAF50",
+            color: "#FFFFFF",
+            borderRadius: "8px",
+            padding: "8px 24px",
+            fontWeight: 600,
+            fontSize: "13px",
+            minWidth: "120px",
+            boxShadow: "none",
+            "&:hover": {
+              backgroundColor: goal.isLive ? "#FB8C00" : "#43A047",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+            },
+            "&:disabled": {
+              backgroundColor: "#9E9E9E",
+              color: "#FFFFFF",
+            },
           }}
-        />
-        <Stack
-          sx={{
-            width: "40px",
-            height: "40px",
-            backgroundColor: "var(--sec-color-acc-1)",
-            borderRadius: "50%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
+          disableElevation
         >
-          <Image
-            src={
-              goal.icon === "castle"
-                ? gate_cse.src
-                : goal.icon === "org"
-                ? placements.src
-                : banking.src
-            }
-            alt="icon"
-            width="16"
-            height="17"
+          {isLoading ? (
+            <CircularProgress size={20} sx={{ color: "white" }} />
+          ) : goal.isLive ? (
+            "Set to Draft"
+          ) : (
+            "Publish Goal"
+          )}
+        </Button>
+      </Stack>
+
+      {/* Main Section: Title & Icon */}
+      <Stack padding="24px 24px 20px 24px" gap="16px">
+        <Stack direction="row" alignItems="flex-start" gap="20px">
+          {/* Icon */}
+          <Stack
+            sx={{
+              width: "64px",
+              height: "64px",
+              backgroundColor: "var(--bg-color)",
+              borderRadius: "16px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              border: "1px solid var(--border-color)",
+              flexShrink: 0,
+            }}
+          >
+            {goalLoading ? (
+              <Skeleton variant="circular" width={32} height={32} />
+            ) : (
+              <Image
+                src={
+                  goal.icon === "castle"
+                    ? gate_cse.src
+                    : goal.icon === "org"
+                    ? placements.src
+                    : banking.src
+                }
+                alt="icon"
+                width="32"
+                height="36"
+              />
+            )}
+          </Stack>
+
+          {/* Title & Status */}
+          <Stack flex={1} gap="8px">
+            <Stack direction="row" alignItems="center" gap="12px">
+              {goalLoading ? (
+                <Skeleton variant="text" width="200px" height="32px" />
+              ) : (
+                <Typography
+                  sx={{
+                    fontFamily: "Lato",
+                    fontSize: "24px",
+                    fontWeight: 700,
+                    color: "var(--text1)",
+                  }}
+                >
+                  {goal.title || "Goal not found"}
+                </Typography>
+              )}
+              {!goalLoading && (
+                <Chip
+                  label={goal.isLive ? "Published" : "Draft"}
+                  size="small"
+                  sx={{
+                    backgroundColor: goal.isLive
+                      ? "rgba(76, 175, 80, 0.1)"
+                      : "rgba(158, 158, 158, 0.1)",
+                    color: goal.isLive
+                      ? "var(--success-color)"
+                      : "var(--text3)",
+                    fontWeight: 700,
+                    fontSize: "11px",
+                    height: "24px",
+                  }}
+                />
+              )}
+            </Stack>
+            <Typography sx={{ fontSize: "13px", color: "var(--text3)" }}>
+              {goalLoading ? (
+                <Skeleton variant="text" width="300px" />
+              ) : (
+                `Manage courses, subjects, blogs, and exams for this goal`
+              )}
+            </Typography>
+          </Stack>
+        </Stack>
+
+        {/* Stats Cards */}
+        <Stack direction="row" gap="16px" marginTop="8px" flexWrap="wrap">
+          <StatCard
+            icon={<School />}
+            label="Courses"
+            value={coursesCount}
+            color="#2196F3"
+            isLoading={goalLoading}
+          />
+          <StatCard
+            icon={<MenuBook />}
+            label="Subjects"
+            value={subjectsCount}
+            color="#9C27B0"
+            isLoading={goalLoading}
+          />
+          <StatCard
+            icon={<Article />}
+            label="Blogs"
+            value={blogsCount}
+            color="#FF9800"
+            isLoading={goalLoading}
           />
         </Stack>
-        <Typography
-          sx={{ fontFamily: "Lato", fontSize: "14px", fontWeight: "700" }}
-        >
-          {!goalLoading ? (
-            goal.title ? (
-              goal.title
-            ) : (
-              "Goal not found"
-            )
-          ) : (
-            <Skeleton variant="text" animation="wave" width="100px" />
-          )}
-        </Typography>
       </Stack>
-      <Button
-        variant="contained"
-        onClick={() => {
-          handleLive();
-        }}
-        sx={{
-          textTransform: "none",
-          width: "120px",
-          backgroundColor: "var(--sec-color)",
-          fontFamily: "Lato",
-          fontSize: "14px",
-          fontWeight: "700",
-          borderRadius: "5px",
-        }}
-        disableElevation
-      >
-        {isLoading ? (
-          <CircularProgress size={22} sx={{ color: "white" }} />
-        ) : goal.isLive === true ? (
-          "Draft"
-        ) : (
-          "Publish"
-        )}
-      </Button>
     </Stack>
   );
 }
+
+// Stat Card Component
+const StatCard = ({ icon, label, value, color, isLoading }) => (
+  <Stack
+    direction="row"
+    alignItems="center"
+    gap="12px"
+    padding="12px 16px"
+    sx={{
+      backgroundColor: "var(--bg-color)",
+      borderRadius: "10px",
+      border: "1px solid var(--border-color)",
+      minWidth: "140px",
+    }}
+  >
+    <Stack
+      sx={{
+        width: "36px",
+        height: "36px",
+        backgroundColor: "var(--white)",
+        borderRadius: "8px",
+        justifyContent: "center",
+        alignItems: "center",
+        border: `1px solid ${color}20`,
+      }}
+    >
+      {icon &&
+        React.cloneElement(icon, {
+          sx: { fontSize: "20px", color: color },
+        })}
+    </Stack>
+    <Stack gap="2px">
+      <Typography
+        sx={{
+          fontSize: "11px",
+          color: "var(--text3)",
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "0.5px",
+        }}
+      >
+        {label}
+      </Typography>
+      {isLoading ? (
+        <Skeleton variant="text" width="30px" height="24px" />
+      ) : (
+        <Typography
+          sx={{
+            fontSize: "20px",
+            fontWeight: 800,
+            color: "var(--text1)",
+            fontFamily: "Lato",
+            lineHeight: 1,
+          }}
+        >
+          {value}
+        </Typography>
+      )}
+    </Stack>
+  </Stack>
+);
+
+// Import React for cloneElement
+import React from "react";

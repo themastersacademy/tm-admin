@@ -3,32 +3,26 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Button,
   CircularProgress,
+  Dialog,
   DialogContent,
   IconButton,
-  MenuItem,
   Stack,
   Typography,
+  Divider,
+  Chip,
 } from "@mui/material";
-import {
-  Add,
-  Close,
-  Delete,
-  East,
-  Edit,
-  PushPin,
-  Visibility,
-} from "@mui/icons-material";
+import { Add, Close, Article } from "@mui/icons-material";
 import { enqueueSnackbar } from "notistack";
 import { apiFetch } from "@/src/lib/apiFetch";
 
-import DialogBox from "@/src/components/DialogBox/DialogBox";
+import BlogCard from "@/src/components/BlogCard/BlogCard";
 import DeleteDialogBox from "@/src/components/DeleteDialogBox/DeleteDialogBox";
-import SecondaryCard from "@/src/components/SecondaryCard/SecondaryCard";
 import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
 import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
 import MarkdownEditor from "@/src/components/MarkdownEditor/MarkdownEditor";
 import MDPreview from "@/src/components/MarkdownPreview/MarkdownPreview";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
+import { getWordCount } from "@/src/utils/blogHelpers";
 
 const EMPTY_CONTENT = { title: "", description: "" };
 
@@ -79,6 +73,7 @@ export default function Info({ goal }) {
     setCurrentIndex(index);
     setDialogContent(content);
   };
+
   const closeDialog = () => {
     setDialogMode(null);
     setCurrentIndex(null);
@@ -89,7 +84,10 @@ export default function Info({ goal }) {
   // Save (create/update)
   const handleSave = async () => {
     const { title, description } = dialogContent;
-    if (!title.trim() || !description.trim()) return;
+    if (!title.trim() || !description.trim()) {
+      enqueueSnackbar("Please fill in all fields", { variant: "warning" });
+      return;
+    }
 
     setIsSaving(true);
     const endpoint =
@@ -108,6 +106,12 @@ export default function Info({ goal }) {
         body: JSON.stringify(payload),
       });
       if (res.success) {
+        enqueueSnackbar(
+          dialogMode === "create"
+            ? "Blog created successfully"
+            : "Blog updated successfully",
+          { variant: "success" }
+        );
         fetchContent();
         closeDialog();
       } else {
@@ -136,6 +140,7 @@ export default function Info({ goal }) {
         }
       );
       if (res.success) {
+        enqueueSnackbar("Blog deleted successfully", { variant: "success" });
         fetchContent();
         setDeleteDialogOpen(false);
       } else {
@@ -148,78 +153,19 @@ export default function Info({ goal }) {
     }
   };
 
-  // Dialog title
-  const dialogTitle = useMemo(() => {
-    if (dialogMode === "preview") return dialogContent.title;
-    if (dialogMode === "create") return "Create Content";
-    if (dialogMode === "update") return "Update Content";
-    return "";
-  }, [dialogMode, dialogContent]);
-
-  // Render dialog body
-  const renderDialogBody = () => {
-    if (dialogMode === "preview") {
-      return (
-        <DialogContent>
-          <Stack gap={2}>
-            <MDPreview value={dialogContent.description} />
-          </Stack>
-        </DialogContent>
-      );
-    }
-    // create or update
-    return (
-      <DialogContent>
-        <Stack gap={2}>
-          <Typography>Title</Typography>
-          <StyledTextField
-            value={dialogContent.title}
-            placeholder="Enter title"
-            onChange={(e) =>
-              setDialogContent((prev) => ({ ...prev, title: e.target.value }))
-            }
-          />
-          <Typography>Description</Typography>
-          <MarkdownEditor
-            value={dialogContent.description}
-            onChange={(val) =>
-              setDialogContent((prev) => ({ ...prev, description: val }))
-            }
-          />
-        </Stack>
-      </DialogContent>
-    );
-  };
-
-  // Options for each card
-  const renderCardOptions = (item, idx) => [
-    <MenuItem key="view" onClick={() => openDialog("preview", idx, item)}>
-      <Visibility sx={{ fontSize: 16 }} /> View
-    </MenuItem>,
-    <MenuItem key="edit" onClick={() => openDialog("update", idx, item)}>
-      <Edit sx={{ fontSize: 16 }} /> Edit
-    </MenuItem>,
-    <MenuItem
-      key="delete"
-      sx={{ color: "var(--delete-color)" }}
-      onClick={() => {
-        setDeleteIndex(idx);
-        setDeleteDialogOpen(true);
-      }}
-    >
-      <Delete sx={{ fontSize: 16 }} /> Delete
-    </MenuItem>,
-  ];
+  const wordCount = useMemo(
+    () => getWordCount(dialogContent.description),
+    [dialogContent.description]
+  );
 
   return (
     <Stack
       sx={{
         backgroundColor: "var(--white)",
         border: "1px solid var(--border-color)",
-        borderRadius: 2,
-        p: 2,
-        gap: 2,
-        minHeight: "100vh",
+        borderRadius: "12px",
+        padding: "24px",
+        gap: "24px",
       }}
     >
       {/* Delete Confirmation */}
@@ -229,17 +175,25 @@ export default function Info({ goal }) {
         title="Blog"
         warning="This action cannot be undone"
         actionButton={
-          <Stack direction="row" justifyContent="center" gap={2} width="100%">
+          <Stack
+            direction="row"
+            justifyContent="center"
+            gap="12px"
+            width="100%"
+          >
             <Button
               onClick={() => setDeleteDialogOpen(false)}
-              variant="contained"
+              variant="outlined"
               sx={{
                 textTransform: "none",
-                backgroundColor: "white",
+                borderRadius: "8px",
+                borderColor: "var(--border-color)",
                 color: "var(--text2)",
-                border: "1px solid var(--border-color)",
-                borderRadius: 1,
                 width: 130,
+                "&:hover": {
+                  borderColor: "var(--text3)",
+                  backgroundColor: "transparent",
+                },
               }}
               disableElevation
             >
@@ -251,13 +205,22 @@ export default function Info({ goal }) {
               sx={{
                 textTransform: "none",
                 backgroundColor: "var(--delete-color)",
-                borderRadius: 1,
+                borderRadius: "8px",
                 width: 130,
+                boxShadow: "none",
+                "&:hover": {
+                  backgroundColor: "#D32F2F",
+                  boxShadow: "none",
+                },
               }}
               disableElevation
               disabled={isDeleting}
             >
-              {isDeleting ? <CircularProgress size={20} /> : "Delete"}
+              {isDeleting ? (
+                <CircularProgress size={20} sx={{ color: "white" }} />
+              ) : (
+                "Delete"
+              )}
             </Button>
           </Stack>
         }
@@ -265,87 +228,333 @@ export default function Info({ goal }) {
 
       {/* Header */}
       <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Typography
-          sx={{
-            fontFamily: "Lato",
-            fontSize: 16,
-            fontWeight: 700,
-            color: "var(--text3)",
-          }}
-        >
-          Contents
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => openDialog("create")}
-          sx={{
-            textTransform: "none",
-            backgroundColor: "var(--primary-color)",
-          }}
-          disableElevation
-        >
-          Create
-        </Button>
+        <Stack gap="4px">
+          <Typography
+            sx={{
+              fontFamily: "Lato",
+              fontSize: "20px",
+              fontWeight: 700,
+              color: "var(--text1)",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <Article sx={{ color: "var(--primary-color)" }} /> Blog Content
+          </Typography>
+          <Typography sx={{ fontSize: "13px", color: "var(--text3)" }}>
+            Create and manage blog posts for this goal
+          </Typography>
+        </Stack>
+
+        <Stack direction="row" alignItems="center" gap="12px">
+          {!isLoading && infoList.length > 0 && (
+            <Chip
+              label={`${infoList.length} ${
+                infoList.length === 1 ? "Blog" : "Blogs"
+              }`}
+              sx={{
+                backgroundColor: "rgba(var(--primary-rgb), 0.1)",
+                color: "var(--primary-color)",
+                fontWeight: 600,
+                fontSize: "12px",
+              }}
+            />
+          )}
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => openDialog("create")}
+            sx={{
+              textTransform: "none",
+              backgroundColor: "var(--primary-color)",
+              borderRadius: "8px",
+              padding: "8px 24px",
+              fontWeight: 600,
+              boxShadow: "none",
+              "&:hover": {
+                backgroundColor: "var(--primary-color-dark)",
+                boxShadow: "none",
+              },
+            }}
+            disableElevation
+          >
+            Create Blog
+          </Button>
+        </Stack>
       </Stack>
+
+      <Divider />
 
       {/* Dialog */}
       {dialogMode && (
-        <DialogBox
-          isOpen
-          title={dialogTitle}
-          icon={
-            <IconButton onClick={closeDialog} sx={{ borderRadius: 1, p: 0.5 }}>
+        <Dialog
+          open={true}
+          onClose={closeDialog}
+          maxWidth={dialogMode === "preview" ? "md" : "lg"}
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: "16px",
+              height: dialogMode === "preview" ? "auto" : "90vh",
+            },
+          }}
+        >
+          {/* Dialog Header */}
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            padding="20px 24px"
+            sx={{ borderBottom: "1px solid var(--border-color)" }}
+          >
+            <Typography
+              sx={{
+                fontFamily: "Lato",
+                fontSize: "20px",
+                fontWeight: 700,
+                color: "var(--text1)",
+              }}
+            >
+              {dialogMode === "preview"
+                ? dialogContent.title
+                : dialogMode === "create"
+                ? "Create Blog Post"
+                : "Edit Blog Post"}
+            </Typography>
+            <IconButton onClick={closeDialog} size="small">
               <Close />
             </IconButton>
-          }
-          actionButton={
-            (dialogMode === "create" || dialogMode === "update") && (
-              <Button
-                onClick={handleSave}
-                variant="text"
-                endIcon={<East />}
-                disabled={isSaving}
-                sx={{ textTransform: "none", color: "var(--primary-color)" }}
+          </Stack>
+
+          {/* Dialog Content */}
+          <DialogContent sx={{ padding: "0", height: "100%" }}>
+            {dialogMode === "preview" ? (
+              <Stack padding="24px" gap="16px">
+                <MDPreview value={dialogContent.description} />
+              </Stack>
+            ) : (
+              <Stack direction={{ xs: "column", md: "row" }} height="100%">
+                {/* Left: Form */}
+                <Stack
+                  flex={1}
+                  padding="24px"
+                  gap="20px"
+                  sx={{
+                    borderRight: { md: "1px solid var(--border-color)" },
+                    overflowY: "auto",
+                  }}
+                >
+                  <Stack gap="8px">
+                    <Typography
+                      sx={{
+                        fontSize: "14px",
+                        fontWeight: 600,
+                        color: "var(--text2)",
+                      }}
+                    >
+                      Title
+                    </Typography>
+                    <StyledTextField
+                      value={dialogContent.title}
+                      placeholder="Enter blog title..."
+                      onChange={(e) =>
+                        setDialogContent((prev) => ({
+                          ...prev,
+                          title: e.target.value,
+                        }))
+                      }
+                    />
+                  </Stack>
+
+                  <Stack gap="8px" flex={1}>
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: "14px",
+                          fontWeight: 600,
+                          color: "var(--text2)",
+                        }}
+                      >
+                        Content (Markdown)
+                      </Typography>
+                      <Typography
+                        sx={{ fontSize: "12px", color: "var(--text3)" }}
+                      >
+                        {wordCount} words
+                      </Typography>
+                    </Stack>
+                    <MarkdownEditor
+                      value={dialogContent.description}
+                      onChange={(val) =>
+                        setDialogContent((prev) => ({
+                          ...prev,
+                          description: val,
+                        }))
+                      }
+                    />
+                  </Stack>
+                </Stack>
+
+                {/* Right: Preview */}
+                <Stack
+                  flex={1}
+                  padding="24px"
+                  gap="16px"
+                  sx={{
+                    backgroundColor: "#F8F9FA",
+                    overflowY: "auto",
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      color: "var(--text3)",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    Live Preview
+                  </Typography>
+                  {dialogContent.description ? (
+                    <MDPreview value={dialogContent.description} />
+                  ) : (
+                    <Stack
+                      justifyContent="center"
+                      alignItems="center"
+                      flex={1}
+                      sx={{ opacity: 0.5 }}
+                    >
+                      <Typography
+                        sx={{ fontSize: "13px", color: "var(--text3)" }}
+                      >
+                        Start typing to see preview...
+                      </Typography>
+                    </Stack>
+                  )}
+                </Stack>
+              </Stack>
+            )}
+          </DialogContent>
+
+          {/* Dialog Footer */}
+          {dialogMode !== "preview" && (
+            <>
+              <Divider />
+              <Stack
+                direction="row"
+                justifyContent="flex-end"
+                gap="12px"
+                padding="16px 24px"
               >
-                {isSaving ? (
-                  <CircularProgress size={20} color="primary" />
-                ) : dialogMode === "create" ? (
-                  "Save"
-                ) : (
-                  "Update"
-                )}
-              </Button>
-            )
-          }
-        >
-          {renderDialogBody()}
-        </DialogBox>
+                <Button
+                  onClick={closeDialog}
+                  variant="outlined"
+                  sx={{
+                    textTransform: "none",
+                    borderRadius: "8px",
+                    padding: "8px 24px",
+                    fontWeight: 600,
+                    borderColor: "var(--border-color)",
+                    color: "var(--text2)",
+                    "&:hover": {
+                      borderColor: "var(--text3)",
+                      backgroundColor: "transparent",
+                    },
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  variant="contained"
+                  disabled={
+                    isSaving ||
+                    !dialogContent.title.trim() ||
+                    !dialogContent.description.trim()
+                  }
+                  sx={{
+                    textTransform: "none",
+                    borderRadius: "8px",
+                    padding: "8px 24px",
+                    fontWeight: 600,
+                    backgroundColor: "var(--primary-color)",
+                    boxShadow: "none",
+                    "&:hover": {
+                      backgroundColor: "var(--primary-color-dark)",
+                      boxShadow: "0 4px 12px rgba(var(--primary-rgb), 0.3)",
+                    },
+                    "&:disabled": {
+                      backgroundColor: "var(--text3)",
+                      color: "var(--white)",
+                      opacity: 0.5,
+                    },
+                  }}
+                >
+                  {isSaving ? (
+                    <CircularProgress size={20} sx={{ color: "white" }} />
+                  ) : dialogMode === "create" ? (
+                    "Create Blog"
+                  ) : (
+                    "Update Blog"
+                  )}
+                </Button>
+              </Stack>
+            </>
+          )}
+        </Dialog>
       )}
 
       {/* Content Cards */}
-      <Stack flexWrap="wrap" direction="row" rowGap={2} columnGap={4}>
+      <Stack
+        direction="row"
+        flexWrap="wrap"
+        gap="20px"
+        sx={{
+          "& > *": {
+            flexBasis: {
+              xs: "100%",
+              sm: "calc(50% - 10px)",
+              md: "calc(33.333% - 14px)",
+            },
+          },
+        }}
+      >
         {isLoading ? (
-          Array.from({ length: 4 }).map((_, idx) => (
+          Array.from({ length: 3 }).map((_, idx) => (
             <SecondaryCardSkeleton key={idx} />
           ))
         ) : Array.isArray(infoList) && infoList.length > 0 ? (
           infoList.map((item, idx) => (
-            <SecondaryCard
+            <BlogCard
               key={idx}
-              icon={
-                <PushPin
-                  sx={{ color: "var(--sec-color)", transform: "rotate(45deg)" }}
-                />
-              }
               title={item.title}
-              options={renderCardOptions(item, idx)}
-              cardWidth="350px"
+              description={item.description}
+              createdAt={item.createdAt || Date.now()}
+              onView={() => openDialog("preview", idx, item)}
+              onEdit={() => openDialog("update", idx, item)}
+              onDelete={() => {
+                setDeleteIndex(idx);
+                setDeleteDialogOpen(true);
+              }}
             />
           ))
         ) : (
-          <Stack width="100%" height={400} justifyContent="center">
-            <NoDataFound info="No blog contents are available, create the blog using create button" />
+          <Stack
+            width="100%"
+            minHeight="400px"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <NoDataFound
+              info="No blog posts yet"
+              subInfo="Click 'Create Blog' to write your first post"
+            />
           </Stack>
         )}
       </Stack>

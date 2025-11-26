@@ -22,6 +22,7 @@ import {
   Quiz,
   Schedule,
   EmojiEvents,
+  ArrowBackIosRounded,
 } from "@mui/icons-material";
 import SecondaryCard from "@/src/components/SecondaryCard/SecondaryCard";
 import { useParams, useRouter } from "next/navigation";
@@ -37,6 +38,7 @@ import StyledSwitch from "@/src/components/StyledSwitch/StyledSwitch";
 import { enqueueSnackbar } from "notistack";
 import CreateExamDialog from "@/src/components/CreateExamDialog/CreateExamDialog";
 import ScheduledExamCard from "@/src/components/ScheduledExamCard/ScheduledExamCard";
+import React from "react";
 
 export default function ExamGroupID() {
   const params = useParams();
@@ -183,23 +185,93 @@ export default function ExamGroupID() {
 
   return (
     <Stack padding="20px" gap="15px">
-      <Header
-        title={
-          isLoading ? (
-            <Skeleton variant="text" sx={{ width: "100px" }} />
-          ) : (
-            exam.title
-          )
-        }
-        back
-        button={[
-          <Stack
-            key="actions"
-            flexDirection="row"
-            alignItems="center"
-            gap="12px"
-            sx={{ marginLeft: "auto" }}
-          >
+      {/* Custom Professional Header */}
+      <Stack
+        sx={{
+          backgroundColor: "var(--white)",
+          border: "1px solid var(--border-color)",
+          borderRadius: "12px",
+          overflow: "hidden",
+        }}
+      >
+        {/* Top Bar: Breadcrumbs & Actions */}
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          padding="16px 24px"
+          sx={{
+            borderBottom: "1px solid var(--border-color)",
+            backgroundColor: "#F8F9FA",
+          }}
+        >
+          {/* Breadcrumbs */}
+          <Stack direction="row" alignItems="center" gap="12px">
+            <IconButton
+              onClick={() => router.back()}
+              size="small"
+              sx={{
+                "&:hover": {
+                  backgroundColor: "rgba(var(--primary-rgb), 0.1)",
+                },
+              }}
+            >
+              <ArrowBackIosRounded
+                sx={{
+                  fontSize: "18px",
+                  color: "var(--text3)",
+                }}
+              />
+            </IconButton>
+            <Stack direction="row" alignItems="center" gap="8px">
+              <Typography
+                sx={{
+                  fontSize: "13px",
+                  color: "var(--text3)",
+                  cursor: "pointer",
+                  "&:hover": { color: "var(--primary-color)" },
+                }}
+                onClick={() => router.push(`/dashboard/goals/${goalID}`)}
+              >
+                Goal
+              </Typography>
+              <Typography sx={{ fontSize: "13px", color: "var(--text3)" }}>
+                ›
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "13px",
+                  color: "var(--text3)",
+                  cursor: "pointer",
+                  "&:hover": { color: "var(--primary-color)" },
+                }}
+                onClick={() =>
+                  router.push(`/dashboard/goals/${goalID}/examgroups`)
+                }
+              >
+                Exam Groups
+              </Typography>
+              <Typography sx={{ fontSize: "13px", color: "var(--text3)" }}>
+                ›
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "13px",
+                  color: "var(--text2)",
+                  fontWeight: 600,
+                }}
+              >
+                {isLoading ? (
+                  <Skeleton variant="text" width="100px" height="20px" />
+                ) : (
+                  exam.title
+                )}
+              </Typography>
+            </Stack>
+          </Stack>
+
+          {/* Action Buttons */}
+          <Stack direction="row" gap="12px">
             <Button
               variant="outlined"
               startIcon={<Settings />}
@@ -207,30 +279,156 @@ export default function ExamGroupID() {
               sx={{
                 textTransform: "none",
                 borderColor: "var(--border-color)",
-                color: "var(--text1)",
+                color: "var(--text2)",
+                borderRadius: "8px",
+                padding: "8px 16px",
+                fontWeight: 600,
+                fontSize: "13px",
                 "&:hover": {
                   borderColor: "var(--primary-color)",
-                  backgroundColor: "var(--primary-color-light, #e3f2fd)",
+                  backgroundColor: "rgba(var(--primary-rgb), 0.05)",
                 },
               }}
             >
-              Group Settings
+              Settings
             </Button>
             <Button
               variant="contained"
               startIcon={<Add />}
               onClick={dialogOpen}
               sx={{
-                backgroundColor: "var(--primary-color)",
+                backgroundColor: "#4CAF50",
+                color: "#FFFFFF",
                 textTransform: "none",
+                borderRadius: "8px",
+                padding: "8px 20px",
+                fontWeight: 600,
+                fontSize: "13px",
+                boxShadow: "none",
+                "&:hover": {
+                  backgroundColor: "#43A047",
+                  boxShadow: "0 2px 8px rgba(76, 175, 80, 0.3)",
+                },
               }}
               disableElevation
             >
               Add Exam
             </Button>
-          </Stack>,
-        ]}
-      />
+          </Stack>
+        </Stack>
+
+        {/* Main Section: Title, Stats & Status */}
+        <Stack padding="24px" gap="20px">
+          {/* Title and Live Badge */}
+          <Stack direction="row" alignItems="center" gap="16px">
+            <Stack
+              sx={{
+                width: "56px",
+                height: "56px",
+                backgroundColor: "rgba(var(--primary-rgb), 0.1)",
+                borderRadius: "14px",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                border: "1px solid rgba(var(--primary-rgb), 0.2)",
+                flexShrink: 0,
+              }}
+            >
+              <Groups
+                sx={{ fontSize: "28px", color: "var(--primary-color)" }}
+              />
+            </Stack>
+
+            <Stack flex={1} gap="6px">
+              <Stack direction="row" alignItems="center" gap="12px">
+                {isLoading ? (
+                  <Skeleton variant="text" width="250px" height="32px" />
+                ) : (
+                  <>
+                    <Typography
+                      sx={{
+                        fontFamily: "Lato",
+                        fontSize: "22px",
+                        fontWeight: 700,
+                        color: "var(--text1)",
+                      }}
+                    >
+                      {exam.title}
+                    </Typography>
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      gap="6px"
+                      padding="6px 12px"
+                      sx={{
+                        backgroundColor: exam.isLive
+                          ? "rgba(76, 175, 80, 0.1)"
+                          : "rgba(158, 158, 158, 0.1)",
+                        borderRadius: "20px",
+                        border: `1px solid ${
+                          exam.isLive ? "#4CAF50" : "#9E9E9E"
+                        }`,
+                      }}
+                    >
+                      <Stack
+                        sx={{
+                          width: "8px",
+                          height: "8px",
+                          borderRadius: "50%",
+                          backgroundColor: exam.isLive ? "#4CAF50" : "#9E9E9E",
+                        }}
+                      />
+                      <Typography
+                        sx={{
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          color: exam.isLive ? "#2E7D32" : "#757575",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                        }}
+                      >
+                        {exam.isLive ? "Live" : "Offline"}
+                      </Typography>
+                    </Stack>
+                  </>
+                )}
+              </Stack>
+              <Typography sx={{ fontSize: "13px", color: "var(--text3)" }}>
+                {isLoading ? (
+                  <Skeleton variant="text" width="300px" />
+                ) : (
+                  "Manage scheduled exams and track student performance"
+                )}
+              </Typography>
+            </Stack>
+          </Stack>
+
+          {/* Stats Cards */}
+          <Stack direction="row" gap="16px" flexWrap="wrap">
+            <StatCard
+              icon={<Quiz />}
+              label="Total Exams"
+              value={examList.length}
+              color="#2196F3"
+              isLoading={isLoading}
+            />
+            <StatCard
+              icon={<Schedule />}
+              label="Scheduled"
+              value={examList.filter((e) => e.scheduled).length}
+              color="#FF9800"
+              isLoading={isLoading}
+            />
+            <StatCard
+              icon={<EmojiEvents />}
+              label="Completed"
+              value={examList.filter((e) => e.completed).length}
+              color="#4CAF50"
+              isLoading={isLoading}
+            />
+          </Stack>
+        </Stack>
+      </Stack>
       <Stack
         sx={{
           backgroundColor: "var(--white)",
@@ -868,3 +1066,64 @@ const SettingsDialog = ({
     </Dialog>
   );
 };
+
+// Stat Card Component for Header Stats
+const StatCard = ({ icon, label, value, color, isLoading }) => (
+  <Stack
+    direction="row"
+    alignItems="center"
+    gap="12px"
+    padding="12px 16px"
+    sx={{
+      backgroundColor: "var(--bg-color)",
+      borderRadius: "10px",
+      border: "1px solid var(--border-color)",
+      minWidth: "160px",
+    }}
+  >
+    <Stack
+      sx={{
+        width: "36px",
+        height: "36px",
+        backgroundColor: "var(--white)",
+        borderRadius: "8px",
+        justifyContent: "center",
+        alignItems: "center",
+        border: `1px solid ${color}20`,
+      }}
+    >
+      {icon &&
+        React.cloneElement(icon, {
+          sx: { fontSize: "20px", color: color },
+        })}
+    </Stack>
+    <Stack gap="2px">
+      <Typography
+        sx={{
+          fontSize: "11px",
+          color: "var(--text3)",
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "0.5px",
+        }}
+      >
+        {label}
+      </Typography>
+      {isLoading ? (
+        <Skeleton variant="text" width="30px" height="24px" />
+      ) : (
+        <Typography
+          sx={{
+            fontSize: "20px",
+            fontWeight: 800,
+            color: "var(--text1)",
+            fontFamily: "Lato",
+            lineHeight: 1,
+          }}
+        >
+          {value}
+        </Typography>
+      )}
+    </Stack>
+  </Stack>
+);

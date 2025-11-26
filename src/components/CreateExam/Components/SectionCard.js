@@ -31,6 +31,7 @@ function SectionCard({
   createSection,
   type,
   isLive,
+  allSections,
 }) {
   const [isOpen, setIsOpen] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -356,6 +357,7 @@ function SectionCard({
             tempTitle={tempTitle}
             fetchQuestions={fetchSectionQuestions}
             type={type}
+            allSections={allSections}
           />
         )}
       </AccordionSummary>
