@@ -345,17 +345,19 @@ function SectionCard({
             </Stack>
           </Stack>
         </Stack>
-        <AddQuestionDialog
-          isDialogOpen={isDialogOpen}
-          handleDialogClose={handleDialogClose}
-          questionList={questionList}
-          goalID={goalID}
-          examID={examID}
-          sectionIndex={sectionIndex}
-          tempTitle={tempTitle}
-          fetchQuestions={fetchSectionQuestions}
-          type={type}
-        />
+        {isDialogOpen && (
+          <AddQuestionDialog
+            isDialogOpen={isDialogOpen}
+            handleDialogClose={handleDialogClose}
+            questionList={questionList}
+            goalID={goalID}
+            examID={examID}
+            sectionIndex={sectionIndex}
+            tempTitle={tempTitle}
+            fetchQuestions={fetchSectionQuestions}
+            type={type}
+          />
+        )}
       </AccordionSummary>
       <AccordionDetails sx={{ padding: "0 24px 24px 24px" }}>
         <QuestionList

@@ -84,7 +84,12 @@ export default function FilterQuestions({
     if (filters.difficulty !== "all")
       queryParams.append("difficulty", filters.difficulty);
     if (filters.search) queryParams.append("search", filters.search);
-    if (filters.isRandom) queryParams.append("isRandom", true);
+    if (filters.isRandom) {
+      queryParams.append("isRandom", true);
+      if (filters.randomCount) {
+        queryParams.append("count", filters.randomCount);
+      }
+    }
 
     const query = queryParams.toString();
 

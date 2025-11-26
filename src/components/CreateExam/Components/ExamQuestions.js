@@ -31,6 +31,28 @@ export default function ExamQuestions({
   const hasFetchedExamData = useRef(false);
   const hasFetchedQuestions = useRef(false);
 
+  const fetchExamData = useCallback(async () => {
+    if (hasFetchedExamData.current && sections?.length > 0) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await apiFetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/${examID}`
+      );
+      if (response.success) {
+        setSections(response.data.questionSection);
+        hasFetchedExamData.current = true;
+      }
+    } catch (error) {
+      showSnackbar("Error fetching sections", "error", "", "3000");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [examID, setSections, showSnackbar, sections?.length]);
+
   const createSection = useCallback(
     async ({ params = {} }) => {
       try {
@@ -53,30 +75,8 @@ export default function ExamQuestions({
         showSnackbar("Error occured", "error", "", "3000");
       }
     },
-    [examID, type, showSnackbar]
+    [examID, type, showSnackbar, fetchExamData]
   );
-
-  const fetchExamData = useCallback(async () => {
-    if (hasFetchedExamData.current && sections.length > 0) {
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await apiFetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/${examID}`
-      );
-      if (response.success) {
-        setSections(response.data.questionSection);
-        hasFetchedExamData.current = true;
-      }
-    } catch (error) {
-      showSnackbar("Error fetching sections", "error", "", "3000");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [examID, setSections, showSnackbar, sections.length]);
 
   const fetchQuestions = useCallback(async () => {
     if (hasFetchedQuestions.current && questionList.length > 0) {

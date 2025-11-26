@@ -8,18 +8,19 @@ import ExamSettings from "./Components/ExamSettings";
 import ExamStudents from "./Components/ExamStudents";
 import Header from "../Header/Header";
 import { useParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { apiFetch } from "@/src/lib/apiFetch";
 
 export default function CreateExam({ exam, setExam }) {
   const params = useParams();
   const examID = params.examID;
+  const [examAttempts, setExamAttempts] = useState([]);
   const totalQuestions = exam?.questionSection?.reduce(
     (total, section) => total + (section.questions?.length || 0),
     0
   );
 
-  const getExam = () => {
+  const getExam = useCallback(() => {
     apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/${examID}`).then(
       (data) => {
         if (data.success) {
@@ -29,11 +30,11 @@ export default function CreateExam({ exam, setExam }) {
         }
       }
     );
-  };
+  }, [examID, setExam]);
 
   useEffect(() => {
     getExam();
-  }, []);
+  }, [getExam]);
 
   const tabs = [
     {
@@ -51,7 +52,16 @@ export default function CreateExam({ exam, setExam }) {
         />
       ),
     },
-    { label: "Students", content: <ExamStudents /> },
+    {
+      label: "Analytics",
+      content: (
+        <ExamStudents
+          showStudentList={false}
+          examAttempts={examAttempts}
+          setExamAttempts={setExamAttempts}
+        />
+      ),
+    },
   ];
 
   return (
