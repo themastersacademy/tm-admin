@@ -87,7 +87,13 @@ export default function Examgroups() {
   const totalGroups = groupList.length;
   const liveGroups = groupList.filter((group) => group.isLive).length;
   const totalExams = groupList.reduce(
-    (acc, group) => acc + (group.examCount || 0),
+    (acc, group) =>
+      acc +
+      (group?.examCount ||
+        group?.examList?.length ||
+        group?.exams?.length ||
+        group?.totalExams ||
+        0),
     0
   );
 

@@ -223,20 +223,35 @@ export async function getExamGroupByGoalID(goalID) {
   try {
     const { Items } = await dynamoDB.send(new QueryCommand(params));
     console.log(Items[0]);
+
+    // For each group, fetch the exam count
+    const groupsWithCount = await Promise.all(
+      Items.map(async (item) => {
+        const groupID = item.pKey.split("#")[1];
+        const examListResult = await getExamListByGroupID(groupID);
+        const examCount = examListResult.success
+          ? examListResult.data.length
+          : 0;
+
+        return {
+          id: groupID,
+          goalID: item.sKey.split("@")[1],
+          isLive: item.isLive,
+          title: item.title,
+          examList: item.examList,
+          examCount, // Add the exam count
+          pKey: undefined,
+          sKey: undefined,
+          "GSI1-pKey": undefined,
+          "GSI1-sKey": undefined,
+        };
+      })
+    );
+
     return {
       success: true,
       message: "Exam group retrieved successfully",
-      data: Items.map((item) => ({
-        id: item.pKey.split("#")[1],
-        goalID: item.sKey.split("@")[1],
-        isLive: item.isLive,
-        title: item.title,
-        examList: item.examList,
-        pKey: undefined,
-        sKey: undefined,
-        "GSI1-pKey": undefined,
-        "GSI1-sKey": undefined,
-      })),
+      data: groupsWithCount,
     };
   } catch (error) {
     throw new Error(error);

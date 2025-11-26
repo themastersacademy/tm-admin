@@ -56,26 +56,38 @@ export default function ExamQuestions({
   const createSection = useCallback(
     async ({ params = {} }) => {
       try {
-        await apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/section`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            examID: examID,
-            type: type,
-            ...params,
-          }),
-        }).then((data) => {
-          if (data.success) {
-            fetchExamData();
-          } else {
-            showSnackbar(data.message, "error", "", "3000");
+        const response = await apiFetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/section`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              examID: examID,
+              type: type,
+              ...params,
+            }),
           }
-        });
+        );
+
+        if (response.success) {
+          // Optimistically add the new section to state
+          const newSection = {
+            sectionIndex: sections.length,
+            sectionTitle:
+              params.sectionTitle || `Section ${sections.length + 1}`,
+            questions: [],
+            ...params,
+          };
+          setSections([...sections, newSection]);
+          showSnackbar("Section created successfully", "success", "", "3000");
+        } else {
+          showSnackbar(response.message, "error", "", "3000");
+        }
       } catch (error) {
         showSnackbar("Error occured", "error", "", "3000");
       }
     },
-    [examID, type, showSnackbar, fetchExamData]
+    [examID, type, sections, setSections, showSnackbar]
   );
 
   const fetchQuestions = useCallback(async () => {
@@ -128,8 +140,15 @@ export default function ExamQuestions({
           }
         ).then((data) => {
           if (data.success) {
+            // Optimistically remove the section from state
+            const updatedSections = sections
+              .filter((_, index) => index !== sectionIndex)
+              .map((section, index) => ({
+                ...section,
+                sectionIndex: index, // Reindex sections
+              }));
+            setSections(updatedSections);
             showSnackbar(data.message, "success", "", "3000");
-            fetchExamData();
           } else {
             showSnackbar(data.message, "error", "", "3000");
           }
@@ -138,7 +157,7 @@ export default function ExamQuestions({
         showSnackbar("Error deleting section", "error", "", "3000");
       }
     },
-    [examID, goalID, type, showSnackbar, fetchExamData]
+    [examID, goalID, type, sections, setSections, showSnackbar]
   );
 
   return (

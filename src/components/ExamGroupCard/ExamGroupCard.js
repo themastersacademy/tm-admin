@@ -2,8 +2,13 @@ import { Stack, Typography, Chip, Box } from "@mui/material";
 import { Groups, CheckCircle } from "@mui/icons-material";
 
 export default function ExamGroupCard({ group, onClick }) {
-  // Calculate total exams in the group
-  const examCount = group?.examCount || 0;
+  // Calculate total exams in the group - check multiple possible properties
+  const examCount =
+    group?.examCount ||
+    group?.examList?.length ||
+    group?.exams?.length ||
+    group?.totalExams ||
+    0;
   const isLive = group?.isLive || false;
 
   return (
