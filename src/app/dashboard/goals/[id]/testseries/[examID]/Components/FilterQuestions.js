@@ -16,9 +16,14 @@ export default function FilterQuestions({
 }) {
   const { showSnackbar } = useSnackbar();
   const { subjectList, fetchSubject } = useContext(SubjectContext);
+
   useEffect(() => {
-    fetchSubject();
-  }, [fetchSubject]);
+    // Only fetch if subjectList is empty - SubjectContext handles caching
+    if (subjectList.length === 0) {
+      fetchSubject();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array - only run once on mount
   const [filters, setFilters] = useState({
     subjectID: "all",
     type: "all",

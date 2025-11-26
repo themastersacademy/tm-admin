@@ -5,7 +5,7 @@ import { Button, Stack, Tooltip, Typography } from "@mui/material";
 import question from "@/public/Icons/question.svg";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import NoDataFound from "../../NoDataFound/NoDataFound";
 import QuestionCardSkeleton from "../../QuestionCardSkeleton/QuestionCardSkeleton";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
@@ -23,96 +23,123 @@ export default function ExamQuestions({
   const params = useParams();
   const goalID = params.id;
   const examID = params.examID;
-  const menuOptions = ["Remove"];
+  const menuOptions = useMemo(() => ["Remove"], []);
   const { showSnackbar } = useSnackbar();
   const [isLoading, setIsLoading] = useState(true);
 
-  const createSection = async ({ params = {} }) => {
-    try {
-      await apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/section`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          examID: examID,
-          type: type,
-          ...params,
-        }),
-      }).then((data) => {
-        if (data.success) {
-          fetchExamData();
-        } else {
-          showSnackbar(data.message, "error", "", "3000");
-        }
-      });
-    } catch (error) {
-      showSnackbar("Error occured", "error", "", "3000");
-    }
-  };
+  // Use refs to track if data has been fetched
+  const hasFetchedExamData = useRef(false);
+  const hasFetchedQuestions = useRef(false);
+
+  const createSection = useCallback(
+    async ({ params = {} }) => {
+      try {
+        await apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/section`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            examID: examID,
+            type: type,
+            ...params,
+          }),
+        }).then((data) => {
+          if (data.success) {
+            fetchExamData();
+          } else {
+            showSnackbar(data.message, "error", "", "3000");
+          }
+        });
+      } catch (error) {
+        showSnackbar("Error occured", "error", "", "3000");
+      }
+    },
+    [examID, type, showSnackbar]
+  );
 
   const fetchExamData = useCallback(async () => {
+    if (hasFetchedExamData.current && sections.length > 0) {
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
-    if (sections.length === 0) {
-      try {
-        const response = await apiFetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/${examID}`
-        );
-        if (response.success) {
-          setSections(response.data.questionSection);
-        }
-      } catch (error) {
-        showSnackbar("Error fetching sections", "error", "", "3000");
+    try {
+      const response = await apiFetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/${examID}`
+      );
+      if (response.success) {
+        setSections(response.data.questionSection);
+        hasFetchedExamData.current = true;
       }
-    } else {
+    } catch (error) {
+      showSnackbar("Error fetching sections", "error", "", "3000");
+    } finally {
       setIsLoading(false);
     }
-  }, [sections, setSections, examID, showSnackbar]);
+  }, [examID, setSections, showSnackbar, sections.length]);
 
   const fetchQuestions = useCallback(async () => {
+    if (hasFetchedQuestions.current && questionList.length > 0) {
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
-    if (questionList.length === 0) {
-      try {
-        const response = await apiFetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/get`
-        );
-        if (response.success) {
-          setQuestionList(response.data);
-        }
-      } catch (error) {
-        showSnackbar("Error fetching questions", "error", "", "3000");
+    try {
+      const response = await apiFetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/get`
+      );
+      if (response.success) {
+        setQuestionList(response.data);
+        hasFetchedQuestions.current = true;
       }
-    } else {
+    } catch (error) {
+      showSnackbar("Error fetching questions", "error", "", "3000");
+    } finally {
       setIsLoading(false);
     }
-  }, [questionList, setQuestionList, showSnackbar]);
+  }, [setQuestionList, showSnackbar, questionList.length]);
 
   useEffect(() => {
-    fetchExamData();
-    fetchQuestions();
-  }, [fetchExamData, fetchQuestions]);
-
-  const deleteSection = (sectionIndex) => {
-    try {
-      apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/delete-section`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sectionIndex: sectionIndex,
-          examID: examID,
-          goalID: goalID,
-          type: type,
-        }),
-      }).then((data) => {
-        if (data.success) {
-          showSnackbar(data.message, "success", "", "3000");
-          fetchExamData();
-        } else {
-          showSnackbar(data.message, "error", "", "3000");
-        }
-      });
-    } catch (error) {
-      showSnackbar("Error deleting section", "error", "", "3000");
+    // Only fetch if not already fetched
+    if (!hasFetchedExamData.current) {
+      fetchExamData();
     }
-  };
+    if (!hasFetchedQuestions.current) {
+      fetchQuestions();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency - only run on mount
+
+  const deleteSection = useCallback(
+    (sectionIndex) => {
+      try {
+        apiFetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/delete-section`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sectionIndex: sectionIndex,
+              examID: examID,
+              goalID: goalID,
+              type: type,
+            }),
+          }
+        ).then((data) => {
+          if (data.success) {
+            showSnackbar(data.message, "success", "", "3000");
+            fetchExamData();
+          } else {
+            showSnackbar(data.message, "error", "", "3000");
+          }
+        });
+      } catch (error) {
+        showSnackbar("Error deleting section", "error", "", "3000");
+      }
+    },
+    [examID, goalID, type, showSnackbar, fetchExamData]
+  );
 
   return (
     <Tooltip
@@ -120,30 +147,36 @@ export default function ExamQuestions({
       followCursor
       placement="right"
     >
-      <Stack marginTop="20px" gap="15px" sx={{}}>
-        <Stack flexDirection="row" gap="15px">
+      <Stack marginTop="24px" gap="24px">
+        <Stack flexDirection="row" gap="20px" alignItems="center">
           <Tooltip
             title={isLive ? "You cannot create section when exam is live" : ""}
             followCursor
           >
             <Button
               variant="contained"
-              endIcon={<Add />}
+              startIcon={<Add />}
               onClick={createSection}
               sx={{
-                width: "120px",
+                padding: "10px 24px",
                 backgroundColor: "var(--primary-color)",
                 textTransform: "none",
                 fontFamily: "Lato",
-                cursor: isLive ? "not-allowed" : "auto",
+                fontWeight: "600",
+                fontSize: "14px",
+                borderRadius: "8px",
+                boxShadow: "0 4px 12px rgba(33, 150, 243, 0.2)",
+                cursor: isLive ? "not-allowed" : "pointer",
                 "&:hover": {
-                  backgroundColor: "var(--primary-color)",
+                  backgroundColor: "var(--primary-color-dark)",
+                  boxShadow: "0 6px 16px rgba(33, 150, 243, 0.3)",
+                  color: "white",
                 },
               }}
               disabled={isLive}
               disableElevation
             >
-              Section
+              Add Section
             </Button>
           </Tooltip>
           <Stack
@@ -151,28 +184,33 @@ export default function ExamQuestions({
             justifyContent="space-between"
             alignItems="center"
             sx={{
-              border: "1px solid",
-              borderColor: "var(--border-color)",
-              width: "150px",
-              borderRadius: "4px",
-              padding: "0px 15px",
+              border: "1px solid var(--border-color)",
+              backgroundColor: "var(--white)",
+              borderRadius: "8px",
+              padding: "8px 16px",
+              minWidth: "160px",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
             }}
           >
             <Typography
               sx={{
                 fontFamily: "Lato",
                 fontSize: "14px",
-                color: "var(--sec-color)",
-                fontWeight: "500",
+                color: "var(--text2)",
+                fontWeight: "600",
               }}
             >
-              Selected
+              Total Sections
             </Typography>
             <Typography
               sx={{
                 fontFamily: "Lato",
-                fontSize: "14px",
-                color: "var(--text4)",
+                fontSize: "16px",
+                color: "var(--primary-color)",
+                fontWeight: "700",
+                backgroundColor: "var(--primary-color-acc-2)",
+                padding: "2px 10px",
+                borderRadius: "6px",
               }}
             >
               {sections.length}
@@ -181,37 +219,52 @@ export default function ExamQuestions({
         </Stack>
         {!isLoading ? (
           sections.length > 0 ? (
-            sections.map((section, index) => (
-              <SectionCard
-                key={index}
-                icon={
-                  <Image src={question.src} alt="icon" width={24} height={24} />
-                }
-                sectionTitle={section.title}
-                selected={section.selected || "0"}
-                nMark={section.nMark}
-                pMark={section.pMark}
-                button="Questions"
-                options={menuOptions}
-                sections={sections}
-                setSections={setSections}
-                sectionIndex={index}
-                questionList={questionList}
-                setQuestionList={setQuestionList}
-                isLoading={isLoading}
-                createSection={createSection}
-                deleteSection={deleteSection}
-                type={type}
-                isLive={isLive}
-              />
-            ))
+            <Stack gap="16px">
+              {sections.map((section, index) => (
+                <SectionCard
+                  key={index}
+                  icon={
+                    <Image
+                      src={question.src}
+                      alt="icon"
+                      width={24}
+                      height={24}
+                    />
+                  }
+                  sectionTitle={section.title}
+                  selected={section.selected || "0"}
+                  nMark={section.nMark}
+                  pMark={section.pMark}
+                  button="Questions"
+                  options={menuOptions}
+                  sections={sections}
+                  setSections={setSections}
+                  sectionIndex={index}
+                  questionList={questionList}
+                  setQuestionList={setQuestionList}
+                  isLoading={isLoading}
+                  createSection={createSection}
+                  deleteSection={deleteSection}
+                  type={type}
+                  isLive={isLive}
+                />
+              ))}
+            </Stack>
           ) : (
-            <Stack width={"100%"} minHeight={"50vh"} justifyContent="center">
-              <NoDataFound info="No Question Created yet" />
+            <Stack
+              width={"100%"}
+              minHeight={"400px"}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <NoDataFound info="No Sections Created Yet" />
             </Stack>
           )
         ) : (
-          <QuestionCardSkeleton />
+          <Stack gap="16px">
+            <QuestionCardSkeleton />
+            <QuestionCardSkeleton />
+          </Stack>
         )}
       </Stack>
     </Tooltip>

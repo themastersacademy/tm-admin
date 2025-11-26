@@ -7,8 +7,9 @@ import {
   Button,
   IconButton,
   Stack,
+  Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import StyledTextField from "../../StyledTextField/StyledTextField";
 import { apiFetch } from "@/src/lib/apiFetch";
 import { useParams } from "next/navigation";
@@ -18,7 +19,7 @@ import DialogBox from "../../DialogBox/DialogBox";
 import PreviewStepper from "@/src/app/dashboard/library/allQuestions/addQuestion/Components/PreviewStepper";
 import QuestionList from "@/src/app/dashboard/goals/[id]/testseries/[examID]/Components/QuestionList";
 
-export default function SectionCard({
+function SectionCard({
   icon,
   button,
   sectionTitle,
@@ -58,7 +59,7 @@ export default function SectionCard({
   const handleDialogOpen = () => setIsDialogOpen(true);
   const handleDialogClose = () => setIsDialogOpen(false);
 
-  const fetchSectionQuestions = () => {
+  const fetchSectionQuestions = useCallback(() => {
     setIsLoading(true);
     apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/get-section`, {
       method: "POST",
@@ -72,11 +73,11 @@ export default function SectionCard({
       }
       setIsLoading(false);
     });
-  };
+  }, [goalID, examID, sectionIndex, type, showSnackbar]);
 
   useEffect(() => {
     fetchSectionQuestions();
-  }, []);
+  }, [fetchSectionQuestions]);
 
   return (
     <Accordion
@@ -84,22 +85,38 @@ export default function SectionCard({
       expanded={isOpen}
       sx={{
         border: "1px solid var(--border-color)",
-        borderRadius: "10px",
+        borderRadius: "16px",
         minHeight: "80px",
         width: "100%",
+        boxShadow: "0 2px 12px rgba(0,0,0,0.03)",
+        transition: "all 0.3s ease",
+        overflow: "hidden",
         "&:before": { display: "none" },
+        "&:hover": {
+          boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+          borderColor: "var(--primary-color)",
+          transform: "translateY(-2px)",
+        },
       }}
       elevation={0}
     >
       <AccordionSummary
         component="div"
-        sx={{ margin: "0px" }}
+        sx={{
+          margin: "0px",
+          padding: "12px 24px",
+          "& .MuiAccordionSummary-content": { margin: 0 },
+        }}
         expandIcon={
           <IconButton
-            sx={{ padding: "3px" }}
+            sx={{
+              padding: "8px",
+              backgroundColor: "var(--background-color)",
+              "&:hover": { backgroundColor: "var(--border-color)" },
+            }}
             onClick={() => setIsOpen(!isOpen)}
           >
-            <ExpandMore sx={{ color: "var(--text2)", fontSize: "30px" }} />
+            <ExpandMore sx={{ color: "var(--text2)", fontSize: "24px" }} />
           </IconButton>
         }
       >
@@ -107,23 +124,25 @@ export default function SectionCard({
           flexDirection="row"
           alignItems="center"
           justifyContent="space-between"
-          sx={{ width: "100%" }}
+          sx={{ width: "100%", gap: "24px" }}
         >
-          <Stack flexDirection="row" alignItems="center" gap="20px">
+          <Stack flexDirection="row" alignItems="center" gap="20px" flex={1}>
             <Stack
               sx={{
-                minWidth: "60px",
-                height: "60px",
-                backgroundColor: "var(--sec-color-acc-1)",
-                borderRadius: "10px",
+                minWidth: "56px",
+                height: "56px",
+                backgroundColor: "var(--primary-color-acc-2)",
+                borderRadius: "12px",
                 justifyContent: "center",
                 alignItems: "center",
+                color: "var(--primary-color)",
+                boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)",
               }}
             >
               {icon}
             </Stack>
             <StyledTextField
-              placeholder="Enter Section"
+              placeholder="Enter Section Title"
               value={tempTitle || ""}
               onFocus={(e) => {
                 e.stopPropagation();
@@ -146,90 +165,184 @@ export default function SectionCard({
                 setTempTitle(newTitle);
               }}
               disabled={isLive}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  fontSize: "18px",
+                  fontWeight: "700",
+                  color: "var(--text1)",
+                  padding: 0,
+                  "& fieldset": { border: "none" },
+                  "&.Mui-focused fieldset": { border: "none" },
+                },
+                "& .MuiInputBase-input": { padding: "8px 0" },
+              }}
             />
           </Stack>
-          <Stack flexDirection="row" alignItems="center" gap="15px">
-            <Stack flexDirection="row" alignItems="center" gap="8px">
-              <StyledTextField
-                placeholder="Positive marks"
-                value={positiveMarks || ""}
-                onFocus={(e) => {
-                  e.stopPropagation();
-                  setPositiveMarks(e.target.value);
-                  e.target.select();
-                }}
-                onBlur={(e) => {
-                  createSection({
-                    params: {
-                      pMark: positiveMarks,
-                      sectionIndex: sectionIndex,
-                    },
-                  });
-                }}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (/^\d*$/.test(value)) {
-                    setPositiveMarks(value);
-                  }
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    color: "var(--primary-color)",
-                    fontWeight: "700",
-                  },
-                }}
-                disabled={isLive}
-              />
-              <StyledTextField
-                placeholder="Negative marks"
-                value={negativeMarks || ""}
-                onFocus={(e) => {
-                  e.stopPropagation();
-                  setNegativeMarks(e.target.value);
-                  e.target.select();
-                }}
-                onBlur={(e) => {
-                  createSection({
-                    params: {
-                      nMark: negativeMarks,
-                      sectionIndex: sectionIndex,
-                    },
-                  });
-                }}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (/^\d*$/.test(value)) {
-                    setNegativeMarks(value);
-                  }
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    color: "var(--sec-color)",
-                    fontWeight: "700",
-                  },
-                }}
-                disabled={isLive}
-              />
-            </Stack>
-            <Button
-              variant="contained"
-              endIcon={<Add />}
-              onClick={handleDialogOpen}
+
+          <Stack flexDirection="row" alignItems="center" gap="24px">
+            <Stack
+              flexDirection="row"
+              alignItems="center"
+              gap="16px"
               sx={{
-                backgroundColor: "var(--primary-color)",
-                textTransform: "none",
+                backgroundColor: "var(--background-color)",
+                padding: "8px 12px",
+                borderRadius: "10px",
+                border: "1px solid var(--border-color)",
               }}
-              disabled={isLive}
-              disableElevation
             >
-              {button}
-            </Button>
-            <IconButton
-              onClick={() => deleteSection(sectionIndex)}
-              disabled={isLive}
-            >
-              <Delete sx={{ color: "var(--delete-color)" }} />
-            </IconButton>
+              <Stack gap="4px">
+                <Typography
+                  sx={{
+                    fontSize: "10px",
+                    fontWeight: "700",
+                    color: "#2e7d32",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Positive
+                </Typography>
+                <StyledTextField
+                  placeholder="+ Marks"
+                  value={positiveMarks || ""}
+                  onFocus={(e) => {
+                    e.stopPropagation();
+                    setPositiveMarks(e.target.value);
+                    e.target.select();
+                  }}
+                  onBlur={(e) => {
+                    createSection({
+                      params: {
+                        pMark: positiveMarks,
+                        sectionIndex: sectionIndex,
+                      },
+                    });
+                  }}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*$/.test(value)) {
+                      setPositiveMarks(value);
+                    }
+                  }}
+                  sx={{
+                    width: "70px",
+                    "& .MuiOutlinedInput-root": {
+                      color: "#2e7d32",
+                      fontWeight: "700",
+                      fontSize: "14px",
+                      backgroundColor: "#e8f5e9",
+                      borderRadius: "6px",
+                      height: "32px",
+                      "& fieldset": { border: "none" },
+                    },
+                    "& input": { textAlign: "center", padding: "0" },
+                  }}
+                  disabled={isLive}
+                />
+              </Stack>
+
+              <Stack
+                sx={{
+                  width: "1px",
+                  height: "30px",
+                  backgroundColor: "var(--border-color)",
+                }}
+              />
+
+              <Stack gap="4px">
+                <Typography
+                  sx={{
+                    fontSize: "10px",
+                    fontWeight: "700",
+                    color: "#c62828",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Negative
+                </Typography>
+                <StyledTextField
+                  placeholder="- Marks"
+                  value={negativeMarks || ""}
+                  onFocus={(e) => {
+                    e.stopPropagation();
+                    setNegativeMarks(e.target.value);
+                    e.target.select();
+                  }}
+                  onBlur={(e) => {
+                    createSection({
+                      params: {
+                        nMark: negativeMarks,
+                        sectionIndex: sectionIndex,
+                      },
+                    });
+                  }}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*$/.test(value)) {
+                      setNegativeMarks(value);
+                    }
+                  }}
+                  sx={{
+                    width: "70px",
+                    "& .MuiOutlinedInput-root": {
+                      color: "#c62828",
+                      fontWeight: "700",
+                      fontSize: "14px",
+                      backgroundColor: "#ffebee",
+                      borderRadius: "6px",
+                      height: "32px",
+                      "& fieldset": { border: "none" },
+                    },
+                    "& input": { textAlign: "center", padding: "0" },
+                  }}
+                  disabled={isLive}
+                />
+              </Stack>
+            </Stack>
+
+            <Stack flexDirection="row" gap="12px">
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={handleDialogOpen}
+                sx={{
+                  backgroundColor: "var(--primary-color)",
+                  textTransform: "none",
+                  borderRadius: "8px",
+                  padding: "8px 20px",
+                  fontFamily: "Lato",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                  boxShadow: "0 4px 12px rgba(33, 150, 243, 0.2)",
+                  "&:hover": {
+                    backgroundColor: "var(--primary-color-dark)",
+                    boxShadow: "0 6px 16px rgba(33, 150, 243, 0.3)",
+                    color: "white",
+                  },
+                }}
+                disabled={isLive}
+                disableElevation
+              >
+                {button}
+              </Button>
+              <IconButton
+                onClick={() => deleteSection(sectionIndex)}
+                disabled={isLive}
+                sx={{
+                  color: "var(--delete-color)",
+                  backgroundColor: "rgba(244, 67, 54, 0.08)",
+                  borderRadius: "8px",
+                  padding: "8px",
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    backgroundColor: "rgba(244, 67, 54, 0.15)",
+                    transform: "scale(1.05)",
+                  },
+                }}
+              >
+                <Delete fontSize="small" />
+              </IconButton>
+            </Stack>
           </Stack>
         </Stack>
         <AddQuestionDialog
@@ -244,7 +357,7 @@ export default function SectionCard({
           type={type}
         />
       </AccordionSummary>
-      <AccordionDetails>
+      <AccordionDetails sx={{ padding: "0 24px 24px 24px" }}>
         <QuestionList
           questions={questions}
           previewDialogOpen={previewDialogOpen}
@@ -278,3 +391,5 @@ export default function SectionCard({
     </Accordion>
   );
 }
+
+export default memo(SectionCard);
