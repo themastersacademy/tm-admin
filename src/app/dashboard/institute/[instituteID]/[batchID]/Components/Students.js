@@ -22,7 +22,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { enqueueSnackbar } from "notistack";
 
-export default function BatchStudents() {
+export default function BatchStudents({ setStudentCount }) {
   const params = useParams();
   const [studentsList, setStudentsList] = useState([]);
   const [studentDialog, setStudentDialog] = useState(false);
@@ -46,10 +46,13 @@ export default function BatchStudents() {
     ).then((data) => {
       if (data.success) {
         setStudentsList(data.data);
+        if (setStudentCount) {
+          setStudentCount(data.data.length);
+        }
       }
       setIsLoading(false);
     });
-  }, [params.instituteID, params.batchID]);
+  }, [params.instituteID, params.batchID, setStudentCount]);
 
   useEffect(() => {
     fetchStudents();
@@ -96,15 +99,6 @@ export default function BatchStudents() {
 
   return (
     <Stack gap="20px" marginTop="20px">
-      {/* Analytics Cards */}
-      <Stack direction="row" gap="20px" flexWrap="wrap">
-        <StatCard
-          title="Total Students"
-          value={studentsList.length}
-          icon={<People sx={{ color: "var(--primary-color)" }} />}
-        />
-      </Stack>
-
       <Stack
         sx={{
           border: "1px solid var(--border-color)",

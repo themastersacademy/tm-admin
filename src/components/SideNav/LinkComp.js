@@ -1,6 +1,6 @@
 "use client";
 import { ExpandMore } from "@mui/icons-material";
-import { Stack, Tooltip, Typography } from "@mui/material";
+import { Stack, Tooltip, Typography, Chip } from "@mui/material";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -15,10 +15,18 @@ export default function LinkComp({ isSideNavOpen, sideNavOpen }) {
   return (
     <Stack
       sx={{
-        gap: "10px",
+        gap: "8px",
         maxHeight: "100%",
         overflowY: "auto",
+        overflowX: "hidden",
         scrollbarWidth: "thin",
+        "&::-webkit-scrollbar": {
+          width: "4px",
+        },
+        "&::-webkit-scrollbar-thumb": {
+          backgroundColor: "rgba(var(--primary-rgb), 0.2)",
+          borderRadius: "10px",
+        },
       }}
     >
       <NavComp
@@ -27,6 +35,8 @@ export default function LinkComp({ isSideNavOpen, sideNavOpen }) {
         href="/"
         isSideNavOpen={isSideNavOpen}
         isRoot={true}
+        color="#2196F3"
+        bgColor="rgba(33, 150, 243, 0.1)"
       />
       <NavComp
         icon={library.src}
@@ -39,6 +49,8 @@ export default function LinkComp({ isSideNavOpen, sideNavOpen }) {
         ]}
         isSideNavOpen={isSideNavOpen}
         sideNavOpen={sideNavOpen}
+        color="#9C27B0"
+        bgColor="rgba(156, 39, 176, 0.1)"
       />
       <NavComp
         icon={institute.src}
@@ -50,18 +62,24 @@ export default function LinkComp({ isSideNavOpen, sideNavOpen }) {
         ]}
         isSideNavOpen={isSideNavOpen}
         sideNavOpen={sideNavOpen}
+        color="#FF9800"
+        bgColor="rgba(255, 152, 0, 0.1)"
       />
       <NavComp
         icon={students.src}
         title="Students"
         href="/dashboard/students"
         isSideNavOpen={isSideNavOpen}
+        color="#4CAF50"
+        bgColor="rgba(76, 175, 80, 0.1)"
       />
       <NavComp
         icon={payments.src}
         title="Payments & Coupons"
         href="/dashboard/payments"
         isSideNavOpen={isSideNavOpen}
+        color="#009688"
+        bgColor="rgba(0, 150, 136, 0.1)"
       />
     </Stack>
   );
@@ -75,6 +93,8 @@ const NavComp = ({
   isSideNavOpen,
   sideNavOpen,
   isRoot,
+  color,
+  bgColor,
 }) => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const pathname = usePathname();
@@ -100,45 +120,116 @@ const NavComp = ({
 
   return (
     <Stack>
-      <Tooltip title={title} disableHoverListener={!isSideNavOpen}>
+      <Tooltip
+        title={title}
+        disableHoverListener={!isSideNavOpen}
+        placement="right"
+        slotProps={{
+          tooltip: {
+            sx: {
+              backgroundColor: "var(--text1)",
+              color: "#fff",
+              fontSize: "13px",
+              fontWeight: 600,
+              padding: "8px 12px",
+              borderRadius: "8px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            },
+          },
+        }}
+      >
         <Stack
           sx={{
-            minHeight: "40px",
-            padding: "10px 20px",
+            minHeight: "48px",
+            padding: isSideNavOpen ? "6px" : "8px 10px",
             cursor: "pointer",
-            alignItems: isSideNavOpen ? "center" : "",
-            backgroundColor: isParentActive
-              ? "var(--primary-color-acc-2)"
-              : "transparent",
-            borderRadius: "20px",
+            alignItems: isSideNavOpen ? "center" : "flex-start",
+            background:
+              isParentActive || isChildActive
+                ? `linear-gradient(135deg, ${bgColor} 0%, ${color}15 100%)`
+                : "transparent",
+            borderRadius: "12px",
+            border: `1.5px solid ${
+              isParentActive || isChildActive ? color + "40" : "transparent"
+            }`,
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            position: "relative",
+            overflow: "hidden",
             "&:hover": {
-              backgroundColor:
+              background:
                 list && isNavOpen
                   ? "transparent"
-                  : "var(--primary-color-acc-2)",
+                  : `linear-gradient(135deg, ${bgColor} 0%, ${color}15 100%)`,
+              borderColor: color + "40",
             },
+            "&::before":
+              isParentActive || isChildActive
+                ? {
+                    content: '""',
+                    position: "absolute",
+                    left: 0,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    width: "4px",
+                    height: "60%",
+                    backgroundColor: color,
+                    borderRadius: "0 4px 4px 0",
+                  }
+                : {},
           }}
         >
-          <Link href={href || ""} passHref>
+          <Link href={href || ""} passHref style={{ width: "100%" }}>
             <Stack
               flexDirection="row"
               alignItems="center"
               onClick={toggleLibrary}
+              gap={isSideNavOpen ? 0 : "12px"}
+              justifyContent="space-between"
             >
-              <Stack
-                direction={"row"}
-                alignItems={"center"}
-                gap={"10px"}
-                height={"20px"}
-              >
-                <Image src={icon} alt={title} width={16} height={16} />
+              <Stack direction="row" alignItems="center" gap="12px">
+                <Stack
+                  sx={{
+                    width: "40px",
+                    height: "40px",
+                    backgroundColor:
+                      isParentActive || isChildActive ? color + "20" : bgColor,
+                    borderRadius: "10px",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    border: `1.5px solid ${
+                      isParentActive || isChildActive
+                        ? color + "60"
+                        : color + "30"
+                    }`,
+                    transition: "all 0.3s ease",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Image
+                    src={icon}
+                    alt={title}
+                    width={20}
+                    height={20}
+                    style={{
+                      filter:
+                        isParentActive || isChildActive
+                          ? "brightness(0) saturate(100%)"
+                          : "none",
+                    }}
+                  />
+                </Stack>
                 {!isSideNavOpen && (
                   <Typography
                     sx={{
                       fontFamily: "Lato",
                       fontSize: "14px",
-                      fontWeight: "600",
-                      color: "var(--primary-color)",
+                      fontWeight: isParentActive || isChildActive ? 700 : 600,
+                      color:
+                        isParentActive || isChildActive
+                          ? color
+                          : "var(--text1)",
+                      transition: "all 0.2s ease",
                     }}
                   >
                     {title}
@@ -148,9 +239,11 @@ const NavComp = ({
               {list && !isSideNavOpen && (
                 <ExpandMore
                   sx={{
-                    color: "var(--primary-color)",
-                    marginLeft: "auto",
+                    color:
+                      isParentActive || isChildActive ? color : "var(--text3)",
+                    fontSize: "20px",
                     transform: isNavOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    transition: "transform 0.3s ease",
                   }}
                 />
               )}
@@ -160,37 +253,55 @@ const NavComp = ({
             {isNavOpen && list && (
               <Stack
                 sx={{
-                  pl: "15px",
-                  mt: "10px",
-                  justifyContent: "center",
-                  gap: "2px",
+                  pl: isSideNavOpen ? 0 : "52px",
+                  mt: "8px",
+                  gap: "4px",
+                  animation: "slideDown 0.3s ease",
+                  "@keyframes slideDown": {
+                    from: {
+                      opacity: 0,
+                      transform: "translateY(-10px)",
+                    },
+                    to: {
+                      opacity: 1,
+                      transform: "translateY(0)",
+                    },
+                  },
                 }}
               >
                 {list.map((item, index) => (
                   <Link href={item.href} key={index} passHref>
-                    <Typography
+                    <Stack
                       sx={{
                         fontFamily: "Lato",
-                        fontSize: "14px",
-                        fontWeight: "700",
+                        fontSize: "13px",
+                        fontWeight: 600,
                         color: pathname.startsWith(item.href)
-                          ? "var(--primary-color)"
-                          : "var(--text3)",
+                          ? color
+                          : "var(--text2)",
                         whiteSpace: "nowrap",
-                        borderRadius: "20px",
-                        height: "28px",
-                        paddingTop: "4px",
-                        paddingLeft: "15px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        borderRadius: "8px",
+                        padding: "8px 10px",
                         backgroundColor: pathname.startsWith(item.href)
-                          ? "var(--primary-color-acc-2)"
+                          ? bgColor
                           : "transparent",
+                        border: `1px solid ${
+                          pathname.startsWith(item.href)
+                            ? color + "30"
+                            : "transparent"
+                        }`,
+                        transition: "all 0.2s ease",
+                        cursor: "pointer",
                         "&:hover": {
-                          backgroundColor: "var(--primary-color-acc-2)",
+                          backgroundColor: bgColor,
+                          borderColor: color + "30",
                         },
                       }}
                     >
                       {item.title}
-                    </Typography>
+                    </Stack>
                   </Link>
                 ))}
               </Stack>

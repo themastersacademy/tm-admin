@@ -23,10 +23,11 @@ const StyledTab = styled(Tab)(({ customstyles }) => ({
   fontFamily: "Lato",
   fontWeight: 600,
   borderRadius: "8px",
-  width: "100px",
+  width: "140px",
   transition: "all 0.4s ease",
   minHeight: "32px",
   padding: "0px",
+  whiteSpace: "nowrap",
   "&.Mui-selected": {
     color: "var(--sec-color)",
     backgroundColor: "var(--sec-color-acc-1)",

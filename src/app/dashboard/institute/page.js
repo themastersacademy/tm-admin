@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { Add, East, Close } from "@mui/icons-material";
 import Header from "@/src/components/Header/Header";
+import InstituteHeader from "./Components/InstituteHeader";
 import InstituteCard from "@/src/components/InstituteCard/InstituteCard";
 import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
@@ -67,24 +68,10 @@ export default function Institute() {
 
   return (
     <Stack padding="20px" gap="20px">
-      <Header
-        title="Institute Management"
-        subtitle="Manage all your institutes and their details here"
-        button={[
-          <Button
-            key="addInstitute"
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => setIsDialogOpen(true)}
-            sx={{
-              backgroundColor: "var(--primary-color)",
-              textTransform: "none",
-            }}
-            disableElevation
-          >
-            Institute
-          </Button>,
-        ]}
+      <InstituteHeader
+        instituteCount={instituteList.length}
+        onCreateClick={() => setIsDialogOpen(true)}
+        isLoading={isLoading}
       />
       <Stack
         sx={{

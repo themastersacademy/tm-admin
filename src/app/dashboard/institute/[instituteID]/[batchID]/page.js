@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { Close, East, FileCopy, Settings } from "@mui/icons-material";
 import Header from "@/src/components/Header/Header";
+import BatchHeader from "./Components/BatchHeader";
 import { apiFetch } from "@/src/lib/apiFetch";
 import CustomTabs from "@/src/components/CustomTabs/CustomTabs";
 import BatchCourse from "./Components/Courses";
@@ -26,16 +27,18 @@ import { enqueueSnackbar } from "notistack";
 export default function BatchPage() {
   const [batch, setBatch] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
+  const [studentCount, setStudentCount] = useState(0);
+  const [courseCount, setCourseCount] = useState(0);
   const params = useParams();
   const { showSnackbar } = useSnackbar();
   const tabs = [
     {
       label: "Students",
-      content: <BatchStudents />,
+      content: <BatchStudents setStudentCount={setStudentCount} />,
     },
     {
       label: "Courses",
-      content: <BatchCourse />,
+      content: <BatchCourse setCourseCount={setCourseCount} />,
     },
     {
       label: "Scheduled Exams",
@@ -53,6 +56,22 @@ export default function BatchPage() {
     ).then((data) => {
       if (data.success) {
         setBatch(data.data);
+        // Fetch student count
+        apiFetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/institute/${params.instituteID}/${params.batchID}/get-all-students`
+        ).then((studentsData) => {
+          if (studentsData.success) {
+            setStudentCount(studentsData.data.length);
+          }
+        });
+        // Fetch course count
+        apiFetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/institute/${params.instituteID}/${params.batchID}/get-all-courses`
+        ).then((coursesData) => {
+          if (coursesData.success) {
+            setCourseCount(coursesData.data.length);
+          }
+        });
       }
     });
   }, [params.instituteID, params.batchID]);
@@ -76,42 +95,15 @@ export default function BatchPage() {
 
   return (
     <Stack padding="20px" gap="20px">
-      <Header
-        title={batch.title || <Skeleton variant="text" width={100} />}
-        subtitle={
-          batch.instituteMeta?.title || <Skeleton variant="text" width={150} />
-        }
-        button={[
-          <IconButton
-            key="copy"
-            onClick={() => setOpenDialog(true)}
-            sx={{
-              "&:hover": {
-                color: "var(--primary-color)",
-                backgroundColor: "var(--primary-color-acc-2)",
-              },
-            }}
-          >
-            <Settings sx={{ color: "var(--text3)", transition: "all 0.2s" }} />
-          </IconButton>,
-          <Button
-            key="add"
-            variant="outlined"
-            endIcon={<FileCopy sx={{ color: "var(--text3)" }} />}
-            onClick={handleCopy}
-            sx={{
-              fontSize: "16px",
-              width: "130px",
-              borderColor: "var(--border-color)",
-              textTransform: "none",
-              fontFamily: "Lato",
-              color: "var(--text3) ",
-            }}
-          >
-            {batch.batchCode || <Skeleton variant="text" width={70} />}
-          </Button>,
-        ]}
-        back
+      <BatchHeader
+        batchTitle={batch.title}
+        instituteName={batch.instituteMeta?.title}
+        batchCode={batch.batchCode}
+        onCopyCode={handleCopy}
+        onSettings={() => setOpenDialog(true)}
+        isLoading={!batch.title}
+        studentCount={studentCount}
+        courseCount={courseCount}
       />
 
       <CustomTabs tabs={tabs} />

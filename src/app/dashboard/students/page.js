@@ -2,6 +2,7 @@
 import CustomPagination from "@/src/components/CustomPagination/CustomPagination";
 import FilterSideNav from "@/src/components/FilterSideNav/FilterSideNav";
 import Header from "@/src/components/Header/Header";
+import StudentsHeader from "./Components/StudentsHeader";
 import {
   Add,
   FilterAlt,
@@ -130,59 +131,16 @@ export default function Students() {
 
   return (
     <Stack padding="20px" gap="20px">
-      <Header
-        title="Students"
-        search
-        searchValue={searchQuery}
+      <StudentsHeader
+        searchQuery={searchQuery}
         onSearchChange={(e) => setSearchQuery(e.target.value)}
-        button={[
-          <Button
-            key="Add"
-            variant="contained"
-            startIcon={<Add />}
-            sx={{
-              backgroundColor: "var(--primary-color)",
-              textTransform: "none",
-            }}
-            disableElevation
-          >
-            Students
-          </Button>,
-          <Button
-            key="Filter"
-            variant="contained"
-            endIcon={<FilterAlt />}
-            onClick={filterOpen}
-            sx={{
-              backgroundColor: "var(--primary-color)",
-              textTransform: "none",
-            }}
-            disableElevation
-          >
-            Filter
-          </Button>,
-        ]}
+        onFilterClick={filterOpen}
+        onAddClick={() => {}}
+        stats={stats}
+        isLoading={isLoading}
+        hasActiveFilters={Object.values(filters).some((v) => v)}
+        onClearFilters={() => setFilters({})}
       />
-      <Stack flexDirection="row" gap="20px" flexWrap="wrap">
-        <SecondaryCard
-          icon={<Group sx={{ color: "var(--primary-color)" }} />}
-          title="Total Students"
-          subTitle={stats.total}
-          cardWidth="200px"
-        />
-        <SecondaryCard
-          icon={<VerifiedUser sx={{ color: "var(--primary-color)" }} />}
-          title="Verified Students"
-          subTitle={stats.verified}
-          cardWidth="200px"
-        />
-        <SecondaryCard
-          icon={<CheckCircle sx={{ color: "var(--primary-color)" }} />}
-          title="Active Students"
-          subTitle={stats.active}
-          cardWidth="200px"
-        />
-      </Stack>
       <FilterSideNav
         isOpen={isOpen}
         toggleDrawer={toggleDrawer}

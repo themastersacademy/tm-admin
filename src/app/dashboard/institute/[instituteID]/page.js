@@ -3,6 +3,7 @@ import { useSnackbar } from "@/src/app/context/SnackbarContext";
 import BatchCard from "@/src/components/BatchCard/BatchCard";
 import DialogBox from "@/src/components/DialogBox/DialogBox";
 import Header from "@/src/components/Header/Header";
+import InstituteDetailHeader from "./Components/InstituteDetailHeader";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
 import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
 import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
@@ -86,35 +87,12 @@ export default function InstituteID() {
 
   return (
     <Stack padding="20px" gap="20px">
-      <Header
-        title={
-          batch?.instituteMeta?.title || (
-            <Skeleton variant="text" width="100px" />
-          )
-        }
-        subtitle={
-          batch?.instituteMeta?.email || (
-            <Skeleton variant="text" width="150px" />
-          )
-        }
-        search
-        button={[
-          <Button
-            key="batch"
-            variant="contained"
-            startIcon={<Add />}
-            onClick={dialogOpen}
-            sx={{
-              backgroundColor: "var(--primary-color)",
-              textTransform: "none",
-              width: "120px",
-            }}
-            disableElevation
-          >
-            Batch
-          </Button>,
-        ]}
-        back
+      <InstituteDetailHeader
+        instituteName={batch?.instituteMeta?.title}
+        instituteEmail={batch?.instituteMeta?.email}
+        batchCount={batchList.length}
+        onCreateBatch={dialogOpen}
+        isLoading={isLoading}
       />
       <DialogBox
         isOpen={isDialogOpen}
