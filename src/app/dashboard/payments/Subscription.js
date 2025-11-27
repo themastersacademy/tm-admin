@@ -1,6 +1,5 @@
 "use client";
 import DialogBox from "@/src/components/DialogBox/DialogBox";
-import SecondaryCard from "@/src/components/SecondaryCard/SecondaryCard";
 import StyledSelect from "@/src/components/StyledSelect/StyledSelect";
 import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
 import { apiFetch } from "@/src/lib/apiFetch";
@@ -8,9 +7,12 @@ import {
   Add,
   Close,
   East,
-  PlaylistAddCheck,
   Edit,
   Delete,
+  WorkspacePremium,
+  CheckCircle,
+  LocalOffer,
+  CalendarToday,
 } from "@mui/icons-material";
 import {
   Button,
@@ -18,13 +20,16 @@ import {
   IconButton,
   Stack,
   Typography,
-  MenuItem,
   CircularProgress,
+  Grid,
+  Card,
+  Chip,
+  Box,
+  Divider,
 } from "@mui/material";
 import { useState, useEffect, useCallback } from "react";
 import { useSnackbar } from "../../context/SnackbarContext";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
-import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
 import DeleteDialogBox from "@/src/components/DeleteDialogBox/DeleteDialogBox";
 
 export default function Subscription() {
@@ -75,10 +80,6 @@ export default function Subscription() {
     setIsDialogOpen(true);
   };
 
-  {
-    /* Fetch Subscription */
-  }
-
   const fetchSubscription = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -96,10 +97,6 @@ export default function Subscription() {
     }
     setIsLoading(false);
   }, []);
-
-  {
-    /* Delete Subscription */
-  }
 
   const handleDelete = useCallback(async () => {
     if (!selectedSubscriptionID) {
@@ -157,11 +154,11 @@ export default function Subscription() {
     dialogDeleteClose();
   }, [selectedSubscriptionID, showSnackbar, fetchSubscription]);
 
-  {
-    /* Create Subscription */
-  }
-
   const createSubscription = useCallback(() => {
+    if (!title || !duration || !priceWithTax) {
+      showSnackbar("Please fill all required fields", "error", "", "3000");
+      return;
+    }
     showSnackbar(
       "Creating...",
       "success",
@@ -211,10 +208,6 @@ export default function Subscription() {
     fetchSubscription,
   ]);
 
-  {
-    /* Update Subscription */
-  }
-
   const updateSubscription = useCallback(async () => {
     if (!selectedSubscriptionID) {
       showSnackbar("No subscription selected for update", "error", "", "3000");
@@ -234,6 +227,7 @@ export default function Subscription() {
       type: title,
       duration,
       priceWithTax,
+      discountInPercent,
       discountInPercent,
     };
     try {
@@ -286,121 +280,91 @@ export default function Subscription() {
   useEffect(() => {
     fetchSubscription();
   }, [fetchSubscription]);
-
   return (
-    <Stack
-      sx={{
-        gap: "15px",
-        marginTop: "20px",
-        border: "1px solid var(--border-color)",
-        borderRadius: "10px",
-        backgroundColor: "var(--white)",
-        minHeight: "100vh",
-        padding: "20px",
-      }}
-    >
-      <Stack flexDirection="row" justifyContent="space-between">
+    <Stack gap="20px" padding="20px">
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Typography
           sx={{
-            fontFamily: "Lato",
             fontSize: "20px",
-            fontWeight: "700",
-            color: "var(--text3)",
+            fontWeight: 700,
+            color: "var(--text1)",
           }}
         >
-          PRO subscription
+          Subscription Plans
         </Typography>
-        <Stack flexDirection="row" gap="10px" alignItems="flex-end">
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={dialogOpen}
-            sx={{
-              backgroundColor: "var(--primary-color)",
-              textTransform: "none",
-              height: "40px",
-              borderRadius: "4px",
-              minWidth: "100px",
-            }}
-            disableElevation
-          >
-            Add
-          </Button>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={dialogOpen}
+          sx={{
+            background: "linear-gradient(135deg, #4CAF50 0%, #45A049 100%)",
+            color: "#FFFFFF",
+            textTransform: "none",
+            borderRadius: "10px",
+            padding: "10px 24px",
+            fontWeight: 700,
+            fontSize: "14px",
+            boxShadow: "0 4px 12px rgba(76, 175, 80, 0.25)",
+            "&:hover": {
+              background: "linear-gradient(135deg, #45A049 0%, #3D8B40 100%)",
+              boxShadow: "0 6px 16px rgba(76, 175, 80, 0.35)",
+              transform: "translateY(-1px)",
+            },
+          }}
+          disableElevation
+        >
+          Add Plan
+        </Button>
+      </Stack>
+
+      <CreateDialog
+        isDialogOpen={isDialogOpen}
+        dialogClose={dialogClose}
+        createSubscription={createSubscription}
+        updateSubscription={updateSubscription}
+        subscription={{
+          type: title,
+          duration,
+          priceWithTax,
+          discountInPercent,
+        }}
+        setSubscription={(updates) => {
+          setTitle(updates.type);
+          setDuration(updates.duration);
+          setPriceWithTax(updates.priceWithTax);
+          setDiscountInPercent(updates.discountInPercent);
+        }}
+        isEditMode={isEditMode}
+        isLoading={isLoading}
+      />
+
+      {isLoading ? (
+        <Stack alignItems="center" justifyContent="center" minHeight="300px">
+          <CircularProgress />
         </Stack>
-        <CreateDialog
-          isDialogOpen={isDialogOpen}
-          dialogClose={dialogClose}
-          createSubscription={createSubscription}
-          updateSubscription={updateSubscription}
-          subscription={{
-            type: title,
-            duration,
-            priceWithTax,
-            discountInPercent,
-          }}
-          setSubscription={(updates) => {
-            setTitle(updates.type);
-            setDuration(updates.duration);
-            setPriceWithTax(updates.priceWithTax);
-            setDiscountInPercent(updates.discountInPercent);
-          }}
-          isEditMode={isEditMode}
-          isLoading={isLoading}
-        />
-      </Stack>
-      <Stack flexDirection="row" flexWrap="wrap" gap="20px">
-        {isLoading ? (
-          Array.from({ length: 4 }).map((_, index) => (
-            <SecondaryCardSkeleton key={index} />
-          ))
-        ) : subscription.length > 0 ? (
-          subscription.map((item, index) => (
-            <SecondaryCard
-              key={index}
-              title={`₹${item.priceWithTax}`}
-              subTitle={
-                <Stack flexDirection="row" gap="10px">
-                  <Stack>{`${item.duration} ${
-                    item.type === "MONTHLY" ? "months" : "years"
-                  }`}</Stack>
-                  <Stack>{`${item.discountInPercent}% off`}</Stack>
-                </Stack>
-              }
-              icon={
-                <PlaylistAddCheck
-                  sx={{ color: "var(--sec-color)", fontSize: "34px" }}
-                />
-              }
-              options={[
-                <MenuItem
-                  key="edit"
-                  onClick={() => handleEditOpen(item)}
-                  sx={{ borderRadius: "4px", fontSize: "14px", gap: "5px" }}
-                >
-                  <Edit sx={{ fontSize: "16px" }} /> Edit
-                </MenuItem>,
-                <MenuItem
-                  key="delete"
-                  onClick={() => dialogDeleteOpen(item.id)}
-                  sx={{
-                    borderRadius: "4px",
-                    fontSize: "14px",
-                    color: "var(--delete-color)",
-                    gap: "5px",
-                  }}
-                >
-                  <Delete sx={{ fontSize: "16px" }} /> Delete
-                </MenuItem>,
-              ]}
-              cardWidth="350px"
-            />
-          ))
-        ) : (
-          <Stack width="100%" minHeight="60vh">
-            <NoDataFound info="No subscription created yet" />
-          </Stack>
-        )}
-      </Stack>
+      ) : subscription.length > 0 ? (
+        <Grid container spacing={3}>
+          {subscription.map((item, index) => (
+            <Grid item xs={12} sm={6} md={4} key={index}>
+              <PlanCard
+                plan={item}
+                onEdit={() => handleEditOpen(item)}
+                onDelete={() => dialogDeleteOpen(item.id)}
+              />
+            </Grid>
+          ))}
+        </Grid>
+      ) : (
+        <Stack
+          width="100%"
+          minHeight="50vh"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <NoDataFound info="No subscription plans created yet" />
+        </Stack>
+      )}
+
       <DeleteDialogBox
         isOpen={isDialogDelete}
         onClose={dialogDeleteClose}
@@ -408,40 +372,31 @@ export default function Subscription() {
           <Stack
             flexDirection="row"
             justifyContent="center"
-            sx={{ gap: "20px", width: "100%" }}
+            sx={{ gap: "16px", width: "100%" }}
           >
-            {isLoading ? (
-              <CircularProgress
-                size={20}
-                sx={{ color: "var(--primary-color)" }}
-              />
-            ) : (
-              <>
-                <Button
-                  variant="contained"
-                  onClick={handleDelete}
-                  sx={{
-                    textTransform: "none",
-                    backgroundColor: "var(--delete-color)",
-                    borderRadius: "5px",
-                    width: "130px",
-                  }}
-                  disableElevation
-                >
-                  Delete
-                </Button>
-              </>
-            )}
             <Button
               variant="contained"
+              onClick={handleDelete}
+              sx={{
+                textTransform: "none",
+                backgroundColor: "var(--delete-color)",
+                borderRadius: "8px",
+                width: "120px",
+              }}
+              disableElevation
+              disabled={isLoading}
+            >
+              {isLoading ? "Deleting..." : "Delete"}
+            </Button>
+            <Button
+              variant="outlined"
               onClick={dialogDeleteClose}
               sx={{
                 textTransform: "none",
-                borderRadius: "5px",
-                backgroundColor: "white",
+                borderRadius: "8px",
+                borderColor: "var(--border-color)",
                 color: "var(--text2)",
-                border: "1px solid var(--border-color)",
-                width: "130px",
+                width: "120px",
               }}
               disableElevation
             >
@@ -453,6 +408,123 @@ export default function Subscription() {
     </Stack>
   );
 }
+
+const PlanCard = ({ plan, onEdit, onDelete }) => {
+  return (
+    <Card
+      elevation={0}
+      sx={{
+        border: "1px solid var(--border-color)",
+        borderRadius: "16px",
+        padding: "24px",
+        position: "relative",
+        transition: "all 0.3s ease",
+        "&:hover": {
+          boxShadow: "0 12px 24px rgba(0,0,0,0.05)",
+          transform: "translateY(-4px)",
+          borderColor: "var(--primary-color)",
+        },
+      }}
+    >
+      {plan.discountInPercent > 0 && (
+        <Chip
+          icon={<LocalOffer sx={{ fontSize: "14px !important" }} />}
+          label={`${plan.discountInPercent}% OFF`}
+          size="small"
+          sx={{
+            position: "absolute",
+            top: "16px",
+            right: "16px",
+            backgroundColor: "#E3F2FD",
+            color: "#1976D2",
+            fontWeight: 700,
+            fontSize: "12px",
+          }}
+        />
+      )}
+
+      <Stack gap="16px">
+        <Stack direction="row" gap="12px" alignItems="center">
+          <Box
+            sx={{
+              width: "48px",
+              height: "48px",
+              borderRadius: "12px",
+              backgroundColor: "var(--primary-color-acc-2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--primary-color)",
+            }}
+          >
+            <WorkspacePremium />
+          </Box>
+          <Stack>
+            <Typography
+              sx={{ fontSize: "18px", fontWeight: 700, color: "var(--text1)" }}
+            >
+              {plan.type === "MONTHLY" ? "Monthly Plan" : "Yearly Plan"}
+            </Typography>
+            <Stack direction="row" gap="4px" alignItems="center">
+              <CalendarToday sx={{ fontSize: "14px", color: "var(--text3)" }} />
+              <Typography sx={{ fontSize: "13px", color: "var(--text3)" }}>
+                {plan.duration} {plan.type === "MONTHLY" ? "Months" : "Years"}
+              </Typography>
+            </Stack>
+          </Stack>
+        </Stack>
+
+        <Divider sx={{ borderStyle: "dashed" }} />
+
+        <Stack>
+          <Typography
+            sx={{ fontSize: "32px", fontWeight: 800, color: "var(--text1)" }}
+          >
+            ₹{plan.priceWithTax}
+          </Typography>
+          <Typography sx={{ fontSize: "13px", color: "var(--text3)" }}>
+            inclusive of all taxes
+          </Typography>
+        </Stack>
+
+        <Stack direction="row" gap="12px" marginTop="8px">
+          <Button
+            variant="outlined"
+            startIcon={<Edit />}
+            onClick={onEdit}
+            fullWidth
+            sx={{
+              borderRadius: "8px",
+              textTransform: "none",
+              borderColor: "var(--border-color)",
+              color: "var(--text2)",
+            }}
+          >
+            Edit
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Delete />}
+            onClick={onDelete}
+            fullWidth
+            sx={{
+              borderRadius: "8px",
+              textTransform: "none",
+              borderColor: "var(--delete-color)",
+              color: "var(--delete-color)",
+              "&:hover": {
+                backgroundColor: "#FFEBEE",
+                borderColor: "var(--delete-color)",
+              },
+            }}
+          >
+            Delete
+          </Button>
+        </Stack>
+      </Stack>
+    </Card>
+  );
+};
 
 const CreateDialog = ({
   isDialogOpen,
@@ -471,12 +543,12 @@ const CreateDialog = ({
 
   const monthly = Array.from({ length: 11 }, (_, i) => ({
     id: String(i + 1),
-    title: String(i + 1),
+    title: `${i + 1} Month${i === 0 ? "" : "s"}`,
   }));
 
   const yearly = Array.from({ length: 5 }, (_, i) => ({
     id: String(i + 1),
-    title: String(i + 1),
+    title: `${i + 1} Year${i === 0 ? "" : "s"}`,
   }));
 
   const durationOptions = subscription.type === "MONTHLY" ? monthly : yearly;
@@ -484,7 +556,7 @@ const CreateDialog = ({
   return (
     <DialogBox
       isOpen={isDialogOpen}
-      title={isEditMode ? "Edit Subscription" : "Add Subscription"}
+      title={isEditMode ? "Edit Subscription Plan" : "Add New Plan"}
       icon={
         <IconButton
           sx={{ borderRadius: "8px", padding: "4px" }}
@@ -496,65 +568,89 @@ const CreateDialog = ({
       }
       actionButton={
         <Button
-          variant="text"
+          variant="contained"
           endIcon={<East />}
           onClick={isEditMode ? updateSubscription : createSubscription}
-          sx={{ textTransform: "none", color: "var(--primary-color)" }}
+          sx={{
+            background: "linear-gradient(135deg, #4CAF50 0%, #45A049 100%)",
+            color: "#FFFFFF",
+            textTransform: "none",
+            borderRadius: "10px",
+            padding: "10px 24px",
+            fontWeight: 700,
+            fontSize: "14px",
+            boxShadow: "0 4px 12px rgba(76, 175, 80, 0.25)",
+            "&:hover": {
+              background: "linear-gradient(135deg, #45A049 0%, #3D8B40 100%)",
+              boxShadow: "0 6px 16px rgba(76, 175, 80, 0.35)",
+              transform: "translateY(-1px)",
+            },
+          }}
+          disableElevation
           disabled={isLoading}
         >
-          {isEditMode ? "Update Subscription" : "Add Subscription"}
+          {isEditMode ? "Update Plan" : "Create Plan"}
         </Button>
       }
     >
       <DialogContent>
-        <Stack gap="10px">
-          <StyledSelect
-            title="Monthly / Yearly"
-            value={subscription.type}
-            onChange={(e) =>
-              setSubscription({
-                ...subscription,
-                type: e.target.value,
-                duration: "", // Reset duration when type changes
-              })
-            }
-            options={planOptions}
-            disabled={isLoading}
-          />
-          <Stack flexDirection="row" gap="10px" justifyContent="space-between">
-            <StyledSelect
-              title="Select duration"
-              value={subscription.duration}
-              onChange={(e) =>
-                setSubscription({ ...subscription, duration: e.target.value })
-              }
-              options={durationOptions}
-              disabled={isLoading || !subscription.type}
-            />
-            <StyledTextField
-              placeholder="Enter rupees"
-              value={subscription.priceWithTax}
-              onChange={(e) =>
-                setSubscription({
-                  ...subscription,
-                  priceWithTax: e.target.value,
-                })
-              }
-              disabled={isLoading}
-            />
-            <StyledTextField
-              placeholder="Discount %"
-              type="number"
-              value={subscription.discountInPercent}
-              onChange={(e) =>
-                setSubscription({
-                  ...subscription,
-                  discountInPercent: e.target.value,
-                })
-              }
-              disabled={isLoading}
-            />
-          </Stack>
+        <Stack gap="24px" padding="8px 0">
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <StyledSelect
+                title="Plan Type"
+                value={subscription.type}
+                onChange={(e) =>
+                  setSubscription({
+                    ...subscription,
+                    type: e.target.value,
+                    duration: "", // Reset duration when type changes
+                  })
+                }
+                options={planOptions}
+                disabled={isLoading}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <StyledSelect
+                title="Duration"
+                value={subscription.duration}
+                onChange={(e) =>
+                  setSubscription({ ...subscription, duration: e.target.value })
+                }
+                options={durationOptions}
+                disabled={isLoading || !subscription.type}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <StyledTextField
+                placeholder="Price (₹)"
+                value={subscription.priceWithTax}
+                onChange={(e) =>
+                  setSubscription({
+                    ...subscription,
+                    priceWithTax: e.target.value,
+                  })
+                }
+                disabled={isLoading}
+                type="number"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <StyledTextField
+                placeholder="Discount Percentage (%)"
+                type="number"
+                value={subscription.discountInPercent}
+                onChange={(e) =>
+                  setSubscription({
+                    ...subscription,
+                    discountInPercent: e.target.value,
+                  })
+                }
+                disabled={isLoading}
+              />
+            </Grid>
+          </Grid>
         </Stack>
       </DialogContent>
     </DialogBox>

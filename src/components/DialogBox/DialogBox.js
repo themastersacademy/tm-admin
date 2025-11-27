@@ -14,6 +14,7 @@ export default function DialogBox({
   icon,
   actionButton,
   text,
+  customWidth,
 }) {
   return (
     <Dialog
@@ -23,7 +24,8 @@ export default function DialogBox({
       sx={{
         "& .MuiDialog-paper": {
           minWidth: "600px",
-          maxWidth: "650px",
+          maxWidth: customWidth || "650px",
+          width: customWidth ? "100%" : "auto",
           borderRadius: "10px",
           border: "1px solid",
           borderColor: "var(--border-color)",

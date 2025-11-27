@@ -1,19 +1,36 @@
 "use client";
 import SearchBox from "@/src/components/SearchBox/SearchBox";
-import { Add, Close, DeleteRounded, East, Edit } from "@mui/icons-material";
+import {
+  Add,
+  Close,
+  Delete,
+  East,
+  Edit,
+  LocalOffer,
+  ContentCopy,
+  Event,
+  AttachMoney,
+  People,
+  Redeem,
+} from "@mui/icons-material";
 import {
   Button,
   CircularProgress,
   DialogContent,
   IconButton,
-  MenuItem,
   Stack,
   Typography,
+  Grid,
+  Card,
+  Chip,
+  Box,
+  Divider,
+  Tooltip,
+  Paper,
 } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import DialogBox from "@/src/components/DialogBox/DialogBox";
 import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
-import CouponCard from "@/src/components/CouponCard/CouponCard";
 import StyledSelect from "@/src/components/StyledSelect/StyledSelect";
 import { apiFetch } from "@/src/lib/apiFetch";
 import dayjs from "dayjs";
@@ -21,7 +38,6 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { MultiInputDateRangeField } from "@mui/x-date-pickers-pro/MultiInputDateRangeField";
 import { useSnackbar } from "../../context/SnackbarContext";
-import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
 import DeleteDialogBox from "@/src/components/DeleteDialogBox/DeleteDialogBox";
 
@@ -62,8 +78,8 @@ export default function Coupons() {
     setIsDialogOpen(true);
   };
 
-  const dialogDeleteOpen = (couponID) => {
-    setSelectedCoupon(couponID);
+  const dialogDeleteOpen = (coupon) => {
+    setSelectedCoupon(coupon);
     setIsDialogDelete(true);
   };
 
@@ -118,7 +134,7 @@ export default function Coupons() {
     });
   };
 
-  const fetchCoupons = () => {
+  const fetchCoupons = useCallback(() => {
     setIsLoading(true);
     apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/coupon/get-all`).then(
       (data) => {
@@ -128,11 +144,11 @@ export default function Coupons() {
         setIsLoading(false);
       }
     );
-  };
+  }, []);
 
   useEffect(() => {
     fetchCoupons();
-  }, []);
+  }, [fetchCoupons]);
 
   const updateCoupon = useCallback(async () => {
     if (!selectedCoupon?.id) {
@@ -177,7 +193,7 @@ export default function Coupons() {
       if (data.success) {
         setCoupons((prev) =>
           prev.map((c) =>
-            c.id === coupons.id ? { ...c, ...updatedCoupon } : c
+            c.id === selectedCoupon.id ? { ...c, ...updatedCoupon } : c
           )
         );
         fetchCoupons();
@@ -197,7 +213,7 @@ export default function Coupons() {
 
     setIsLoading(false);
     dialogClose();
-  }, [selectedCoupon, showSnackbar]);
+  }, [selectedCoupon, showSnackbar, fetchCoupons]);
 
   const handleDelete = useCallback(async () => {
     try {
@@ -206,7 +222,7 @@ export default function Coupons() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id: selectedCoupon }),
+        body: JSON.stringify({ id: selectedCoupon?.id }),
       }).then((data) => {
         if (data.success) {
           showSnackbar(data.message, "success", "", "3000");
@@ -223,142 +239,302 @@ export default function Coupons() {
   }, [showSnackbar, fetchCoupons, selectedCoupon]);
 
   return (
-    <Stack marginTop="20px">
-      <Stack
-        padding="20px"
-        sx={{
-          padding: "20px",
-          border: "1px solid var(--border-color)",
-          minHeight: "90vh",
-          backgroundColor: "var(--white)",
-          borderRadius: "10px",
-          gap: "20px",
-          maxWidth: "1200px",
-        }}
-      >
-        <Stack flexDirection="row" justifyContent="space-between">
-          <Typography
-            sx={{
-              fontFamily: "Lato",
-              fontSize: "20px",
-              fontWeight: "700",
-              color: "var(--text3)",
-            }}
+    <Stack gap="20px" padding="20px">
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Typography
+          sx={{
+            fontSize: "20px",
+            fontWeight: 700,
+            color: "var(--text1)",
+          }}
+        >
+          Coupons & Offers
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={dialogOpen}
+          sx={{
+            background: "linear-gradient(135deg, #4CAF50 0%, #45A049 100%)",
+            color: "#FFFFFF",
+            textTransform: "none",
+            borderRadius: "10px",
+            padding: "10px 24px",
+            fontWeight: 700,
+            fontSize: "14px",
+            boxShadow: "0 4px 12px rgba(76, 175, 80, 0.25)",
+            "&:hover": {
+              background: "linear-gradient(135deg, #45A049 0%, #3D8B40 100%)",
+              boxShadow: "0 6px 16px rgba(76, 175, 80, 0.35)",
+              transform: "translateY(-1px)",
+            },
+          }}
+          disableElevation
+        >
+          Create Coupon
+        </Button>
+      </Stack>
+
+      <CouponDialog
+        isDialogOpen={isDialogOpen}
+        dialogClose={dialogClose}
+        coupon={selectedCoupon || {}}
+        setCoupon={setSelectedCoupon}
+        createCoupon={createCoupon}
+        goalOptions={goalOptions}
+        discountTypeOptions={discountTypeOptions}
+        isEditMode={isEditMode}
+        isLoading={isLoading}
+        updateCoupon={updateCoupon}
+      />
+
+      {isLoading ? (
+        <Stack alignItems="center" justifyContent="center" minHeight="300px">
+          <CircularProgress />
+        </Stack>
+      ) : coupons.length > 0 ? (
+        <Grid container spacing={3}>
+          {coupons.map((item, index) => (
+            <Grid item xs={12} md={6} lg={4} key={index}>
+              <CouponCard
+                coupon={item}
+                onEdit={() => handleEditOpen(item)}
+                onDelete={() => dialogDeleteOpen(item)}
+              />
+            </Grid>
+          ))}
+        </Grid>
+      ) : (
+        <Stack
+          width="100%"
+          minHeight="60vh"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <NoDataFound info="No Coupons Added" />
+        </Stack>
+      )}
+
+      <DeleteDialogBox
+        isOpen={isDialogDelete}
+        onClose={dialogDeleteClose}
+        actionButton={
+          <Stack
+            flexDirection="row"
+            gap="16px"
+            justifyContent="center"
+            sx={{ width: "100%" }}
           >
-            Coupons
-          </Typography>
-          <Stack flexDirection="row" gap="10px" alignItems="flex-end">
-            <SearchBox />
             <Button
               variant="contained"
-              startIcon={<Add />}
-              onClick={dialogOpen}
+              onClick={handleDelete}
               sx={{
-                backgroundColor: "var(--primary-color)",
                 textTransform: "none",
-                height: "40px",
-                borderRadius: "4px",
-                minWidth: "100px",
+                backgroundColor: "var(--delete-color)",
+                borderRadius: "8px",
+                width: "120px",
               }}
               disableElevation
             >
-              New
+              Delete
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={dialogDeleteClose}
+              sx={{
+                textTransform: "none",
+                borderRadius: "8px",
+                borderColor: "var(--border-color)",
+                color: "var(--text2)",
+                width: "120px",
+              }}
+              disableElevation
+            >
+              Cancel
             </Button>
           </Stack>
-        </Stack>
-        <CouponDialog
-          isDialogOpen={isDialogOpen}
-          dialogClose={dialogClose}
-          coupon={selectedCoupon || {}}
-          setCoupon={setSelectedCoupon}
-          createCoupon={createCoupon}
-          goalOptions={goalOptions}
-          discountTypeOptions={discountTypeOptions}
-          isEditMode={isEditMode}
-          isLoading={isLoading}
-          updateCoupon={updateCoupon}
-        />
-        <Stack gap="15px" flexDirection="row" flexWrap="wrap">
-          {isLoading ? (
-            <Stack gap="15px" flexWrap="wrap" flexDirection="row">
-              <SecondaryCardSkeleton />
-              <SecondaryCardSkeleton />
-            </Stack>
-          ) : coupons.length > 0 ? (
-            coupons.map((item, index) => (
-              <CouponCard
-                key={index}
-                name={item.title}
-                duration={`${dayjs(item.startDate).format(
-                  "MM/DD/YYYY"
-                )} - ${dayjs(item.endDate).format("MM/DD/YYYY")}`}
-                status={item.isActive ? "Active" : "Expired"}
-                price={`₹ ${item.minOrderAmount} - ₹ ${item.maxDiscountPrice}`}
-                code={item.code}
-                subscriptionType={`Subscription/${item.couponClass}`}
-                discount={`${item.discountValue}%`}
-                redems={`${item.totalRedemptions} redeems & ${item.totalRedemptionsPerUser} left`}
-                edit={() => handleEditOpen(item)}
-                deleteCoupon={() => dialogDeleteOpen(item.id)}
-              />
-            ))
-          ) : (
-            <Stack width="100%" minHeight="60vh">
-              <NoDataFound info="No Coupons Added" />
-            </Stack>
-          )}
-        </Stack>
-        <DeleteDialogBox
-          isOpen={isDialogDelete}
-          onClose={dialogDeleteClose}
-          actionButton={
-            <Stack
-              flexDirection="row"
-              gap="20px"
-              justifyContent="center"
-              sx={{ width: "100%" }}
-            >
-              <Button
-                variant="contained"
-                onClick={() => handleDelete({ id: selectedCoupon.id })}
-                sx={{
-                  textTransform: "none",
-                  backgroundColor: "var(--delete-color)",
-                  borderRadius: "5px",
-                  width: "130px",
-                }}
-                disableElevation
-              >
-                Delete
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={dialogDeleteClose}
-                sx={{
-                  textTransform: "none",
-                  borderRadius: "5px",
-                  backgroundColor: "white",
-                  color: "var(--text2)",
-                  border: "1px solid var(--border-color)",
-                  width: "130px",
-                }}
-                disableElevation
-              >
-                Cancel
-              </Button>
-            </Stack>
-          }
-        >
-          <DialogContent>
-            <Typography>
-              Are you sure you want to delete this coupon?
-            </Typography>
-          </DialogContent>
-        </DeleteDialogBox>
-      </Stack>
+        }
+      >
+        <DialogContent>
+          <Typography align="center" color="var(--text2)">
+            Are you sure you want to delete this coupon? This action cannot be
+            undone.
+          </Typography>
+        </DialogContent>
+      </DeleteDialogBox>
     </Stack>
   );
 }
+
+const CouponCard = ({ coupon, onEdit, onDelete }) => {
+  const isExpired = dayjs().isAfter(dayjs(coupon.endDate));
+  const isActive = coupon.isActive && !isExpired;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(coupon.code);
+  };
+
+  return (
+    <Card
+      elevation={0}
+      sx={{
+        border: "1px solid var(--border-color)",
+        borderRadius: "16px",
+        padding: "20px",
+        position: "relative",
+        transition: "all 0.3s ease",
+        "&:hover": {
+          boxShadow: "0 12px 24px rgba(0,0,0,0.05)",
+          transform: "translateY(-4px)",
+          borderColor: "var(--primary-color)",
+        },
+        opacity: isActive ? 1 : 0.7,
+      }}
+    >
+      <Chip
+        label={isActive ? "Active" : isExpired ? "Expired" : "Inactive"}
+        size="small"
+        color={isActive ? "success" : "default"}
+        sx={{
+          position: "absolute",
+          top: "16px",
+          right: "16px",
+          fontWeight: 600,
+          borderRadius: "6px",
+        }}
+      />
+
+      <Stack gap="16px">
+        <Stack direction="row" gap="16px" alignItems="center">
+          <Box
+            sx={{
+              width: "56px",
+              height: "56px",
+              borderRadius: "12px",
+              backgroundColor: "var(--primary-color-acc-2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--primary-color)",
+            }}
+          >
+            <LocalOffer sx={{ fontSize: "28px" }} />
+          </Box>
+          <Stack>
+            <Typography
+              sx={{
+                fontSize: "14px",
+                color: "var(--text3)",
+                textTransform: "uppercase",
+                fontWeight: 700,
+              }}
+            >
+              {coupon.title}
+            </Typography>
+            <Typography
+              sx={{ fontSize: "24px", fontWeight: 800, color: "var(--text1)" }}
+            >
+              {coupon.discountType === "PERCENTAGE"
+                ? `${coupon.discountValue}% OFF`
+                : `₹${coupon.discountValue} OFF`}
+            </Typography>
+          </Stack>
+        </Stack>
+
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{
+            backgroundColor: "#F5F5F5",
+            padding: "12px",
+            borderRadius: "8px",
+            border: "1px dashed var(--text3)",
+          }}
+        >
+          <Typography
+            sx={{
+              fontFamily: "monospace",
+              fontSize: "16px",
+              fontWeight: 700,
+              color: "var(--text1)",
+            }}
+          >
+            {coupon.code}
+          </Typography>
+          <Tooltip title="Copy Code">
+            <IconButton size="small" onClick={handleCopy}>
+              <ContentCopy sx={{ fontSize: "16px" }} />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+
+        <Stack gap="8px">
+          <DetailItem
+            icon={<Event />}
+            text={`${dayjs(coupon.startDate).format("DD MMM")} - ${dayjs(
+              coupon.endDate
+            ).format("DD MMM YYYY")}`}
+          />
+          <DetailItem
+            icon={<AttachMoney />}
+            text={`Min. Order: ₹${coupon.minOrderAmount}`}
+          />
+          <DetailItem
+            icon={<Redeem />}
+            text={`${coupon.totalRedemptions} Total / ${coupon.totalRedemptionsPerUser} Per User`}
+          />
+        </Stack>
+
+        <Divider />
+
+        <Stack direction="row" gap="12px">
+          <Button
+            variant="outlined"
+            startIcon={<Edit />}
+            onClick={onEdit}
+            fullWidth
+            size="small"
+            sx={{
+              borderRadius: "8px",
+              textTransform: "none",
+              borderColor: "var(--border-color)",
+              color: "var(--text2)",
+            }}
+          >
+            Edit
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Delete />}
+            onClick={onDelete}
+            fullWidth
+            size="small"
+            sx={{
+              borderRadius: "8px",
+              textTransform: "none",
+              borderColor: "var(--delete-color)",
+              color: "var(--delete-color)",
+            }}
+          >
+            Delete
+          </Button>
+        </Stack>
+      </Stack>
+    </Card>
+  );
+};
+
+const DetailItem = ({ icon, text }) => (
+  <Stack direction="row" gap="8px" alignItems="center">
+    <Box sx={{ color: "var(--text3)", display: "flex" }}>
+      {icon && <icon.type sx={{ fontSize: "16px" }} />}
+    </Box>
+    <Typography sx={{ fontSize: "13px", color: "var(--text2)" }}>
+      {text}
+    </Typography>
+  </Stack>
+);
 
 const CouponDialog = ({
   isDialogOpen,
@@ -375,8 +551,8 @@ const CouponDialog = ({
   const defaultStartDate = dayjs();
   const defaultEndDate = dayjs().add(7, "day");
   const [dateRange, setDateRange] = useState([
-    defaultStartDate,
-    defaultEndDate,
+    coupon.startDate ? dayjs(coupon.startDate) : defaultStartDate,
+    coupon.endDate ? dayjs(coupon.endDate) : defaultEndDate,
   ]);
 
   const handleDateChange = (newDateRange) => {
@@ -384,160 +560,323 @@ const CouponDialog = ({
     setDateRange(newDateRange);
     setCoupon((prev) => ({
       ...prev,
-      startDate: startDate.valueOf(),
-      endDate: endDate.valueOf(),
+      startDate: startDate ? startDate.valueOf() : null,
+      endDate: endDate ? endDate.valueOf() : null,
     }));
   };
+
+  const SectionCard = ({ title, icon, children }) => (
+    <Paper
+      elevation={0}
+      sx={{
+        padding: "20px",
+        borderRadius: "12px",
+        border: "1px solid var(--border-color)",
+        backgroundColor: "var(--bg-color)", // Subtle background
+      }}
+    >
+      <Stack direction="row" alignItems="center" gap="10px" mb={2}>
+        <Box
+          sx={{
+            width: "32px",
+            height: "32px",
+            borderRadius: "8px",
+            backgroundColor: "var(--white)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+          }}
+        >
+          {icon}
+        </Box>
+        <Typography
+          sx={{
+            fontSize: "15px",
+            fontWeight: 700,
+            color: "var(--text1)",
+          }}
+        >
+          {title}
+        </Typography>
+      </Stack>
+      {children}
+    </Paper>
+  );
+
+  const Label = ({ children }) => (
+    <Typography
+      sx={{
+        fontSize: "13px",
+        fontWeight: 600,
+        color: "var(--text1)",
+        mb: "6px",
+      }}
+    >
+      {children}
+    </Typography>
+  );
 
   return (
     <DialogBox
       isOpen={isDialogOpen}
-      title={isEditMode ? "Edit Coupon" : "Add Coupon"}
+      title={isEditMode ? "Edit Coupon" : "Create New Coupon"}
+      customWidth="850px"
       icon={
         <IconButton
           onClick={dialogClose}
-          sx={{ borderRadius: "10px", padding: "6px" }}
+          sx={{
+            borderRadius: "8px",
+            padding: "8px",
+            backgroundColor: "var(--bg-color)",
+            "&:hover": { backgroundColor: "var(--border-color)" },
+          }}
           disabled={isLoading}
         >
-          <Close sx={{ color: "var(--text2)" }} />
+          <Close sx={{ fontSize: "20px", color: "var(--text1)" }} />
         </IconButton>
       }
       actionButton={
         <Button
-          variant="text"
+          variant="contained"
           onClick={() => {
             isEditMode ? updateCoupon() : createCoupon();
           }}
           endIcon={<East />}
-          sx={{ textTransform: "none", color: "var(--primary-color)" }}
-          disabled={isLoading && coupon.title === ""}
+          sx={{
+            backgroundColor: "var(--primary-color)",
+            color: "#FFFFFF",
+            textTransform: "none",
+            borderRadius: "10px",
+            padding: "12px 32px",
+            fontWeight: 700,
+            fontSize: "15px",
+            boxShadow: "0 4px 14px rgba(0, 0, 0, 0.15)",
+            "&:hover": {
+              backgroundColor: "var(--primary-color-dark, #1565C0)", // Fallback if var not defined
+              boxShadow: "0 6px 20px rgba(0, 0, 0, 0.2)",
+              transform: "translateY(-1px)",
+            },
+            transition: "all 0.2s ease",
+          }}
+          disableElevation
+          disabled={isLoading || !coupon.title}
         >
-          {isEditMode ? "Update Coupon" : "Add Coupon"}
+          {isEditMode ? "Update Coupon" : "Create Coupon"}
         </Button>
       }
     >
-      <DialogContent>
-        <Stack gap="15px">
-          <StyledTextField
-            placeholder="Title"
-            value={coupon.title || ""}
-            onChange={(e) =>
-              setCoupon((prev) => ({ ...prev, title: e.target.value }))
-            }
-          />
-          <StyledTextField
-            placeholder="Enter coupon text"
-            value={coupon.code || ""}
-            onChange={(e) =>
-              setCoupon((prev) => ({ ...prev, code: e.target.value }))
-            }
-          />
-          <StyledSelect
-            title="Select Goal/Course"
-            value={coupon.couponClass || ""}
-            onChange={(e) =>
-              setCoupon((prev) => ({
-                ...prev,
-                couponClass: e.target.value,
-              }))
-            }
-            options={goalOptions}
-          />
-          <Stack flexDirection="row" gap="10px">
-            <StyledSelect
-              title="Select percentage/rupees"
-              value={coupon.discountType || ""}
-              onChange={(e) =>
-                setCoupon((prev) => ({
-                  ...prev,
-                  discountType: e.target.value,
-                }))
-              }
-              options={discountTypeOptions}
-            />
-            <StyledTextField
-              placeholder={
-                coupon.discountType === "PERCENTAGE"
-                  ? "Enter percentage (Max: 100%)"
-                  : "Enter rupees"
-              }
-              value={coupon.discountValue || ""}
-              type="number"
-              onChange={(e) => {
-                const value = e.target.value;
-                if (coupon.discountType === "PERCENTAGE" && value > 100) {
-                  setCoupon((prev) => ({ ...prev, discountValue: 100 }));
-                } else {
-                  setCoupon((prev) => ({ ...prev, discountValue: value }));
+      <DialogContent sx={{ padding: "24px" }}>
+        <Stack gap="24px">
+          {/* Top Row: Basic Info & Validity */}
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={7}>
+              <SectionCard
+                title="Basic Information"
+                icon={
+                  <LocalOffer
+                    sx={{ fontSize: "18px", color: "var(--primary-color)" }}
+                  />
                 }
-              }}
-            />
-          </Stack>
-          <Stack flexDirection="row" gap="10px">
-            <StyledTextField
-              placeholder="Min purchase price"
-              value={coupon.minOrderAmount || ""}
-              type="number"
-              onChange={(e) =>
-                setCoupon((prev) => ({
-                  ...prev,
-                  minOrderAmount: e.target.value,
-                }))
-              }
-            />
-            <StyledTextField
-              placeholder="Max. purchase price"
-              value={coupon.maxDiscountPrice || ""}
-              type="number"
-              onChange={(e) =>
-                setCoupon((prev) => ({
-                  ...prev,
-                  maxDiscountPrice: e.target.value,
-                }))
-              }
-            />
-          </Stack>
-          <Stack flexDirection="row" gap="10px">
-            <StyledTextField
-              placeholder="Total redeemable"
-              value={coupon.totalRedemptions || ""}
-              type="number"
-              onChange={(e) =>
-                setCoupon((prev) => ({
-                  ...prev,
-                  totalRedemptions: e.target.value,
-                }))
-              }
-            />
-            <StyledTextField
-              placeholder="Total RedemptionsPerUser"
-              value={coupon.totalRedemptionsPerUser || ""}
-              type="number"
-              onChange={(e) =>
-                setCoupon((prev) => ({
-                  ...prev,
-                  totalRedemptionsPerUser: e.target.value,
-                }))
-              }
-            />
-          </Stack>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <MultiInputDateRangeField
-              value={dateRange}
-              onChange={handleDateChange}
-              sx={{
-                "& .MuiInputBase-root": {
-                  height: "40px",
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    border: "1px solid var(--sec-color)",
-                  },
-                  "&:hover .MuiOutlinedInput-notchedOutline": {
-                    border: "1px solid var(--sec-color)",
-                  },
-                },
-              }}
-            />
-          </LocalizationProvider>
+              >
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <Label>Coupon Title</Label>
+                    <StyledTextField
+                      placeholder="e.g., Summer Sale 2024"
+                      value={coupon.title || ""}
+                      onChange={(e) =>
+                        setCoupon((prev) => ({
+                          ...prev,
+                          title: e.target.value,
+                        }))
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Label>Coupon Code</Label>
+                    <StyledTextField
+                      placeholder="e.g., SUMMER50"
+                      value={coupon.code || ""}
+                      onChange={(e) =>
+                        setCoupon((prev) => ({
+                          ...prev,
+                          code: e.target.value.toUpperCase(),
+                        }))
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Label>Applicable To</Label>
+                    <StyledSelect
+                      value={coupon.couponClass || ""}
+                      onChange={(e) =>
+                        setCoupon((prev) => ({
+                          ...prev,
+                          couponClass: e.target.value,
+                        }))
+                      }
+                      options={goalOptions}
+                    />
+                  </Grid>
+                </Grid>
+              </SectionCard>
+            </Grid>
+
+            <Grid item xs={12} md={5}>
+              <SectionCard
+                title="Validity Period"
+                icon={
+                  <Event
+                    sx={{ fontSize: "18px", color: "var(--primary-color)" }}
+                  />
+                }
+              >
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <Label>Date Range</Label>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <MultiInputDateRangeField
+                        value={dateRange}
+                        onChange={handleDateChange}
+                        slotProps={{
+                          textField: {
+                            size: "small",
+                            fullWidth: true,
+                            sx: {
+                              "& .MuiOutlinedInput-root": {
+                                borderRadius: "8px",
+                                backgroundColor: "var(--white)",
+                              },
+                            },
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </Grid>
+                </Grid>
+              </SectionCard>
+            </Grid>
+          </Grid>
+
+          {/* Middle Row: Discount Rules */}
+          <SectionCard
+            title="Discount Rules"
+            icon={
+              <AttachMoney
+                sx={{ fontSize: "18px", color: "var(--primary-color)" }}
+              />
+            }
+          >
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={3}>
+                <Label>Discount Type</Label>
+                <StyledSelect
+                  value={coupon.discountType || ""}
+                  onChange={(e) =>
+                    setCoupon((prev) => ({
+                      ...prev,
+                      discountType: e.target.value,
+                    }))
+                  }
+                  options={discountTypeOptions}
+                />
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <Label>
+                  {coupon.discountType === "PERCENTAGE"
+                    ? "Value (%)"
+                    : "Amount (₹)"}
+                </Label>
+                <StyledTextField
+                  placeholder={
+                    coupon.discountType === "PERCENTAGE"
+                      ? "e.g., 20"
+                      : "e.g., 500"
+                  }
+                  value={coupon.discountValue || ""}
+                  type="number"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (coupon.discountType === "PERCENTAGE" && value > 100) {
+                      setCoupon((prev) => ({ ...prev, discountValue: 100 }));
+                    } else {
+                      setCoupon((prev) => ({ ...prev, discountValue: value }));
+                    }
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <Label>Min Order (₹)</Label>
+                <StyledTextField
+                  placeholder="e.g., 1000"
+                  value={coupon.minOrderAmount || ""}
+                  type="number"
+                  onChange={(e) =>
+                    setCoupon((prev) => ({
+                      ...prev,
+                      minOrderAmount: e.target.value,
+                    }))
+                  }
+                />
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <Label>Max Discount (₹)</Label>
+                <StyledTextField
+                  placeholder="e.g., 200"
+                  value={coupon.maxDiscountPrice || ""}
+                  type="number"
+                  onChange={(e) =>
+                    setCoupon((prev) => ({
+                      ...prev,
+                      maxDiscountPrice: e.target.value,
+                    }))
+                  }
+                />
+              </Grid>
+            </Grid>
+          </SectionCard>
+
+          {/* Bottom Row: Usage Limits */}
+          <SectionCard
+            title="Usage Limits"
+            icon={
+              <People
+                sx={{ fontSize: "18px", color: "var(--primary-color)" }}
+              />
+            }
+          >
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <Label>Total Redemptions</Label>
+                <StyledTextField
+                  placeholder="e.g., 1000"
+                  value={coupon.totalRedemptions || ""}
+                  type="number"
+                  onChange={(e) =>
+                    setCoupon((prev) => ({
+                      ...prev,
+                      totalRedemptions: e.target.value,
+                    }))
+                  }
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Label>Redemptions Per User</Label>
+                <StyledTextField
+                  placeholder="e.g., 1"
+                  value={coupon.totalRedemptionsPerUser || ""}
+                  type="number"
+                  onChange={(e) =>
+                    setCoupon((prev) => ({
+                      ...prev,
+                      totalRedemptionsPerUser: e.target.value,
+                    }))
+                  }
+                />
+              </Grid>
+            </Grid>
+          </SectionCard>
         </Stack>
       </DialogContent>
     </DialogBox>

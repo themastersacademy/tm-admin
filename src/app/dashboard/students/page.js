@@ -14,7 +14,7 @@ import { Button, Stack, Typography, TablePagination } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import { apiFetch } from "@/src/lib/apiFetch";
-import StudentCard from "@/src/components/StudentCard/StudentCard";
+import StudentCard from "./Components/StudentCard";
 import UserCardSkeleton from "@/src/components/UserCardSkeleton/UserCardSkeleton";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
 import SecondaryCard from "@/src/components/SecondaryCard/SecondaryCard";
