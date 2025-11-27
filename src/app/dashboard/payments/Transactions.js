@@ -1,7 +1,23 @@
 "use client";
 import SearchBox from "@/src/components/SearchBox/SearchBox";
-import { LocalMall, Print, Close } from "@mui/icons-material";
 import {
+  LocalMall,
+  Print,
+  Close,
+  Person,
+  Email,
+  Phone,
+  LocationOn,
+  CreditCard,
+  Receipt,
+  ContentCopy,
+  CheckCircle,
+  Cancel,
+  Error as ErrorIcon,
+  Help,
+} from "@mui/icons-material";
+import {
+  Avatar,
   Box,
   Chip,
   Divider,
@@ -18,10 +34,44 @@ import {
   Button,
   CircularProgress,
   IconButton,
+  TablePagination,
+  Tooltip,
+  Grid,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useSnackbar } from "notistack";
 import RefreshIcon from "@mui/icons-material/Refresh";
+
+const getStatusColor = (status) => {
+  switch (status?.toLowerCase()) {
+    case "completed":
+      return { bg: "#E8F5E9", color: "#2E7D32" };
+    case "pending":
+      return { bg: "#FFF3E0", color: "#EF6C00" };
+    case "cancelled":
+      return { bg: "#FFEBEE", color: "#C62828" };
+    case "refunded":
+      return { bg: "#F3E5F5", color: "#7B1FA2" };
+    default:
+      return { bg: "#E3F2FD", color: "#1565C0" };
+  }
+};
+
+const headerCellStyle = {
+  backgroundColor: "var(--bg-color)",
+  color: "var(--text3)",
+  fontWeight: 700,
+  fontSize: "13px",
+  textTransform: "uppercase",
+  letterSpacing: "0.5px",
+  borderBottom: "2px solid var(--border-color)",
+  padding: "16px",
+};
+
+const cellStyle = {
+  borderBottom: "1px solid var(--border-color)",
+  padding: "16px",
+};
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
@@ -29,6 +79,17 @@ export default function Transactions() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   const handleRowClick = (user) => {
     setSelectedUser(user);
@@ -326,557 +387,735 @@ export default function Transactions() {
   }, []);
 
   return (
-    <Stack
-      sx={{
-        padding: "20px",
-        border: "1px solid var(--border-color)",
-        minHeight: "100vh",
-        backgroundColor: "var(--white)",
-        borderRadius: "10px",
-        gap: "20px",
-        marginTop: "20px",
-        maxWidth: "1200px",
-      }}
-    >
+    <Stack gap="20px" padding="20px" pt="30px">
       <Stack flexDirection="row" justifyContent="space-between">
         <Typography
           sx={{
-            fontFamily: "Lato",
             fontSize: "20px",
-            fontWeight: "700",
-            color: "var(--text3)",
+            fontWeight: 700,
+            color: "var(--text1)",
           }}
         >
           Transactions
         </Typography>
-        <Stack flexDirection="row" gap="10px" alignItems="flex-end">
+        <Stack flexDirection="row" gap="10px" alignItems="center">
           <SearchBox />
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={fetchTransactions}
+            sx={{
+              height: "40px",
+              textTransform: "none",
+              borderColor: "var(--border-color)",
+              color: "var(--text2)",
+              "&:hover": {
+                borderColor: "var(--primary-color)",
+                backgroundColor: "var(--bg-color)",
+              },
+            }}
+          >
+            Refresh
+          </Button>
         </Stack>
       </Stack>
       <Stack gap="15px">
         <TableContainer
+          component={Paper}
           sx={{
             boxShadow: "none",
             border: "1px solid var(--border-color)",
-            borderRadius: "8px",
+            borderRadius: "12px",
+            overflow: "hidden",
           }}
-          component={Paper}
         >
-          <Table sx={{ minWidth: 650 }} aria-label="simple table">
-            <TableHead sx={{ backgroundColor: "var(--library-expand)" }}>
+          <Table stickyHeader>
+            <TableHead>
               <TableRow>
-                <TableCell align="left">Name</TableCell>
-                <TableCell align="left">Order ID</TableCell>
-                <TableCell align="left">Amount</TableCell>
-                <TableCell align="left">Date</TableCell>
-                <TableCell align="left">Status</TableCell>
+                <TableCell sx={headerCellStyle}>Customer</TableCell>
+                <TableCell sx={headerCellStyle}>Order ID</TableCell>
+                <TableCell sx={headerCellStyle}>Date & Time</TableCell>
+                <TableCell sx={{ ...headerCellStyle, textAlign: "right" }}>
+                  Amount
+                </TableCell>
+                <TableCell sx={{ ...headerCellStyle, textAlign: "center" }}>
+                  Status
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {transactions.map((transaction, index) => (
-                <TableRow
-                  key={index}
-                  sx={{
-                    "&:last-child td, &:last-child th": { border: 0 },
-                    cursor: "pointer",
-                    "&:hover": { backgroundColor: "var(--library-expand)" },
-                  }}
-                  onClick={() => handleRowClick(transaction)}
-                >
-                  <TableCell component="th" scope="row">
-                    <Stack flexDirection="row" gap="10px" alignItems="center">
-                      <LocalMall
-                        sx={{
-                          color:
-                            transaction.status === "completed"
-                              ? "var(--primary-color)"
-                              : transaction.status === "pending"
-                              ? "var(--sec-color)"
-                              : transaction.status === "cancelled"
-                              ? "var(--text4)"
-                              : transaction.status === "refunded"
-                              ? "var(--delete-color)"
-                              : "var(--delete-color)",
-                          fontSize: "24px",
-                        }}
-                      />
-                      {transaction.userMeta.name}
-                    </Stack>
-                  </TableCell>
-                  <TableCell align="left">{transaction.order.id}</TableCell>
-                  <TableCell align="left">₹{transaction.amount}</TableCell>
-                  <TableCell align="left">
-                    {new Date(transaction.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell align="left">
-                    <Chip
-                      label={transaction.status || ""}
-                      size="small"
+              {transactions
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((transaction, index) => {
+                  const statusStyle = getStatusColor(transaction.status);
+                  return (
+                    <TableRow
+                      key={index}
+                      onClick={() => handleRowClick(transaction)}
                       sx={{
-                        backgroundColor:
-                          transaction.status === "completed"
-                            ? "var(--primary-color)"
-                            : transaction.status === "pending"
-                            ? "var(--sec-color)"
-                            : transaction.status === "cancelled"
-                            ? "var(--text4)"
-                            : transaction.status === "refunded"
-                            ? "var(--delete-color)"
-                            : "var(--delete-color)",
-                        fontSize: "14px",
-                        color:
-                          transaction.status === "completed"
-                            ? "white"
-                            : transaction.status === "pending"
-                            ? "white"
-                            : transaction.status === "cancelled"
-                            ? "white"
-                            : transaction.status === "refunded"
-                            ? "white"
-                            : "white",
-                        borderRadius: "6px",
-                        textTransform: "capitalize",
-                        minWidth: "90px",
+                        cursor: "pointer",
+                        "&:hover": {
+                          backgroundColor: "var(--bg-color)",
+                          transform: "scale(1.001)",
+                        },
+                        transition: "all 0.2s ease",
                       }}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
+                    >
+                      <TableCell sx={cellStyle}>
+                        <Stack direction="row" gap="12px" alignItems="center">
+                          <Avatar
+                            sx={{
+                              width: 42,
+                              height: 42,
+                              fontSize: "16px",
+                              bgcolor: "var(--primary-color)",
+                              fontWeight: 700,
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                            }}
+                          >
+                            {transaction.userMeta.name.charAt(0).toUpperCase()}
+                          </Avatar>
+                          <Stack>
+                            <Typography
+                              sx={{
+                                fontSize: "14px",
+                                fontWeight: 600,
+                                color: "var(--text1)",
+                                lineHeight: 1.4,
+                              }}
+                            >
+                              {transaction.userMeta.name}
+                            </Typography>
+                            <Typography
+                              sx={{
+                                fontSize: "12px",
+                                color: "var(--text3)",
+                                lineHeight: 1.4,
+                              }}
+                            >
+                              {transaction.userMeta.email}
+                            </Typography>
+                          </Stack>
+                        </Stack>
+                      </TableCell>
+                      <TableCell sx={cellStyle}>
+                        <Typography
+                          sx={{
+                            fontFamily: "monospace",
+                            fontWeight: 600,
+                            color: "var(--text2)",
+                            fontSize: "13px",
+                          }}
+                        >
+                          #{transaction.order.id}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={cellStyle}>
+                        <Stack gap="4px">
+                          <Typography
+                            sx={{
+                              fontSize: "13px",
+                              color: "var(--text2)",
+                              lineHeight: 1.4,
+                            }}
+                          >
+                            {new Date(transaction.createdAt).toLocaleDateString(
+                              "en-IN",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              }
+                            )}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontSize: "11px",
+                              color: "var(--text3)",
+                              lineHeight: 1.4,
+                            }}
+                          >
+                            {new Date(transaction.createdAt).toLocaleTimeString(
+                              "en-IN",
+                              { hour: "2-digit", minute: "2-digit" }
+                            )}
+                          </Typography>
+                        </Stack>
+                      </TableCell>
+                      <TableCell sx={{ ...cellStyle, textAlign: "right" }}>
+                        <Typography
+                          sx={{
+                            fontSize: "16px",
+                            fontWeight: 700,
+                            color: "var(--text1)",
+                          }}
+                        >
+                          ₹{transaction.amount.toLocaleString("en-IN")}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ ...cellStyle, textAlign: "center" }}>
+                        <Chip
+                          label={transaction.status}
+                          size="small"
+                          sx={{
+                            backgroundColor: statusStyle.bg,
+                            color: statusStyle.color,
+                            fontWeight: 600,
+                            fontSize: "11px",
+                            borderRadius: "6px",
+                            textTransform: "capitalize",
+                            height: "24px",
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
             </TableBody>
           </Table>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={transactions.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            sx={{
+              borderTop: "1px solid var(--border-color)",
+            }}
+          />
         </TableContainer>
         <Drawer
           anchor="right"
           open={drawerOpen}
           onClose={handleDrawerClose}
-          sx={{ zIndex: 1300, minHeight: "100vh" }}
-        >
-          <Box
-            sx={{
-              padding: 2,
-              minHeight: "100%",
+          PaperProps={{
+            sx: {
+              width: "500px",
+              maxWidth: "100%",
               display: "flex",
-              width: "350px",
-            }}
-          >
-            {selectedUser ? (
-              <Stack gap={1} width="100%" height="100%">
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  padding="16px 20px"
-                  sx={{
-                    borderBottom: "1px solid var(--border-color)",
-                    backgroundColor: "var(--bg-color)",
-                  }}
-                >
-                  <Stack
-                    direction="row"
-                    gap="12px"
-                    alignItems="center"
-                    flex={1}
+              flexDirection: "column",
+            },
+          }}
+          sx={{ zIndex: 1300 }}
+        >
+          {selectedUser ? (
+            <>
+              {/* Header */}
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{
+                  p: 3,
+                  borderBottom: "1px solid var(--border-color)",
+                  bgcolor: "var(--bg-color)",
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 10,
+                }}
+              >
+                <Stack direction="row" gap={2} alignItems="center">
+                  <Avatar
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      bgcolor: "var(--primary-color)",
+                      fontSize: "20px",
+                      fontWeight: 700,
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                    }}
                   >
-                    <LocalMall
-                      sx={{ color: "var(--primary-color)", fontSize: "24px" }}
-                    />
+                    {selectedUser.userMeta.name.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Stack>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 700,
+                        color: "var(--text1)",
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {selectedUser.userMeta.name}
+                    </Typography>
+                    <Stack direction="row" gap={0.5} alignItems="center">
+                      <Email sx={{ fontSize: 14, color: "var(--text3)" }} />
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "var(--text3)", fontSize: "13px" }}
+                      >
+                        {selectedUser.userMeta.email}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                </Stack>
+                <IconButton
+                  onClick={handleDrawerClose}
+                  sx={{ color: "var(--text2)" }}
+                >
+                  <Close />
+                </IconButton>
+              </Stack>
+
+              {/* Content */}
+              <Box sx={{ p: 3, overflowY: "auto", flex: 1 }}>
+                <Stack gap={3}>
+                  {/* Status Banner */}
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      bgcolor: getStatusColor(selectedUser.status).bg,
+                      border: `1px solid ${
+                        getStatusColor(selectedUser.status).color
+                      }30`,
+                      borderRadius: "12px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                    }}
+                  >
+                    {selectedUser.status === "completed" ? (
+                      <CheckCircle
+                        sx={{
+                          color: getStatusColor(selectedUser.status).color,
+                        }}
+                      />
+                    ) : selectedUser.status === "cancelled" ||
+                      selectedUser.status === "refunded" ? (
+                      <Cancel
+                        sx={{
+                          color: getStatusColor(selectedUser.status).color,
+                        }}
+                      />
+                    ) : (
+                      <ErrorIcon
+                        sx={{
+                          color: getStatusColor(selectedUser.status).color,
+                        }}
+                      />
+                    )}
                     <Stack>
                       <Typography
                         sx={{
-                          fontFamily: "Lato",
-                          fontSize: "18px",
                           fontWeight: 700,
+                          color: getStatusColor(selectedUser.status).color,
+                          textTransform: "capitalize",
                         }}
                       >
-                        {selectedUser.userMeta.name}
+                        {selectedUser.status} Transaction
                       </Typography>
                       <Typography
-                        sx={{ fontSize: "13px", color: "var(--text3)" }}
+                        variant="caption"
+                        sx={{ color: "var(--text2)" }}
                       >
-                        Transaction Details
+                        {selectedUser.status === "completed"
+                          ? "Payment successfully processed"
+                          : `Transaction is ${selectedUser.status}`}
                       </Typography>
                     </Stack>
-                  </Stack>
-                  <Stack direction="row" gap="8px" alignItems="center">
-                    <Chip
-                      label={selectedUser.status || ""}
-                      size="small"
-                      sx={{
-                        backgroundColor:
-                          selectedUser.status === "completed"
-                            ? "var(--primary-color)"
-                            : selectedUser.status === "pending"
-                            ? "var(--sec-color)"
-                            : selectedUser.status === "cancelled"
-                            ? "var(--text4)"
-                            : selectedUser.status === "refunded"
-                            ? "var(--delete-color)"
-                            : "var(--delete-color)",
-                        fontSize: "12px",
-                        color: "white",
-                        borderRadius: "6px",
-                        textTransform: "capitalize",
-                        fontWeight: 600,
-                      }}
-                    />
-                    <Button
-                      variant="outlined"
-                      startIcon={<Print />}
-                      onClick={handlePrint}
-                      size="small"
-                      sx={{
-                        borderRadius: "8px",
-                        textTransform: "none",
-                        borderColor: "var(--border-color)",
-                        color: "var(--text2)",
-                        fontSize: "13px",
-                      }}
-                    >
-                      Print Invoice
-                    </Button>
-                    <IconButton onClick={handleDrawerClose} size="small">
-                      <Close />
-                    </IconButton>
-                  </Stack>
-                </Stack>
-                <Stack gap="10px">
-                  <Stack
-                    flexDirection="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                  >
+                  </Paper>
+
+                  {/* Order Details */}
+                  <Stack gap={1.5}>
                     <Typography
                       sx={{
-                        fontFamily: "Lato",
-                        fontSize: "16px",
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        color: "var(--text3)",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
                       }}
                     >
-                      Order ID
+                      Order Details
                     </Typography>
-                    <Typography sx={{ color: "var(--text3)" }}>
-                      {selectedUser.order.id}
-                    </Typography>
-                  </Stack>
-                  <Stack
-                    flexDirection="row"
-                    gap="10px"
-                    alignItems="center"
-                    justifyContent="space-between"
-                  >
-                    <Typography
+                    <Paper
+                      elevation={0}
                       sx={{
-                        fontFamily: "Lato",
-                        fontSize: "16px",
+                        p: 2,
+                        border: "1px solid var(--border-color)",
+                        borderRadius: "12px",
                       }}
                     >
-                      Email ID
-                    </Typography>
-                    <Typography sx={{ color: "var(--text3)" }}>
-                      {selectedUser.userMeta.email}
-                    </Typography>
-                  </Stack>
-                  <Stack
-                    flexDirection="row"
-                    gap="10px"
-                    alignItems="center"
-                    justifyContent="space-between"
-                  >
-                    <Typography
-                      sx={{
-                        fontFamily: "Lato",
-                        fontSize: "16px",
-                      }}
-                    >
-                      Purchase Date
-                    </Typography>
-                    <Typography sx={{ color: "var(--text3)" }}>
-                      {new Date(selectedUser.createdAt).toLocaleDateString()}
-                    </Typography>
+                      <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                          <Stack gap={0.5}>
+                            <Typography variant="caption" color="var(--text3)">
+                              Order ID
+                            </Typography>
+                            <Stack direction="row" alignItems="center" gap={1}>
+                              <Typography fontWeight={600} fontSize="14px">
+                                #{selectedUser.order.id}
+                              </Typography>
+                              <Tooltip title="Copy Order ID">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(
+                                      selectedUser.order.id
+                                    );
+                                    enqueueSnackbar("Order ID copied", {
+                                      variant: "success",
+                                    });
+                                  }}
+                                >
+                                  <ContentCopy sx={{ fontSize: 14 }} />
+                                </IconButton>
+                              </Tooltip>
+                            </Stack>
+                          </Stack>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Stack gap={0.5}>
+                            <Typography variant="caption" color="var(--text3)">
+                              Date & Time
+                            </Typography>
+                            <Typography fontWeight={600} fontSize="14px">
+                              {new Date(selectedUser.createdAt).toLocaleString(
+                                "en-IN",
+                                {
+                                  dateStyle: "medium",
+                                  timeStyle: "short",
+                                }
+                              )}
+                            </Typography>
+                          </Stack>
+                        </Grid>
+                      </Grid>
+                    </Paper>
                   </Stack>
 
-                  <Stack gap="10px">
+                  {/* Customer Details */}
+                  <Stack gap={1.5}>
                     <Typography
                       sx={{
-                        fontFamily: "Lato",
-                        fontSize: "18px",
-                        fontWeight: "700",
-                        marginTop: "10px",
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        color: "var(--text3)",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
                       }}
                     >
-                      User Details
+                      Customer Information
                     </Typography>
-                    <Divider />
-                    <Stack
-                      flexDirection="row"
-                      gap="10px"
-                      alignItems="center"
-                      justifyContent="space-between"
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        border: "1px solid var(--border-color)",
+                        borderRadius: "12px",
+                      }}
                     >
-                      <Typography
-                        sx={{
-                          fontFamily: "Lato",
-                          fontSize: "16px",
-                        }}
-                      >
-                        Phone Number
-                      </Typography>
-                      <Typography sx={{ color: "var(--text3)" }}>
-                        {selectedUser.userMeta.billingInfo.phone}
-                      </Typography>
-                    </Stack>
-                    <Stack
-                      flexDirection="row"
-                      gap="10px"
-                      alignItems="center"
-                      justifyContent="space-between"
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: "Lato",
-                          fontSize: "16px",
-                        }}
-                      >
-                        City
-                      </Typography>
-                      <Typography sx={{ color: "var(--text3)" }}>
-                        {selectedUser.userMeta.billingInfo.city}
-                      </Typography>
-                    </Stack>
-                    <Stack
-                      flexDirection="row"
-                      gap="10px"
-                      alignItems="center"
-                      justifyContent="space-between"
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: "Lato",
-                          fontSize: "16px",
-                        }}
-                      >
-                        State
-                      </Typography>
-                      <Typography sx={{ color: "var(--text3)" }}>
-                        {selectedUser.userMeta.billingInfo.state}
-                      </Typography>
-                    </Stack>
+                      <Stack gap={2}>
+                        <Stack direction="row" gap={2} alignItems="center">
+                          <Phone sx={{ color: "var(--text3)", fontSize: 20 }} />
+                          <Stack>
+                            <Typography variant="caption" color="var(--text3)">
+                              Phone Number
+                            </Typography>
+                            <Typography fontWeight={500} fontSize="14px">
+                              {selectedUser.userMeta.billingInfo?.phone ||
+                                "N/A"}
+                            </Typography>
+                          </Stack>
+                        </Stack>
+                        <Divider />
+                        <Stack direction="row" gap={2} alignItems="center">
+                          <LocationOn
+                            sx={{ color: "var(--text3)", fontSize: 20 }}
+                          />
+                          <Stack>
+                            <Typography variant="caption" color="var(--text3)">
+                              Billing Address
+                            </Typography>
+                            <Typography fontWeight={500} fontSize="14px">
+                              {[
+                                selectedUser.userMeta.billingInfo?.city,
+                                selectedUser.userMeta.billingInfo?.state,
+                              ]
+                                .filter(Boolean)
+                                .join(", ") || "N/A"}
+                            </Typography>
+                          </Stack>
+                        </Stack>
+                      </Stack>
+                    </Paper>
                   </Stack>
-                  {selectedUser?.status === "completed" && (
-                    <Stack gap="10px">
+
+                  {/* Payment Details */}
+                  <Stack gap={1.5}>
+                    <Typography
+                      sx={{
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        color: "var(--text3)",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                      }}
+                    >
+                      Payment Information
+                    </Typography>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        border: "1px solid var(--border-color)",
+                        borderRadius: "12px",
+                      }}
+                    >
+                      <Stack gap={2}>
+                        <Stack direction="row" justifyContent="space-between">
+                          <Stack direction="row" gap={2} alignItems="center">
+                            <CreditCard
+                              sx={{ color: "var(--text3)", fontSize: 20 }}
+                            />
+                            <Stack>
+                              <Typography
+                                variant="caption"
+                                color="var(--text3)"
+                              >
+                                Payment Method
+                              </Typography>
+                              <Typography fontWeight={500} fontSize="14px">
+                                {selectedUser.paymentDetails?.method ||
+                                  "Online"}
+                              </Typography>
+                            </Stack>
+                          </Stack>
+                          <Stack alignItems="flex-end">
+                            <Typography variant="caption" color="var(--text3)">
+                              Amount
+                            </Typography>
+                            <Typography
+                              fontWeight={700}
+                              fontSize="16px"
+                              color="var(--primary-color)"
+                            >
+                              ₹{selectedUser.amount?.toLocaleString("en-IN")}
+                            </Typography>
+                          </Stack>
+                        </Stack>
+                        <Divider />
+                        <Stack gap={0.5}>
+                          <Typography variant="caption" color="var(--text3)">
+                            Transaction ID
+                          </Typography>
+                          <Stack direction="row" alignItems="center" gap={1}>
+                            <Typography
+                              fontWeight={500}
+                              fontSize="13px"
+                              sx={{
+                                fontFamily: "monospace",
+                                wordBreak: "break-all",
+                              }}
+                            >
+                              {selectedUser.paymentDetails?.razorpayPaymentId ||
+                                "N/A"}
+                            </Typography>
+                            {selectedUser.paymentDetails?.razorpayPaymentId && (
+                              <Tooltip title="Copy Transaction ID">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(
+                                      selectedUser.paymentDetails
+                                        .razorpayPaymentId
+                                    );
+                                    enqueueSnackbar("Transaction ID copied", {
+                                      variant: "success",
+                                    });
+                                  }}
+                                >
+                                  <ContentCopy sx={{ fontSize: 14 }} />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                          </Stack>
+                        </Stack>
+                      </Stack>
+                    </Paper>
+                  </Stack>
+
+                  {/* Refund Details (Conditional) */}
+                  {selectedUser.status === "refunded" && (
+                    <Stack gap={1.5}>
                       <Typography
                         sx={{
-                          fontFamily: "Lato",
-                          fontSize: "18px",
-                          fontWeight: "700",
-                          marginTop: "10px",
-                        }}
-                      >
-                        Billing Details
-                      </Typography>
-                      <Divider />
-                      <Stack
-                        flexDirection="row"
-                        gap="10px"
-                        alignItems="center"
-                        justifyContent="space-between"
-                      >
-                        <Typography
-                          sx={{
-                            fontFamily: "Lato",
-                            fontSize: "16px",
-                          }}
-                        >
-                          Payment Method
-                        </Typography>
-                        <Typography sx={{ color: "var(--text3)" }}>
-                          {selectedUser?.paymentDetails?.method}
-                        </Typography>
-                      </Stack>
-                      <Stack
-                        flexDirection="row"
-                        gap="10px"
-                        alignItems="center"
-                        justifyContent="space-between"
-                      >
-                        <Typography
-                          sx={{
-                            fontFamily: "Lato",
-                            fontSize: "16px",
-                          }}
-                        >
-                          Payment ID
-                        </Typography>
-                        <Typography sx={{ color: "var(--text3)" }}>
-                          {selectedUser?.paymentDetails?.razorpayPaymentId}
-                        </Typography>
-                      </Stack>
-                    </Stack>
-                  )}
-                  {selectedUser?.status === "refunded" && (
-                    <Stack gap="10px">
-                      <Typography
-                        sx={{
-                          fontFamily: "Lato",
-                          fontSize: "18px",
-                          fontWeight: "700",
-                          marginTop: "10px",
+                          fontSize: "14px",
+                          fontWeight: 700,
+                          color: "var(--delete-color)",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
                         }}
                       >
                         Refund Details
                       </Typography>
-                      <Divider />
-                      <Stack
-                        flexDirection="row"
-                        gap="10px"
-                        alignItems="center"
-                        justifyContent="space-between"
-                      >
-                        <Typography
-                          sx={{
-                            fontFamily: "Lato",
-                            fontSize: "16px",
-                          }}
-                        >
-                          Refunded Amount
-                        </Typography>
-                        <Typography sx={{ color: "var(--text3)" }}>
-                          ₹{selectedUser?.paymentDetails?.refundedAmount}
-                        </Typography>
-                      </Stack>
-                      <Stack
-                        flexDirection="row"
-                        gap="10px"
-                        alignItems="center"
-                        justifyContent="space-between"
-                      >
-                        <Typography
-                          sx={{
-                            fontFamily: "Lato",
-                            fontSize: "16px",
-                          }}
-                        >
-                          Refunded At
-                        </Typography>
-                        <Typography sx={{ color: "var(--text3)" }}>
-                          {new Date(
-                            selectedUser?.paymentDetails?.refundedAt
-                          ).toLocaleDateString()}
-                        </Typography>
-                      </Stack>
-                      <Stack
-                        flexDirection="row"
-                        gap="10px"
-                        alignItems="center"
-                        justifyContent="space-between"
-                      >
-                        <Typography
-                          sx={{
-                            fontFamily: "Lato",
-                            fontSize: "16px",
-                          }}
-                        >
-                          Refund ID
-                        </Typography>
-                        <Typography sx={{ color: "var(--text3)" }}>
-                          {selectedUser?.paymentDetails?.refundId}
-                        </Typography>
-                      </Stack>
-                      <Stack
-                        flexDirection="row"
-                        gap="10px"
-                        alignItems="center"
-                        justifyContent="space-between"
-                      >
-                        <Typography
-                          sx={{
-                            fontFamily: "Lato",
-                            fontSize: "16px",
-                          }}
-                        >
-                          Refunded Status
-                        </Typography>
-                        <Typography sx={{ color: "var(--text3)" }}>
-                          {selectedUser?.paymentDetails?.status}
-                        </Typography>
-                      </Stack>
-                    </Stack>
-                  )}
-                  {/* {selectedUser?.status === "completed" && (
-                    <Stack
-                      flexDirection="row"
-                      gap="10px"
-                      marginTop="10px"
-                      justifyContent="space-between"
-                    >
-                      {selectedUser?.status === "completed" && (
-                        <IconButton
-                          onClick={refreshTransaction}
+                      <Paper
+                        elevation={0}
                         sx={{
-                          backgroundColor: "var(--primary-color)",
-                          color: "white",
-                          "&:hover": {
-                            backgroundColor: "var(--primary-color)",
-                          },
+                          p: 2,
+                          bgcolor: "#FFEBEE",
+                          border: "1px solid #FFCDD2",
+                          borderRadius: "12px",
                         }}
                       >
-                        <RefreshIcon />
-                      </IconButton>
-                      )}
-                      {loading ? (
-                        <CircularProgress />
-                      ) : (
-                        <Button
-                          variant="contained"
-                          color="error"
-                          sx={{
-                            textTransform: "none",
-                            fontFamily: "Lato",
-                            fontSize: "16px",
-                            borderRadius: "6px",
-                          }}
-                          onClick={handleRefund}
-                        >
-                          Refund
-                        </Button>
-                      )}
+                        <Stack gap={1}>
+                          <Stack direction="row" justifyContent="space-between">
+                            <Typography
+                              variant="body2"
+                              color="var(--delete-color)"
+                            >
+                              Refunded Amount
+                            </Typography>
+                            <Typography
+                              fontWeight={700}
+                              color="var(--delete-color)"
+                            >
+                              ₹{selectedUser.paymentDetails?.refundedAmount}
+                            </Typography>
+                          </Stack>
+                          <Stack direction="row" justifyContent="space-between">
+                            <Typography
+                              variant="body2"
+                              color="var(--delete-color)"
+                            >
+                              Refund ID
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              fontWeight={600}
+                              color="var(--delete-color)"
+                            >
+                              {selectedUser.paymentDetails?.refundId}
+                            </Typography>
+                          </Stack>
+                          <Stack direction="row" justifyContent="space-between">
+                            <Typography
+                              variant="body2"
+                              color="var(--delete-color)"
+                            >
+                              Date
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              fontWeight={600}
+                              color="var(--delete-color)"
+                            >
+                              {new Date(
+                                selectedUser.paymentDetails?.refundedAt
+                              ).toLocaleDateString()}
+                            </Typography>
+                          </Stack>
+                        </Stack>
+                      </Paper>
                     </Stack>
-                  )} */}
+                  )}
                 </Stack>
+              </Box>
 
-                <Stack sx={{ marginTop: "auto" }}>
-                  <Divider sx={{ my: 1 }} />
-                  <Stack
-                    flexDirection="row"
-                    gap="10px"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    sx={{ marginTop: "auto" }}
+              {/* Footer */}
+              <Stack
+                p={3}
+                gap={2}
+                sx={{
+                  borderTop: "1px solid var(--border-color)",
+                  bgcolor: "var(--bg-color)",
+                  position: "sticky",
+                  bottom: 0,
+                  zIndex: 10,
+                }}
+              >
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Typography sx={{ color: "var(--text2)", fontWeight: 600 }}>
+                    Total Amount
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: "24px",
+                      fontWeight: 800,
+                      color: "var(--text1)",
+                    }}
                   >
-                    <Typography
-                      sx={{
-                        fontFamily: "Lato",
-                        fontSize: "20px",
-                        fontWeight: "700",
-                      }}
-                    >
-                      Total
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontFamily: "Lato",
-                        fontSize: "20px",
-                        fontWeight: "700",
-                      }}
-                    >
-                      ₹{selectedUser.amount}
-                    </Typography>
-                  </Stack>
+                    ₹{selectedUser.amount?.toLocaleString("en-IN")}
+                  </Typography>
                 </Stack>
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      startIcon={<Print />}
+                      onClick={handlePrint}
+                      sx={{
+                        height: "44px",
+                        borderRadius: "8px",
+                        textTransform: "none",
+                        fontWeight: 600,
+                        borderColor: "var(--border-color)",
+                        color: "var(--text1)",
+                      }}
+                    >
+                      Print Invoice
+                    </Button>
+                  </Grid>
+                  <Grid item xs={6}>
+                    {selectedUser.status === "completed" ? (
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        color="error"
+                        onClick={handleRefund}
+                        disabled={loading}
+                        sx={{
+                          height: "44px",
+                          borderRadius: "8px",
+                          textTransform: "none",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {loading ? (
+                          <CircularProgress size={20} />
+                        ) : (
+                          "Process Refund"
+                        )}
+                      </Button>
+                    ) : (
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        onClick={handleDrawerClose}
+                        sx={{
+                          height: "44px",
+                          borderRadius: "8px",
+                          textTransform: "none",
+                          fontWeight: 600,
+                          bgcolor: "var(--primary-color)",
+                          boxShadow: "none",
+                        }}
+                      >
+                        Close
+                      </Button>
+                    )}
+                  </Grid>
+                </Grid>
               </Stack>
-            ) : (
-              <Typography variant="body2">No user selected</Typography>
-            )}
-          </Box>
+            </>
+          ) : (
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              height="100%"
+            >
+              <CircularProgress />
+            </Box>
+          )}
         </Drawer>
       </Stack>
     </Stack>
