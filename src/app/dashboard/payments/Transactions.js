@@ -1045,27 +1045,27 @@ export default function Transactions() {
                     ₹{selectedUser.amount?.toLocaleString("en-IN")}
                   </Typography>
                 </Stack>
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      startIcon={<Print />}
-                      onClick={handlePrint}
-                      sx={{
-                        height: "44px",
-                        borderRadius: "8px",
-                        textTransform: "none",
-                        fontWeight: 600,
-                        borderColor: "var(--border-color)",
-                        color: "var(--text1)",
-                      }}
-                    >
-                      Print Invoice
-                    </Button>
-                  </Grid>
-                  <Grid item xs={6}>
-                    {selectedUser.status === "completed" ? (
+                {selectedUser.status === "completed" ? (
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        startIcon={<Print />}
+                        onClick={handlePrint}
+                        sx={{
+                          height: "44px",
+                          borderRadius: "8px",
+                          textTransform: "none",
+                          fontWeight: 600,
+                          borderColor: "var(--border-color)",
+                          color: "var(--text1)",
+                        }}
+                      >
+                        Print Invoice
+                      </Button>
+                    </Grid>
+                    <Grid item xs={6}>
                       <Button
                         fullWidth
                         variant="outlined"
@@ -1085,25 +1085,25 @@ export default function Transactions() {
                           "Process Refund"
                         )}
                       </Button>
-                    ) : (
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        onClick={handleDrawerClose}
-                        sx={{
-                          height: "44px",
-                          borderRadius: "8px",
-                          textTransform: "none",
-                          fontWeight: 600,
-                          bgcolor: "var(--primary-color)",
-                          boxShadow: "none",
-                        }}
-                      >
-                        Close
-                      </Button>
-                    )}
+                    </Grid>
                   </Grid>
-                </Grid>
+                ) : (
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={handleDrawerClose}
+                    sx={{
+                      height: "44px",
+                      borderRadius: "8px",
+                      textTransform: "none",
+                      fontWeight: 600,
+                      bgcolor: "var(--primary-color)",
+                      boxShadow: "none",
+                    }}
+                  >
+                    Close
+                  </Button>
+                )}
               </Stack>
             </>
           ) : (
