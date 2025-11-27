@@ -11,12 +11,20 @@ import {
   IconButton,
   Stack,
   Typography,
+  Box,
 } from "@mui/material";
 import * as XLSX from "xlsx";
 import { useEffect, useRef, useState } from "react";
 import { sanitizeQuestions } from "@/src/lib/sanitizeQuestion";
 import QuestionCard from "@/src/components/QuestionCard/QuestionCard";
-import { Close, ExpandMore, Visibility } from "@mui/icons-material";
+import {
+  Close,
+  ExpandMore,
+  Visibility,
+  CloudUpload,
+  InsertDriveFile,
+  Delete,
+} from "@mui/icons-material";
 import DialogBox from "@/src/components/DialogBox/DialogBox";
 import PreviewStepper from "./PreviewStepper";
 import ErrorQuestionCard from "./ErrorQuestionCard";
@@ -36,10 +44,8 @@ export default function BulkImport({ subjectTitle, isOpen, close }) {
   const [error, setError] = useState("");
 
   const previewDialogOpen = (question) => {
-    console.log(question);
     setIsPreviewDialog(true);
     setPreviewData(question);
-    // setSelectedSubject(question.subjectID);
   };
   const previewDialogClose = () => {
     setIsPreviewDialog(false);
@@ -47,10 +53,9 @@ export default function BulkImport({ subjectTitle, isOpen, close }) {
 
   const triggerFileInput = () => {
     if (!selectedSubject) {
-      setError("Please select a subject before choosing a file.");
+      enqueueSnackbar("Please select a subject first.", { variant: "warning" });
       return;
     }
-    setError("");
     fileInputRef.current.click();
   };
 
@@ -69,10 +74,19 @@ export default function BulkImport({ subjectTitle, isOpen, close }) {
       selectedSubject
     );
     setError(errors);
-    console.log(sanitizedQuestions, errors);
     setQuestions(sanitizedQuestions);
     setPreview(sanitizedQuestions);
-    setError(errors);
+    if (errors && errors.length > 0) {
+      setIsOpenAccordion(true);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setFile(null);
+    setQuestions([]);
+    setPreview([]);
+    setError("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSubmit = async () => {
@@ -81,12 +95,14 @@ export default function BulkImport({ subjectTitle, isOpen, close }) {
       enqueueSnackbar("Please select a subject before importing.", {
         variant: "error",
       });
+      setIsLoading(false);
       return;
     }
     if (!questions.length) {
       enqueueSnackbar("Please upload a file to import questions.", {
         variant: "error",
       });
+      setIsLoading(false);
       return;
     }
 
@@ -101,14 +117,16 @@ export default function BulkImport({ subjectTitle, isOpen, close }) {
         enqueueSnackbar("Questions imported successfully.", {
           variant: "success",
         });
+        handleRemoveFile();
         close();
+      } else {
+        enqueueSnackbar("Import failed: " + result.error, { variant: "error" });
       }
     } catch (err) {
       enqueueSnackbar("Upload failed.", {
         variant: "error",
       });
     } finally {
-      close();
       setIsLoading(false);
     }
   };
@@ -122,18 +140,16 @@ export default function BulkImport({ subjectTitle, isOpen, close }) {
         <Stack direction="row" gap="10px">
           <Button
             variant="outlined"
-            sx={{
-              color: "var(--delete-color)",
-              borderColor: "var(--delete-color)",
-              textTransform: "none",
+            onClick={() => {
+              handleRemoveFile();
+              close();
             }}
             disabled={isLoading}
-            onClick={() => {
-              setError([]);
-              setQuestions([]);
-              setPreview([]);
-              setFile(null);
-              close();
+            sx={{
+              color: "var(--text2)",
+              borderColor: "var(--border-color)",
+              textTransform: "none",
+              borderRadius: "8px",
             }}
           >
             Cancel
@@ -144,166 +160,242 @@ export default function BulkImport({ subjectTitle, isOpen, close }) {
             disabled={
               !selectedSubject || !questions.length || !file || isLoading
             }
-            loading={isLoading}
             sx={{
               backgroundColor: "var(--primary-color)",
               textTransform: "none",
+              borderRadius: "8px",
+              boxShadow: "none",
             }}
           >
-            Upload
+            {isLoading ? "Importing..." : "Import Questions"}
           </Button>
         </Stack>
       }
       titleComponent={
-        <Stack direction="row" gap="10px" mt="20px">
+        <Stack direction="row" gap="10px" mt="20px" alignItems="center">
           <StyledSelect
             title="Select Subject"
             value={selectedSubject}
             onChange={(e) => {
               setSelectedSubject(e.target.value);
-              setError("");
+              // If file exists, maybe re-validate? For now, we just set subject.
+              // Ideally, changing subject might require re-parsing if validation depends on it.
+              // But sanitizeQuestions uses subjectID for the object, not much validation logic there usually.
             }}
             options={subjectTitle}
             getLabel={(s) => s.title}
             getValue={(s) => s.subjectID}
           />
-
-          <Stack
-            flexDirection="row"
-            justifyContent="space-between"
-            alignItems="center"
-            sx={{
-              width: "100%",
-              height: "40px",
-              border: "1px solid var(--border-color)",
-              borderRadius: "4px",
-              padding: "8px",
-            }}
-          >
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept=".csv, .xlsx, .xls"
-              onChange={handleFileChange}
-              style={{ visibility: "hidden", position: "absolute" }}
-            />
-            {file ? (
-              <Typography>{file.name}</Typography>
-            ) : (
-              <Typography>Select File</Typography>
-            )}
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: "var(--primary-color)",
-                height: "30px",
-                textTransform: "none",
-                marginLeft: "auto",
-                minWidth: "130px",
-              }}
-              onClick={triggerFileInput}
-              disabled={!selectedSubject}
-            >
-              Choose File
-            </Button>
-          </Stack>
         </Stack>
       }
     >
-      <Stack p="20px" gap="20px" height="100%">
-        {error.length > 0 ? (
-          <Accordion
-            disableGutters
-            expanded={isOpenAccordion}
-            onClick={() => setIsOpenAccordion(!isOpenAccordion)}
+      <Stack p="24px" gap="24px" height="100%">
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept=".csv, .xlsx, .xls"
+          onChange={handleFileChange}
+          style={{ display: "none" }}
+        />
+
+        {!file ? (
+          <Stack
+            onClick={triggerFileInput}
+            alignItems="center"
+            justifyContent="center"
+            gap="12px"
             sx={{
-              border: "1px solid var(--delete-color)",
-              borderRadius: "10px",
-              minHeight: "80px",
-              width: "100%",
-              "&:before": { display: "none" },
-              "&.MuiPaper-root": {
-                minHeight: "0px",
+              border: "2px dashed var(--border-color)",
+              borderRadius: "12px",
+              backgroundColor: "var(--bg-color)",
+              padding: "40px",
+              cursor: selectedSubject ? "pointer" : "not-allowed",
+              transition: "all 0.2s ease",
+              opacity: selectedSubject ? 1 : 0.6,
+              "&:hover": {
+                borderColor: selectedSubject
+                  ? "var(--primary-color)"
+                  : "var(--border-color)",
+                backgroundColor: selectedSubject
+                  ? "rgba(102, 126, 234, 0.04)"
+                  : "var(--bg-color)",
               },
             }}
-            elevation={0}
           >
-            <AccordionSummary
-              component="div"
-              sx={{ margin: "0px" }}
-              expandIcon={
-                <IconButton
-                  sx={{ padding: "3px" }}
-                  onClick={() => setIsOpenAccordion(!isOpenAccordion)}
-                >
-                  <ExpandMore
-                    sx={{ color: "var(--text2)", fontSize: "30px" }}
-                  />
-                </IconButton>
-              }
+            <Box
+              sx={{
+                width: "60px",
+                height: "60px",
+                borderRadius: "50%",
+                backgroundColor: "rgba(102, 126, 234, 0.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-              <Typography color="error" fontSize="14px">
-                Some rows have errors
+              <CloudUpload
+                sx={{ fontSize: "32px", color: "var(--primary-color)" }}
+              />
+            </Box>
+            <Stack alignItems="center">
+              <Typography
+                variant="h6"
+                fontWeight="600"
+                color="var(--text1)"
+                fontSize="16px"
+              >
+                Click to upload or drag and drop
               </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Stack gap="10px">
-                {error?.map((e) => (
-                  <ErrorQuestionCard key={e.row} error={e} />
-                ))}
-              </Stack>
-            </AccordionDetails>
-          </Accordion>
-        ) : null}
-        {preview.length > 0 ? (
-          preview.map((row, i) => (
-            <QuestionCard
-              key={i}
-              question={row.title}
-              difficulty={
-                row.difficultyLevel === 0
-                  ? 1
-                  : row.difficultyLevel === 1
-                  ? 2
-                  : 3
-              }
-              questionType={row.type}
-              subjectID={row.subjectID}
-              preview={
-                <Chip
-                  icon={<Visibility sx={{ fontSize: "small" }} />}
-                  label="Preview"
-                  onClick={() => previewDialogOpen(row)}
-                  sx={{
-                    fontSize: "10px",
-                    fontFamily: "Lato",
-                    fontWeight: "700",
-                    height: "20px",
-                    backgroundColor: "var(--border-color)",
-                    color: "var(--text3)",
-                  }}
-                />
-              }
-            />
-          ))
+              <Typography variant="body2" color="var(--text3)">
+                Supports .csv, .xlsx, .xls
+              </Typography>
+            </Stack>
+          </Stack>
         ) : (
-          <Stack
-            justifyContent="center"
-            alignItems="center"
-            height="100%"
-            width="100%"
-            minHeight="400px"
-          >
-            <NoDataFound info="Please upload a file to import questions" />
+          <Stack gap="20px">
+            {/* File Info Card */}
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{
+                p: 2,
+                border: "1px solid var(--border-color)",
+                borderRadius: "10px",
+                backgroundColor: "var(--white)",
+              }}
+            >
+              <Stack direction="row" alignItems="center" gap={2}>
+                <Box
+                  sx={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "8px",
+                    backgroundColor: "#E8F0FE",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Typography
+                    fontWeight="700"
+                    fontSize="10px"
+                    color="var(--primary-color)"
+                  >
+                    XLSX
+                  </Typography>
+                </Box>
+                <Stack>
+                  <Typography fontWeight="600" fontSize="14px">
+                    {file.name}
+                  </Typography>
+                  <Typography fontSize="12px" color="var(--text3)">
+                    {(file.size / 1024).toFixed(2)} KB
+                  </Typography>
+                </Stack>
+              </Stack>
+              <IconButton onClick={handleRemoveFile}>
+                <Close sx={{ color: "var(--text3)" }} />
+              </IconButton>
+            </Stack>
+
+            {/* Error Section */}
+            {error && error.length > 0 && (
+              <Accordion
+                disableGutters
+                expanded={isOpenAccordion}
+                onChange={() => setIsOpenAccordion(!isOpenAccordion)}
+                sx={{
+                  border: "1px solid #ffcdd2",
+                  borderRadius: "10px !important",
+                  backgroundColor: "#ffebee",
+                  boxShadow: "none",
+                  "&:before": { display: "none" },
+                }}
+              >
+                <AccordionSummary
+                  expandIcon={<ExpandMore sx={{ color: "#d32f2f" }} />}
+                >
+                  <Stack direction="row" alignItems="center" gap={1}>
+                    <Typography
+                      color="#d32f2f"
+                      fontWeight="600"
+                      fontSize="14px"
+                    >
+                      Found {error.length} errors
+                    </Typography>
+                  </Stack>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Stack gap="10px">
+                    {error.map((e, idx) => (
+                      <ErrorQuestionCard key={idx} error={e} />
+                    ))}
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
+            )}
+
+            {/* Preview List */}
+            {preview.length > 0 && (
+              <Stack gap="16px">
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Typography fontWeight="700" fontSize="16px">
+                    Preview ({preview.length} Questions)
+                  </Typography>
+                </Stack>
+                <Stack gap="12px">
+                  {preview.map((row, i) => (
+                    <QuestionCard
+                      key={i}
+                      question={row.title}
+                      difficulty={
+                        row.difficultyLevel === 0
+                          ? 1
+                          : row.difficultyLevel === 1
+                          ? 2
+                          : 3
+                      }
+                      questionType={row.type}
+                      subjectID={row.subjectID}
+                      questionNumber={`Q${i + 1}`}
+                      preview={
+                        <Chip
+                          icon={<Visibility sx={{ fontSize: "14px" }} />}
+                          label="Preview"
+                          onClick={() => previewDialogOpen(row)}
+                          size="small"
+                          sx={{
+                            fontSize: "11px",
+                            fontWeight: "600",
+                            height: "24px",
+                            backgroundColor: "rgba(102, 126, 234, 0.1)",
+                            color: "var(--primary-color)",
+                            cursor: "pointer",
+                            "& .MuiChip-icon": {
+                              color: "var(--primary-color)",
+                            },
+                          }}
+                        />
+                      }
+                    />
+                  ))}
+                </Stack>
+              </Stack>
+            )}
           </Stack>
         )}
       </Stack>
       <DialogBox
-        title="Preview"
+        title="Preview Question"
         isOpen={isPreviewDialog}
         icon={
           <IconButton
-            sx={{ borderRadius: "4px", padding: "3px", marginLeft: "auto" }}
+            sx={{ borderRadius: "8px", padding: "4px", marginLeft: "auto" }}
             onClick={previewDialogClose}
           >
             <Close sx={{ color: "var(--text2)" }} />
@@ -311,7 +403,7 @@ export default function BulkImport({ subjectTitle, isOpen, close }) {
         }
       >
         <Stack sx={{ width: "100%" }}>
-          {<PreviewStepper questionData={previewData} />}
+          <PreviewStepper questionData={previewData} />
         </Stack>
       </DialogBox>
     </LongDialogBox>

@@ -5,6 +5,7 @@ import React from "react";
 
 export default function InstituteHeader({
   instituteCount,
+  activeBatches,
   onCreateClick,
   isLoading,
 }) {
@@ -133,7 +134,7 @@ export default function InstituteHeader({
           <ModernStatCard
             icon={<Groups />}
             label="Active Batches"
-            value={0}
+            value={activeBatches}
             color="#2196F3"
             bgColor="rgba(33, 150, 243, 0.08)"
             isLoading={isLoading}

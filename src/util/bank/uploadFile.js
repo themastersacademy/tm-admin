@@ -45,6 +45,7 @@ export async function createFile({ title, bankID, fileName, fileType }) {
         fileType,
         isUploaded: false,
         linkedLessons: [],
+        createdAt: new Date().toISOString(),
       },
     };
 
@@ -55,7 +56,6 @@ export async function createFile({ title, bankID, fileName, fileType }) {
     const fileParams = {
       Bucket: process.env.AWS_BUCKET_NAME,
       Key: awsFileName,
-      Expires: 60 * 60, // 1 - hour expiry
       ContentType: fileType,
     };
 

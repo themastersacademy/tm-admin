@@ -40,7 +40,7 @@ export async function addQuestion(questionData) {
   const pKey = `QUESTION#${randomUUID()}`;
   const sKey = `QUESTIONS@${subjectID}`;
   const gsi1pKey = `QUESTIONS`;
-  const gsi1sKey = `QUESTIONS`;
+  const gsi1sKey = `QUESTIONS#${now}`;
 
   const item = {
     pKey,

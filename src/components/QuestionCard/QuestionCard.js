@@ -8,6 +8,7 @@ import {
   Menu,
   Stack,
   Typography,
+  Box,
 } from "@mui/material";
 import React, { useContext, useEffect, useState } from "react";
 
@@ -22,7 +23,7 @@ export default function QuestionCard({
   isSelected,
   onSelect,
   subjectID,
-  isLive
+  isLive,
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { subjectList, fetchSubject } = useContext(SubjectContext);
@@ -52,94 +53,111 @@ export default function QuestionCard({
           flexDirection="row"
           alignItems="center"
           sx={{
-            padding: "15px",
+            padding: "20px",
             border: "1px solid var(--border-color)",
-            borderRadius: "10px",
+            borderRadius: "12px",
             minHeight: "100px",
             width: "100%",
-            gap: "15px",
+            gap: "16px",
             backgroundColor: "var(--white)",
+            transition: "all 0.2s ease-in-out",
+            "&:hover": {
+              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.05)",
+              borderColor: "var(--primary-color)",
+              transform: "translateY(-2px)",
+            },
           }}
         >
-          {/* {check && (
-            <Checkbox
-              checked={Boolean(isSelected)}
-              onChange={onSelect}
-              sx={{
-                color: "var(--sec-color)",
-                "&.Mui-checked": { color: "var(--sec-color)" },
-                "&.MuiCheckbox-root": {
-                  padding: "0px",
-                },
-              }}
-            />
-          )} */}
-          {check} 
-          <Stack width="100%" gap="8px">
-            <Stack flexDirection="row" justifyContent="space-between">
-              <Stack flexDirection="row" alignItems="center" gap="10px">
-                <Typography>{questionNumber}</Typography>
-                <Chip
-                  label={questionType}
+          {check}
+          <Stack width="100%" gap="12px">
+            <Stack
+              flexDirection="row"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <Stack flexDirection="row" alignItems="center" gap="12px">
+                <Box
                   sx={{
-                    fontSize: "12px",
-                    fontFamily: "Lato",
-                    fontWeight: "700",
-                    width: "70px",
-                    height: "22px",
-                    backgroundColor: "var(--sec-color-acc-1)",
-                    color: "var(--sec-color)",
-                    borderRadius: "4px",
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    backgroundColor: "rgba(102, 126, 234, 0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
-                />
-                <Chip
-                  label={subjectTitle}
-                  sx={{
-                    fontSize: "12px",
-                    fontFamily: "Lato",
-                    fontWeight: "700",
-                    height: "22px",
-                    backgroundColor: "var(--primary-color-acc-2)",
-                    color: "var(--primary-color)",
-                    borderRadius: "4px",
-                  }}
-                />
-                <Chip
-                  label={
-                    difficulty === 1
-                      ? "Easy"
-                      : difficulty === 2
-                      ? "Medium"
-                      : "Hard"
-                  }
-                  sx={{
-                    fontSize: "12px",
-                    fontFamily: "Lato",
-                    fontWeight: "700",
-                    height: "22px",
-                    textTransform: "capitalize",
-                    backgroundColor:
+                >
+                  <Typography
+                    sx={{
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      color: "var(--primary-color)",
+                    }}
+                  >
+                    {questionNumber.replace("Q", "")}
+                  </Typography>
+                </Box>
+                <Stack direction="row" gap="8px">
+                  <Chip
+                    label={questionType}
+                    size="small"
+                    sx={{
+                      fontSize: "11px",
+                      fontWeight: "600",
+                      backgroundColor: "rgba(102, 126, 234, 0.08)",
+                      color: "var(--primary-color)",
+                      borderRadius: "6px",
+                      height: "24px",
+                    }}
+                  />
+                  <Chip
+                    label={subjectTitle}
+                    size="small"
+                    sx={{
+                      fontSize: "11px",
+                      fontWeight: "600",
+                      backgroundColor: "rgba(245, 0, 87, 0.08)",
+                      color: "#f50057",
+                      borderRadius: "6px",
+                      height: "24px",
+                    }}
+                  />
+                  <Chip
+                    label={
                       difficulty === 1
-                        ? "var(--primary-color-acc-2)"
+                        ? "Easy"
                         : difficulty === 2
-                        ? "var(--sec-color-acc-1)"
-                        : difficulty === 3
-                        ? "#D6454555"
-                        : "var(--primary-color-acc-2)",
-                    color:
-                      difficulty === 1
-                        ? "var(--primary-color)"
-                        : difficulty === 2
-                        ? "var(--sec-color)"
-                        : difficulty === 3
-                        ? "var(--delete-color)"
-                        : "var(--primary-color)",
-                    borderRadius: "4px",
-                  }}
-                />
+                        ? "Medium"
+                        : "Hard"
+                    }
+                    size="small"
+                    sx={{
+                      fontSize: "11px",
+                      fontWeight: "600",
+                      borderRadius: "6px",
+                      height: "24px",
+                      backgroundColor:
+                        difficulty === 1
+                          ? "rgba(76, 175, 80, 0.08)"
+                          : difficulty === 2
+                          ? "rgba(255, 152, 0, 0.08)"
+                          : "rgba(244, 67, 54, 0.08)",
+                      color:
+                        difficulty === 1
+                          ? "#4caf50"
+                          : difficulty === 2
+                          ? "#ff9800"
+                          : "#f44336",
+                    }}
+                  />
+                </Stack>
               </Stack>
             </Stack>
-            {question}
+            <Box
+              sx={{ "& p": { margin: 0, fontSize: "15px", lineHeight: 1.6 } }}
+            >
+              {question}
+            </Box>
           </Stack>
           <Stack
             gap="10px"

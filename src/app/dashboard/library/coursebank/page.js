@@ -2,23 +2,24 @@
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
 import DeleteDialogBox from "@/src/components/DeleteDialogBox/DeleteDialogBox";
 import DialogBox from "@/src/components/DialogBox/DialogBox";
-import Header from "@/src/components/Header/Header";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
-import SecondaryCard from "@/src/components/SecondaryCard/SecondaryCard";
 import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
 import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
 import { apiFetch } from "@/src/lib/apiFetch";
-import { Add, Close, DeleteRounded, East, Folder } from "@mui/icons-material";
+import { Add, Close, CreateNewFolder, East } from "@mui/icons-material";
 import {
   Button,
   CircularProgress,
   DialogContent,
   IconButton,
-  MenuItem,
   Stack,
+  Typography,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import CourseBankHeader from "./Components/CourseBankHeader";
+import BankFolderCard from "./Components/BankFolderCard";
+import CreateBankDialog from "./Components/CreateBankDialog";
 
 export default function Coursebank() {
   const router = useRouter();
@@ -30,14 +31,10 @@ export default function Coursebank() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedBankID, setselectedBankID] = useState(null);
 
-  const dialogOpen = () => {
-    setIsDialogOpen(true);
-  };
-  const dialogClose = () => {
-    setIsDialogOpen(false);
-  };
+  const dialogOpen = () => setIsDialogOpen(true);
+  const dialogClose = () => setIsDialogOpen(false);
 
-  const deleteDialogOpen = ({ bankID }) => {
+  const deleteDialogOpen = (bankID) => {
     setselectedBankID(bankID);
     setIsDeleteDialogOpen(true);
   };
@@ -59,6 +56,7 @@ export default function Coursebank() {
       }
     );
   };
+
   useEffect(() => {
     fetchCourse();
   }, []);
@@ -75,124 +73,97 @@ export default function Coursebank() {
         showSnackbar(data.message, "error", "", "3000");
       }
       setIsLoading(false);
+      deleteDialogClose();
     });
   };
 
   return (
-    <Stack padding="20px" gap="20px">
-      <Header
-        title="Course bank"
-        search
-        button={[
-          <Button
-            key="Add"
-            variant="contained"
-            startIcon={<Add />}
-            onClick={dialogOpen}
-            sx={{
-              backgroundColor: "var(--primary-color)",
-              textTransform: "none",
-            }}
-            disableElevation
-          >
-            Add
-          </Button>,
+    <Stack padding="20px" gap="24px">
+      <CourseBankHeader
+        title="Course Bank"
+        breadcrumbs={[{ label: "Course Bank" }]}
+        actions={[
+          {
+            label: "New Folder",
+            icon: <CreateNewFolder />,
+            onClick: dialogOpen,
+            sx: {
+              background: "linear-gradient(135deg, #2196F3 0%, #1976D2 100%)",
+              color: "white",
+            },
+          },
         ]}
       />
-      <BankCreateDialog
-        title={title}
-        setTitle={setTitle}
-        isDialogOpen={isDialogOpen}
-        dialogClose={dialogClose}
+
+      <CreateBankDialog
+        open={isDialogOpen}
+        onClose={dialogClose}
         fetchCourse={fetchCourse}
       />
+
       <Stack
         sx={{
           border: "1px solid var(--border-color)",
           backgroundColor: "var(--white)",
-          borderRadius: "10px",
-          padding: "20px",
-          minHeight: "80vh",
+          borderRadius: "16px",
+          padding: "32px",
+          minHeight: "75vh",
         }}
       >
-        <Stack
-          flexDirection="row"
-          gap="20px"
-          flexWrap="wrap"
+        <Typography
+          sx={{
+            fontSize: "14px",
+            fontWeight: 700,
+            color: "var(--text2)",
+            mb: "20px",
+            textTransform: "uppercase",
+            letterSpacing: "0.5px",
+          }}
         >
+          Folders ({courseList.length})
+        </Typography>
+
+        <Stack flexDirection="row" gap="24px" flexWrap="wrap">
           {!isLoading ? (
             courseList.length > 0 ? (
               courseList.map((item, index) => (
-                <SecondaryCard
+                <BankFolderCard
                   key={index}
-                  icon={
-                    <Folder
-                      sx={{ color: "var(--sec-color)" }}
-                      fontSize="large"
-                    />
-                  }
-                  title={
-                    <span
-                      onClick={() => {
-                        router.push(
-                          `/dashboard/library/coursebank/${item.bankID}`
-                        );
-                      }}
-                      style={{ cursor: "pointer" }}
-                    >
-                      {item.title}
-                    </span>
-                  }
-                  options={[
-                    <MenuItem
-                      key="one"
-                      sx={{
-                        fontSize: "14px",
-                        color: "var(--delete-color)",
-                        gap: "2px",
-                      }}
-                      onClick={() => {
-                        deleteDialogOpen({ bankID: item.bankID });
-                      }}
-                    >
-                      <DeleteRounded sx={{ fontSize: "18px" }} />
-                      Delete
-                    </MenuItem>,
-                  ]}
-                  cardWidth="350px"
+                  bank={item}
+                  onDelete={deleteDialogOpen}
                 />
               ))
             ) : (
-              <Stack width={"100%"} minHeight={"60vh"}>
-                <NoDataFound info="No Bank Created yet" />
+              <Stack width="100%" height="50vh">
+                <NoDataFound info="No folders created yet" />
               </Stack>
             )
           ) : (
-            [...Array(3)].map((_, index) => (
+            [...Array(4)].map((_, index) => (
               <SecondaryCardSkeleton key={index} />
             ))
           )}
         </Stack>
       </Stack>
+
       <DeleteDialogBox
         isOpen={isDeleteDialogOpen}
+        onClose={deleteDialogClose}
         actionButton={
           <Stack
             flexDirection="row"
             justifyContent="center"
-            sx={{ gap: "20px", width: "100%" }}
+            sx={{ gap: "16px", width: "100%" }}
           >
             <Button
               variant="contained"
-              onClick={() => {
-                bankDelete();
-                deleteDialogClose();
-              }}
+              onClick={bankDelete}
               sx={{
                 textTransform: "none",
                 backgroundColor: "var(--delete-color)",
-                borderRadius: "5px",
-                width: "130px",
+                borderRadius: "8px",
+                width: "120px",
+                height: "44px",
               }}
               disableElevation
             >
@@ -203,103 +174,22 @@ export default function Coursebank() {
               )}
             </Button>
             <Button
-              variant="contained"
+              variant="outlined"
               onClick={deleteDialogClose}
               sx={{
                 textTransform: "none",
-                borderRadius: "5px",
-                backgroundColor: "white",
+                borderRadius: "8px",
                 color: "var(--text2)",
-                border: "1px solid var(--border-color)",
-                width: "130px",
+                borderColor: "var(--border-color)",
+                width: "120px",
+                height: "44px",
               }}
-              disableElevation
             >
               Cancel
             </Button>
           </Stack>
         }
-      ></DeleteDialogBox>
+      />
     </Stack>
   );
 }
-
-const BankCreateDialog = ({
-  isDialogOpen,
-  dialogClose,
-  setTitle,
-  title,
-  fetchCourse,
-}) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const { showSnackbar } = useSnackbar();
-  function OnCourseCreate() {
-    if (!title) {
-      showSnackbar("Fill all data", "error", "", "3000");
-      return;
-    }
-    setIsLoading(true);
-    apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/bank/create-bank`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ title }),
-    }).then((data) => {
-      if (data.success) {
-        showSnackbar(data.message, "success", "", "3000");
-        dialogClose();
-        setTitle("");
-        fetchCourse();
-      } else {
-        showSnackbar(data.message, "error", "", "3000");
-      }
-      setIsLoading(false);
-    });
-  }
-  return (
-    <DialogBox
-      isOpen={isDialogOpen}
-      onClose={dialogClose}
-      title="Add Course bank"
-      actionButton={
-        <Button
-          variant="text"
-          onClick={OnCourseCreate}
-          endIcon={<East />}
-          disabled={isLoading}
-          sx={{ textTransform: "none", color: "var(--primary-color)" }}
-        >
-          {isLoading ? (
-            <CircularProgress
-              size={20}
-              sx={{
-                color: "var(--primary-color)",
-              }}
-            />
-          ) : (
-            "Add Course bank"
-          )}
-        </Button>
-      }
-      icon={
-        <IconButton
-          onClick={dialogClose}
-          sx={{ borderRadius: "10px", padding: "6px" }}
-        >
-          <Close sx={{ color: "var(--text2)" }} />
-        </IconButton>
-      }
-    >
-      <DialogContent>
-        <StyledTextField
-          placeholder="Enter Course"
-          value={title}
-          onChange={(e) => {
-            setTitle(e.target.value);
-          }}
-        />
-      </DialogContent>
-    </DialogBox>
-  );
-};

@@ -1,36 +1,14 @@
 "use client";
-import DialogBox from "@/src/components/DialogBox/DialogBox";
-import StyledSelect from "@/src/components/StyledSelect/StyledSelect";
-import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
 import { apiFetch } from "@/src/lib/apiFetch";
-import {
-  Add,
-  Close,
-  East,
-  Edit,
-  Delete,
-  WorkspacePremium,
-  CheckCircle,
-  LocalOffer,
-  CalendarToday,
-} from "@mui/icons-material";
-import {
-  Button,
-  DialogContent,
-  IconButton,
-  Stack,
-  Typography,
-  CircularProgress,
-  Grid,
-  Card,
-  Chip,
-  Box,
-  Divider,
-} from "@mui/material";
+import { Add } from "@mui/icons-material";
+import { Button, Stack, CircularProgress, Grid } from "@mui/material";
 import { useState, useEffect, useCallback } from "react";
 import { useSnackbar } from "../../context/SnackbarContext";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
 import DeleteDialogBox from "@/src/components/DeleteDialogBox/DeleteDialogBox";
+import PlanCard from "./Components/PlanCard";
+import SubscriptionDialog from "./Components/SubscriptionDialog";
+import PageHeader from "./Components/PageHeader";
 
 export default function Subscription() {
   const [subscription, setSubscription] = useState([]);
@@ -281,43 +259,37 @@ export default function Subscription() {
     fetchSubscription();
   }, [fetchSubscription]);
   return (
-    <Stack gap="20px" padding="20px">
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Typography
-          sx={{
-            fontSize: "20px",
-            fontWeight: 700,
-            color: "var(--text1)",
-          }}
-        >
-          Subscription Plans
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={dialogOpen}
-          sx={{
-            background: "linear-gradient(135deg, #4CAF50 0%, #45A049 100%)",
-            color: "#FFFFFF",
-            textTransform: "none",
-            borderRadius: "10px",
-            padding: "10px 24px",
-            fontWeight: 700,
-            fontSize: "14px",
-            boxShadow: "0 4px 12px rgba(76, 175, 80, 0.25)",
-            "&:hover": {
-              background: "linear-gradient(135deg, #45A049 0%, #3D8B40 100%)",
-              boxShadow: "0 6px 16px rgba(76, 175, 80, 0.35)",
-              transform: "translateY(-1px)",
-            },
-          }}
-          disableElevation
-        >
-          Add Plan
-        </Button>
-      </Stack>
+    <Stack gap="0px" padding="24px">
+      <PageHeader
+        title="Subscription Plans"
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={dialogOpen}
+            sx={{
+              background: "linear-gradient(135deg, #1976D2 0%, #1565C0 100%)",
+              color: "#FFFFFF",
+              textTransform: "none",
+              borderRadius: "10px",
+              padding: "10px 24px",
+              fontWeight: 700,
+              fontSize: "14px",
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.25)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #1565C0 0%, #0D47A1 100%)",
+                boxShadow: "0 6px 16px rgba(25, 118, 210, 0.35)",
+                transform: "translateY(-1px)",
+              },
+            }}
+            disableElevation
+          >
+            Add Plan
+          </Button>
+        }
+      />
 
-      <CreateDialog
+      <SubscriptionDialog
         isDialogOpen={isDialogOpen}
         dialogClose={dialogClose}
         createSubscription={createSubscription}
@@ -408,251 +380,3 @@ export default function Subscription() {
     </Stack>
   );
 }
-
-const PlanCard = ({ plan, onEdit, onDelete }) => {
-  return (
-    <Card
-      elevation={0}
-      sx={{
-        border: "1px solid var(--border-color)",
-        borderRadius: "16px",
-        padding: "24px",
-        position: "relative",
-        transition: "all 0.3s ease",
-        "&:hover": {
-          boxShadow: "0 12px 24px rgba(0,0,0,0.05)",
-          transform: "translateY(-4px)",
-          borderColor: "var(--primary-color)",
-        },
-      }}
-    >
-      {plan.discountInPercent > 0 && (
-        <Chip
-          icon={<LocalOffer sx={{ fontSize: "14px !important" }} />}
-          label={`${plan.discountInPercent}% OFF`}
-          size="small"
-          sx={{
-            position: "absolute",
-            top: "16px",
-            right: "16px",
-            backgroundColor: "#E3F2FD",
-            color: "#1976D2",
-            fontWeight: 700,
-            fontSize: "12px",
-          }}
-        />
-      )}
-
-      <Stack gap="16px">
-        <Stack direction="row" gap="12px" alignItems="center">
-          <Box
-            sx={{
-              width: "48px",
-              height: "48px",
-              borderRadius: "12px",
-              backgroundColor: "var(--primary-color-acc-2)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "var(--primary-color)",
-            }}
-          >
-            <WorkspacePremium />
-          </Box>
-          <Stack>
-            <Typography
-              sx={{ fontSize: "18px", fontWeight: 700, color: "var(--text1)" }}
-            >
-              {plan.type === "MONTHLY" ? "Monthly Plan" : "Yearly Plan"}
-            </Typography>
-            <Stack direction="row" gap="4px" alignItems="center">
-              <CalendarToday sx={{ fontSize: "14px", color: "var(--text3)" }} />
-              <Typography sx={{ fontSize: "13px", color: "var(--text3)" }}>
-                {plan.duration} {plan.type === "MONTHLY" ? "Months" : "Years"}
-              </Typography>
-            </Stack>
-          </Stack>
-        </Stack>
-
-        <Divider sx={{ borderStyle: "dashed" }} />
-
-        <Stack>
-          <Typography
-            sx={{ fontSize: "32px", fontWeight: 800, color: "var(--text1)" }}
-          >
-            ₹{plan.priceWithTax}
-          </Typography>
-          <Typography sx={{ fontSize: "13px", color: "var(--text3)" }}>
-            inclusive of all taxes
-          </Typography>
-        </Stack>
-
-        <Stack direction="row" gap="12px" marginTop="8px">
-          <Button
-            variant="outlined"
-            startIcon={<Edit />}
-            onClick={onEdit}
-            fullWidth
-            sx={{
-              borderRadius: "8px",
-              textTransform: "none",
-              borderColor: "var(--border-color)",
-              color: "var(--text2)",
-            }}
-          >
-            Edit
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<Delete />}
-            onClick={onDelete}
-            fullWidth
-            sx={{
-              borderRadius: "8px",
-              textTransform: "none",
-              borderColor: "var(--delete-color)",
-              color: "var(--delete-color)",
-              "&:hover": {
-                backgroundColor: "#FFEBEE",
-                borderColor: "var(--delete-color)",
-              },
-            }}
-          >
-            Delete
-          </Button>
-        </Stack>
-      </Stack>
-    </Card>
-  );
-};
-
-const CreateDialog = ({
-  isDialogOpen,
-  dialogClose,
-  createSubscription,
-  updateSubscription,
-  subscription,
-  setSubscription,
-  isEditMode,
-  isLoading,
-}) => {
-  const planOptions = [
-    { id: "MONTHLY", title: "Monthly" },
-    { id: "YEARLY", title: "Yearly" },
-  ];
-
-  const monthly = Array.from({ length: 11 }, (_, i) => ({
-    id: String(i + 1),
-    title: `${i + 1} Month${i === 0 ? "" : "s"}`,
-  }));
-
-  const yearly = Array.from({ length: 5 }, (_, i) => ({
-    id: String(i + 1),
-    title: `${i + 1} Year${i === 0 ? "" : "s"}`,
-  }));
-
-  const durationOptions = subscription.type === "MONTHLY" ? monthly : yearly;
-
-  return (
-    <DialogBox
-      isOpen={isDialogOpen}
-      title={isEditMode ? "Edit Subscription Plan" : "Add New Plan"}
-      icon={
-        <IconButton
-          sx={{ borderRadius: "8px", padding: "4px" }}
-          onClick={dialogClose}
-          disabled={isLoading}
-        >
-          <Close />
-        </IconButton>
-      }
-      actionButton={
-        <Button
-          variant="contained"
-          endIcon={<East />}
-          onClick={isEditMode ? updateSubscription : createSubscription}
-          sx={{
-            background: "linear-gradient(135deg, #4CAF50 0%, #45A049 100%)",
-            color: "#FFFFFF",
-            textTransform: "none",
-            borderRadius: "10px",
-            padding: "10px 24px",
-            fontWeight: 700,
-            fontSize: "14px",
-            boxShadow: "0 4px 12px rgba(76, 175, 80, 0.25)",
-            "&:hover": {
-              background: "linear-gradient(135deg, #45A049 0%, #3D8B40 100%)",
-              boxShadow: "0 6px 16px rgba(76, 175, 80, 0.35)",
-              transform: "translateY(-1px)",
-            },
-          }}
-          disableElevation
-          disabled={isLoading}
-        >
-          {isEditMode ? "Update Plan" : "Create Plan"}
-        </Button>
-      }
-    >
-      <DialogContent>
-        <Stack gap="24px" padding="8px 0">
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <StyledSelect
-                title="Plan Type"
-                value={subscription.type}
-                onChange={(e) =>
-                  setSubscription({
-                    ...subscription,
-                    type: e.target.value,
-                    duration: "", // Reset duration when type changes
-                  })
-                }
-                options={planOptions}
-                disabled={isLoading}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <StyledSelect
-                title="Duration"
-                value={subscription.duration}
-                onChange={(e) =>
-                  setSubscription({ ...subscription, duration: e.target.value })
-                }
-                options={durationOptions}
-                disabled={isLoading || !subscription.type}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <StyledTextField
-                placeholder="Price (₹)"
-                value={subscription.priceWithTax}
-                onChange={(e) =>
-                  setSubscription({
-                    ...subscription,
-                    priceWithTax: e.target.value,
-                  })
-                }
-                disabled={isLoading}
-                type="number"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <StyledTextField
-                placeholder="Discount Percentage (%)"
-                type="number"
-                value={subscription.discountInPercent}
-                onChange={(e) =>
-                  setSubscription({
-                    ...subscription,
-                    discountInPercent: e.target.value,
-                  })
-                }
-                disabled={isLoading}
-              />
-            </Grid>
-          </Grid>
-        </Stack>
-      </DialogContent>
-    </DialogBox>
-  );
-};

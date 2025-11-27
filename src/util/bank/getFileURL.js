@@ -1,4 +1,6 @@
 import { s3 } from "../awsAgent";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 /**
  * Generates a pre-signed URL for retrieving a file from S3.
@@ -9,15 +11,15 @@ import { s3 } from "../awsAgent";
  * @returns {Promise<Object>} Returns an object with the signed URL if successful.
  */
 export async function getFileURL({ path, expiry = 3600 }) {
-  const fileParams = {
-    Bucket: process.env.AWS_BUCKET_NAME,
-    Key: path, // The file path in S3
-    Expires: expiry, // Expiry time in seconds (e.g., 3600 seconds = 1 hour)
-  };
-
   try {
+    const command = new GetObjectCommand({
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: path,
+    });
+
     // Generate the pre-signed URL for the GET operation
-    const url = await s3.getSignedUrlPromise("getObject", fileParams);
+    const url = await getSignedUrl(s3, command, { expiresIn: expiry });
+
     return {
       success: true,
       url,

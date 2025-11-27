@@ -38,6 +38,7 @@ export default async function getAllResources({ bankID }) {
             url,
             videoID,
             path,
+            createdAt,
           } = resource;
           return {
             resourceID: pKey.split("#")[1],
@@ -48,6 +49,7 @@ export default async function getAllResources({ bankID }) {
             videoID,
             url,
             path,
+            createdAt,
           };
         }),
       },

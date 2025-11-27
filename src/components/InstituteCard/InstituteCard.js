@@ -3,6 +3,7 @@ import {
   CalendarToday,
   Class,
   Email,
+  ArrowForward,
 } from "@mui/icons-material";
 import {
   Avatar,
@@ -32,20 +33,34 @@ export default function InstituteCard({ institute }) {
       sx={{
         width: "350px",
         border: "1px solid var(--border-color)",
-        borderRadius: "12px",
-        transition: "all 0.2s ease-in-out",
+        borderRadius: "16px",
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        background: "var(--white)",
+        position: "relative",
+        overflow: "visible",
         "&:hover": {
           transform: "translateY(-4px)",
-          boxShadow: "0 12px 24px -10px rgba(0, 0, 0, 0.1)",
-          borderColor: "var(--primary-color)",
+          boxShadow: "0 12px 24px -4px rgba(0, 0, 0, 0.08)",
+          borderColor: "transparent",
+          "& .action-arrow": {
+            opacity: 1,
+            transform: "translateX(0)",
+          },
         },
       }}
     >
       <CardActionArea
         onClick={() => router.push(`/dashboard/institute/${id}`)}
-        sx={{ height: "100%", padding: "20px" }}
+        sx={{
+          height: "100%",
+          padding: "24px",
+          borderRadius: "16px",
+          "&:hover .MuiCardActionArea-focusHighlight": {
+            opacity: 0,
+          },
+        }}
       >
-        <Stack gap="16px">
+        <Stack gap="20px">
           {/* Header with Icon and Status */}
           <Stack
             flexDirection="row"
@@ -53,24 +68,33 @@ export default function InstituteCard({ institute }) {
             alignItems="flex-start"
           >
             <Avatar
+              variant="rounded"
               sx={{
-                bgcolor: "var(--primary-color-acc-2)",
-                color: "var(--primary-color)",
-                width: 48,
-                height: 48,
+                background: "linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)",
+                color: "#F57C00",
+                width: 52,
+                height: 52,
+                borderRadius: "12px",
+                border: "1px solid rgba(255, 152, 0, 0.1)",
               }}
             >
-              <AccountBalance />
+              <AccountBalance sx={{ fontSize: "26px" }} />
             </Avatar>
             <Chip
               label={status || "Active"}
               size="small"
               sx={{
-                backgroundColor: status === "ACTIVE" ? "#e8f5e9" : "#ffebee",
-                color: status === "ACTIVE" ? "#2e7d32" : "#c62828",
-                fontWeight: 600,
+                backgroundColor: status === "ACTIVE" ? "#E8F5E9" : "#FFEBEE",
+                color: status === "ACTIVE" ? "#2E7D32" : "#C62828",
+                fontWeight: 700,
                 fontSize: "11px",
-                height: "24px",
+                height: "26px",
+                borderRadius: "6px",
+                border: "1px solid",
+                borderColor:
+                  status === "ACTIVE"
+                    ? "rgba(46, 125, 50, 0.1)"
+                    : "rgba(198, 40, 40, 0.1)",
               }}
             />
           </Stack>
@@ -80,19 +104,20 @@ export default function InstituteCard({ institute }) {
             <Typography
               variant="h6"
               sx={{
-                fontWeight: 700,
+                fontWeight: 800,
                 fontSize: "18px",
                 color: "var(--text1)",
                 mb: 0.5,
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
+                fontFamily: "Lato",
               }}
             >
               {title}
             </Typography>
-            <Stack flexDirection="row" alignItems="center" gap="6px">
-              <Email sx={{ fontSize: 14, color: "var(--text3)" }} />
+            <Stack flexDirection="row" alignItems="center" gap="8px">
+              <Email sx={{ fontSize: 15, color: "var(--text3)" }} />
               <Typography
                 variant="body2"
                 sx={{
@@ -101,6 +126,7 @@ export default function InstituteCard({ institute }) {
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
+                  fontWeight: 500,
                 }}
               >
                 {email}
@@ -108,7 +134,9 @@ export default function InstituteCard({ institute }) {
             </Stack>
           </Box>
 
-          <Divider sx={{ borderStyle: "dashed" }} />
+          <Divider
+            sx={{ borderStyle: "dashed", borderColor: "var(--border-color)" }}
+          />
 
           {/* Stats Footer */}
           <Stack
@@ -116,14 +144,23 @@ export default function InstituteCard({ institute }) {
             justifyContent="space-between"
             alignItems="center"
           >
-            <Stack flexDirection="row" alignItems="center" gap="6px">
-              <Class sx={{ fontSize: 16, color: "var(--primary-color)" }} />
+            <Stack
+              flexDirection="row"
+              alignItems="center"
+              gap="8px"
+              sx={{
+                backgroundColor: "rgba(33, 150, 243, 0.08)",
+                padding: "6px 10px",
+                borderRadius: "6px",
+              }}
+            >
+              <Class sx={{ fontSize: 16, color: "#1976D2" }} />
               <Typography
                 variant="body2"
                 sx={{
-                  fontWeight: 600,
-                  color: "var(--text2)",
-                  fontSize: "13px",
+                  fontWeight: 700,
+                  color: "#1565C0",
+                  fontSize: "12px",
                 }}
               >
                 {batchCount || 0} Batches
@@ -134,7 +171,11 @@ export default function InstituteCard({ institute }) {
               <CalendarToday sx={{ fontSize: 14, color: "var(--text3)" }} />
               <Typography
                 variant="caption"
-                sx={{ color: "var(--text3)", fontSize: "12px" }}
+                sx={{
+                  color: "var(--text3)",
+                  fontSize: "12px",
+                  fontWeight: 500,
+                }}
               >
                 {formattedDate}
               </Typography>

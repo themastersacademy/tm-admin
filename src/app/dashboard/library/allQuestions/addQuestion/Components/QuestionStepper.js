@@ -30,6 +30,7 @@ export default function QuestionStepper({
   handleNext,
   handleBack,
   setInitState,
+  onSuccess,
 }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -65,7 +66,11 @@ export default function QuestionStepper({
         if (addNewQuestion) {
           await setInitState();
         } else {
-          router.push("/dashboard/library/allQuestions");
+          if (onSuccess) {
+            onSuccess();
+          } else {
+            router.push("/dashboard/library/allQuestions");
+          }
         }
       } else {
         console.error("Save failed:", res);
@@ -75,7 +80,7 @@ export default function QuestionStepper({
     } finally {
       setIsLoading(false);
     }
-  }, [questionData, addNewQuestion, router, setInitState]);
+  }, [questionData, addNewQuestion, router, setInitState, onSuccess]);
 
   const toggleAddNewQuestion = useCallback(() => {
     setAddNewQuestion((prev) => !prev);

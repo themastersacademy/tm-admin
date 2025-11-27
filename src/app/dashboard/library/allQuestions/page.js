@@ -2,7 +2,8 @@
 import QuestionCard from "@/src/components/QuestionCard/QuestionCard";
 import DeleteDialogBox from "@/src/components/DeleteDialogBox/DeleteDialogBox";
 import FilterSideNav from "@/src/components/FilterSideNav/FilterSideNav";
-import Header from "@/src/components/Header/Header";
+
+import QuestionsHeader from "./Components/QuestionsHeader";
 import QuestionCardSkeleton from "@/src/components/QuestionCardSkeleton/QuestionCardSkeleton";
 import { apiFetch } from "@/src/lib/apiFetch";
 import {
@@ -12,16 +13,28 @@ import {
   ExpandMore,
   FilterAlt,
   Visibility,
+  ArrowBack,
+  ArrowForward,
 } from "@mui/icons-material";
-import { Button, Chip, IconButton, MenuItem, Stack } from "@mui/material";
+import {
+  Button,
+  Chip,
+  IconButton,
+  MenuItem,
+  Stack,
+  Typography,
+  Box,
+  TablePagination,
+} from "@mui/material";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import PreviewStepper from "./addQuestion/Components/PreviewStepper";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
 import DialogBox from "@/src/components/DialogBox/DialogBox";
 import MDPreview from "@/src/components/MarkdownPreview/MarkdownPreview";
 import SearchQuestions from "./Components/SearchQuestion";
 import BulkImport from "./addQuestion/Components/BulkImport";
+import CreateQuestionDialog from "./Components/CreateQuestionDialog";
 
 export default function AllQuestions() {
   const router = useRouter();
@@ -34,6 +47,21 @@ export default function AllQuestions() {
   const [searchQuery, setSearchQuery] = useState("");
   const [subjects, setSubjects] = useState([]);
   const [isImportDialog, setIsImportDialog] = useState(false);
+
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [stats, setStats] = useState({
+    totalQuestions: 0,
+    difficultyCounts: { 1: 0, 2: 0, 3: 0 },
+    typeCounts: { MCQ: 0, MSQ: 0, FIB: 0 },
+    recentCount: 0,
+  });
+
+  // Pagination state
+  const [page, setPage] = useState(0); // 0-indexed for TablePagination
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const lastKeys = useRef({ 0: null }); // Key for page 0 is null
+  const [hasNextPage, setHasNextPage] = useState(false);
+
   const [filters, setFilters] = useState({
     type: "",
     difficulty: "",
@@ -89,38 +117,91 @@ export default function AllQuestions() {
   const importDialogOpen = () => setIsImportDialog(true);
   const importDialogClose = () => setIsImportDialog(false);
 
+  const createDialogOpen = () => setIsCreateDialogOpen(true);
+  const createDialogClose = () => setIsCreateDialogOpen(false);
+
   const toggleDrawer = (open) => () => setIsOpen(open);
 
-  // build query string
-  const buildQuery = () => {
-    const parts = [];
-    Object.entries(filters).forEach(([key, val]) => {
-      if (val !== "" && val != null)
-        parts.push(`${key}=${encodeURIComponent(val)}`);
-    });
-    if (searchQuery) parts.push(`search=${encodeURIComponent(searchQuery)}`);
-    return parts.length ? `?${parts.join("&")}` : "";
-  };
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await apiFetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/stats`
+      );
+      if (res.success) {
+        setStats(res.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch stats:", error);
+    }
+  }, []);
 
   const fetchQuestions = useCallback(async () => {
     setIsLoading(true);
     try {
-      const query = buildQuery();
+      const currentKey = lastKeys.current[page];
+
+      // build query string
+      const parts = [];
+      Object.entries(filters).forEach(([key, val]) => {
+        if (val !== "" && val != null)
+          parts.push(`${key}=${encodeURIComponent(val)}`);
+      });
+      if (searchQuery) parts.push(`search=${encodeURIComponent(searchQuery)}`);
+
+      parts.push(`limit=${rowsPerPage}`);
+      if (currentKey) {
+        parts.push(`lastKey=${currentKey}`);
+      }
+
+      const query = parts.length ? `?${parts.join("&")}` : "";
       const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/get${query}`;
       const data = await apiFetch(url);
-      setQuestionList(data.success ? data.data : []);
+
+      if (data.success) {
+        setQuestionList(data.data);
+        if (data.lastKey) {
+          lastKeys.current[page + 1] = data.lastKey;
+          setHasNextPage(true);
+        } else {
+          setHasNextPage(false);
+        }
+      } else {
+        setQuestionList([]);
+      }
     } catch (error) {
       console.error("Error fetching questions:", error);
       setQuestionList([]);
     }
     setIsLoading(false);
+  }, [filters, searchQuery, page, rowsPerPage]);
+
+  // Reset pagination when filters or search change
+  useEffect(() => {
+    setPage(0);
+    lastKeys.current = { 0: null };
   }, [filters, searchQuery]);
 
   useEffect(() => {
     fetchQuestions();
   }, [fetchQuestions]);
 
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
   const handleSearch = (q) => setSearchQuery(q);
+
+  const handlePageChange = (event, newPage) => {
+    // Prevent jumping to pages we don't have keys for
+    if (newPage > page && !hasNextPage) return;
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+    lastKeys.current = { 0: null };
+  };
 
   const handleDelete = async (id, subjectID) => {
     try {
@@ -132,9 +213,10 @@ export default function AllQuestions() {
           body: JSON.stringify({ questionID: id, subjectID }),
         }
       );
-      if (res.success)
+      if (res.success) {
         setQuestionList((prev) => prev.filter((q) => q.id !== id));
-      else console.error("Deletion failed", res.error);
+        fetchStats();
+      } else console.error("Deletion failed", res.error);
     } catch (err) {
       console.error("Delete error", err);
     }
@@ -156,65 +238,88 @@ export default function AllQuestions() {
       }
     }
 
-    const localSubjects = localStorage.getItem("subjectsCa");
+    const localSubjects = localStorage.getItem("subjects");
 
     if (localSubjects) {
-      // If already in localStorage, use it
       setSubjects(JSON.parse(localSubjects));
     } else {
-      // If not, fetch from server
       fetchSubjects();
     }
   }, []);
 
+  const handleCreateSuccess = () => {
+    createDialogClose();
+    // Refresh list
+    setPage(0);
+    lastKeys.current = { 0: null };
+    fetchQuestions();
+    fetchStats();
+  };
+
   return (
-    <Stack padding="20px" gap="20px" minHeight="100vh">
-      <Header
-        title="Questions"
-        button={[
-          <Button
-            key="Import"
-            variant="contained"
-            endIcon={<ExpandMore />}
-            sx={{
-              backgroundColor: "var(--primary-color)",
-              textTransform: "none",
-            }}
-            onClick={importDialogOpen}
-            disableElevation
-          >
-            Import
-          </Button>,
-          <Button
-            key="Add"
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() =>
-              router.push(`/dashboard/library/allQuestions/addQuestion`)
-            }
-            sx={{
-              backgroundColor: "var(--primary-color)",
-              textTransform: "none",
-            }}
-            disableElevation
-          >
-            Questions
-          </Button>,
-        ]}
+    <Stack padding="20px" gap="20px">
+      <QuestionsHeader
+        stats={stats}
+        actions={
+          <>
+            <Button
+              key="Import"
+              variant="outlined"
+              endIcon={<ExpandMore />}
+              sx={{
+                textTransform: "none",
+                borderRadius: "8px",
+                borderColor: "var(--border-color)",
+                color: "var(--text2)",
+                backgroundColor: "white",
+                "&:hover": { backgroundColor: "#f5f5f5" },
+              }}
+              onClick={importDialogOpen}
+              disableElevation
+            >
+              Import
+            </Button>
+            <Button
+              key="Add"
+              variant="contained"
+              startIcon={<Add />}
+              onClick={createDialogOpen}
+              sx={{
+                backgroundColor: "var(--primary-color)",
+                textTransform: "none",
+                borderRadius: "8px",
+                boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
+              }}
+              disableElevation
+            >
+              Add Question
+            </Button>
+          </>
+        }
       />
 
-      <Stack flexDirection="row" justifyContent="space-between" gap="20px">
-        <SearchQuestions onSearch={handleSearch} />
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        justifyContent="space-between"
+        gap="16px"
+        alignItems="center"
+      >
+        <Box sx={{ width: { xs: "100%", md: "400px" } }}>
+          <SearchQuestions onSearch={handleSearch} />
+        </Box>
         <Button
-          variant="contained"
-          endIcon={<FilterAlt />}
+          variant="outlined"
+          startIcon={<FilterAlt />}
           onClick={toggleDrawer(true)}
           sx={{
-            backgroundColor: "var(--primary-color)",
             textTransform: "none",
-            borderRadius: "4px",
+            borderRadius: "8px",
+            borderColor: "var(--border-color)",
+            color: "var(--text2)",
+            backgroundColor: "white",
+            height: "44px",
+            minWidth: "100px",
           }}
-          disableElevation
         >
           Filters
         </Button>
@@ -226,74 +331,119 @@ export default function AllQuestions() {
           filters={filters}
         />
       </Stack>
+
       <Stack
         sx={{
-          border: "1px solid var(--border-color)",
           backgroundColor: "var(--white)",
+          border: "1px solid",
+          borderColor: "var(--border-color)",
           borderRadius: "10px",
           padding: "20px",
+          gap: "20px",
           minHeight: "80vh",
-          gap: "15px",
         }}
       >
         {!isLoading ? (
           questionList.length > 0 ? (
-            questionList.map((item, index) => (
-              <QuestionCard
-                key={index}
-                questionNumber={`Q${index + 1}`}
-                questionType={item.type || "MCQ"}
-                Subject={
-                  subjects.find(
-                    (subject) => subject.subjectID === item.subjectID
-                  )?.title || "Unknown"
-                }
-                subjectID={item.subjectID}
-                question={<MDPreview value={item.title} />}
-                difficulty={item.difficultyLevel}
-                preview={
-                  <Chip
-                    icon={<Visibility sx={{ fontSize: "small" }} />}
-                    label="Preview"
-                    onClick={() => previewDialogOpen(item)}
-                    sx={{
-                      fontSize: "10px",
-                      fontFamily: "Lato",
-                      fontWeight: "700",
-                      height: "20px",
-                      backgroundColor: "var(--border-color)",
-                      color: "var(--text3)",
-                    }}
-                  />
-                }
-                options={[
-                  <MenuItem
+            <>
+              <Stack gap="15px">
+                {questionList.map((item, index) => (
+                  <QuestionCard
                     key={index}
-                    sx={{
-                      fontFamily: "Lato",
-                      fontSize: "12px",
-                      padding: "5px",
-                      color: "var(--delete-color)",
-                    }}
-                    onClick={() => dialogDeleteOpen(item.id, item.subjectID)}
-                  >
-                    <Delete
-                      sx={{ color: "var(--delete-color)", fontSize: "16px" }}
-                    />{" "}
-                    Delete
-                  </MenuItem>,
-                ]}
-              />
-            ))
+                    questionNumber={`Q${page * rowsPerPage + index + 1}`}
+                    questionType={item.type || "MCQ"}
+                    Subject={
+                      subjects.find(
+                        (subject) => subject.subjectID === item.subjectID
+                      )?.title || "Unknown"
+                    }
+                    subjectID={item.subjectID}
+                    question={<MDPreview value={item.title} />}
+                    difficulty={item.difficultyLevel}
+                    preview={
+                      <Chip
+                        icon={<Visibility sx={{ fontSize: "16px" }} />}
+                        label="Preview"
+                        onClick={() => previewDialogOpen(item)}
+                        sx={{
+                          fontSize: "12px",
+                          fontFamily: "Lato",
+                          fontWeight: "600",
+                          height: "28px",
+                          backgroundColor: "rgba(102, 126, 234, 0.1)",
+                          color: "var(--primary-color)",
+                          cursor: "pointer",
+                          "&:hover": {
+                            backgroundColor: "rgba(102, 126, 234, 0.2)",
+                          },
+                        }}
+                      />
+                    }
+                    options={[
+                      <MenuItem
+                        key={index}
+                        sx={{
+                          fontFamily: "Lato",
+                          fontSize: "14px",
+                          padding: "8px 16px",
+                          color: "var(--delete-color)",
+                          gap: "8px",
+                        }}
+                        onClick={() =>
+                          dialogDeleteOpen(item.id, item.subjectID)
+                        }
+                      >
+                        <Delete sx={{ fontSize: "18px" }} />
+                        Delete
+                      </MenuItem>,
+                    ]}
+                  />
+                ))}
+              </Stack>
+
+              {/* Pagination Controls */}
+              <Stack
+                flexDirection="row"
+                justifyContent="center"
+                alignItems="center"
+                gap="10px"
+                sx={{
+                  width: "100%",
+                  marginTop: "auto",
+                  borderTop: "1px solid var(--border-color)",
+                  paddingTop: "20px",
+                }}
+              >
+                <TablePagination
+                  component="div"
+                  count={stats.totalQuestions}
+                  page={page}
+                  onPageChange={handlePageChange}
+                  rowsPerPage={rowsPerPage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  rowsPerPageOptions={[10, 25, 50, 100]}
+                />
+              </Stack>
+            </>
           ) : (
-            <Stack width="100%" minHeight="60vh">
-              <NoDataFound info="No Question Created yet" />
+            <Stack
+              width="100%"
+              minHeight="60vh"
+              justifyContent="center"
+              alignItems="center"
+            >
+              <NoDataFound info="No Questions Found" />
             </Stack>
           )
         ) : (
-          <QuestionCardSkeleton />
+          <Stack gap={2}>
+            {[1, 2, 3].map((i) => (
+              <QuestionCardSkeleton key={i} />
+            ))}
+          </Stack>
         )}
       </Stack>
+
       <DeleteDialogBox
         isOpen={isDialogDelete}
         onClose={dialogDeleteClose}
@@ -313,22 +463,22 @@ export default function AllQuestions() {
               sx={{
                 textTransform: "none",
                 backgroundColor: "var(--delete-color)",
-                borderRadius: "5px",
-                width: "130px",
+                borderRadius: "8px",
+                width: "120px",
               }}
               disableElevation
             >
               Delete
             </Button>
             <Button
-              variant="contained"
+              variant="outlined"
               onClick={dialogDeleteClose}
               sx={{
                 textTransform: "none",
-                backgroundColor: "white",
                 color: "var(--text2)",
-                border: "1px solid var(--border-color)",
-                width: "130px",
+                borderColor: "var(--border-color)",
+                borderRadius: "8px",
+                width: "120px",
               }}
               disableElevation
             >
@@ -337,8 +487,9 @@ export default function AllQuestions() {
           </Stack>
         }
       />
+
       <DialogBox
-        title="Preview"
+        title="Preview Question"
         isOpen={isPreviewDialog}
         icon={
           <IconButton
@@ -349,7 +500,7 @@ export default function AllQuestions() {
           </IconButton>
         }
       >
-        <Stack padding="10px">
+        <Stack padding="16px">
           {selectedQuestion && (
             <PreviewStepper
               questionData={selectedQuestion}
@@ -362,10 +513,17 @@ export default function AllQuestions() {
           )}
         </Stack>
       </DialogBox>
+
       <BulkImport
         subjectTitle={subjects}
         isOpen={isImportDialog}
         close={importDialogClose}
+      />
+
+      <CreateQuestionDialog
+        open={isCreateDialogOpen}
+        onClose={createDialogClose}
+        onSuccess={handleCreateSuccess}
       />
     </Stack>
   );
