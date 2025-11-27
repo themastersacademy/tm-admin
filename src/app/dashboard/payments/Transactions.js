@@ -38,7 +38,7 @@ import {
   Tooltip,
   Grid,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSnackbar } from "notistack";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
@@ -101,7 +101,7 @@ export default function Transactions() {
     setSelectedUser(null);
   };
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
       const res = await fetch("/api/transactions/get-all");
       const data = await res.json();
@@ -119,7 +119,7 @@ export default function Transactions() {
         variant: "error",
       });
     }
-  };
+  }, [enqueueSnackbar]);
 
   const refreshTransaction = async () => {
     if (!selectedUser) return;
@@ -515,7 +515,7 @@ export default function Transactions() {
 
   useEffect(() => {
     fetchTransactions();
-  }, []);
+  }, [fetchTransactions]);
 
   return (
     <Stack gap="20px" padding="20px" pt="30px">
