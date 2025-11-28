@@ -39,8 +39,8 @@ export async function addQuestion(questionData) {
   const now = Date.now();
   const pKey = `QUESTION#${randomUUID()}`;
   const sKey = `QUESTIONS@${subjectID}`;
-  const gsi1pKey = `QUESTIONS`;
-  const gsi1sKey = `QUESTIONS#${now}`;
+  const gsi1pKey = `SUBJECT#${subjectID}`;
+  const gsi1sKey = `QUESTION#${now}`;
 
   const item = {
     pKey,

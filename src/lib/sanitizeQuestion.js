@@ -22,17 +22,36 @@ export function sanitizeQuestions(rows, subjectID) {
       .trim()
       .toUpperCase();
     const rawLevel = Number(row["Level"]);
-    const difficultyLevel = Number.isFinite(rawLevel) ? rawLevel : NaN;
+
+    // Normalize difficulty level: Excel uses 0,1,2 but DB expects 1,2,3
+    // So we add 1 to convert 0->1, 1->2, 2->3
+    let difficultyLevel = NaN;
+    if (
+      Number.isFinite(rawLevel) &&
+      Number.isInteger(rawLevel) &&
+      rawLevel >= 0
+    ) {
+      difficultyLevel = rawLevel + 1; // Convert 0-based to 1-based
+    }
+
     const solution = String(row["Solution"] || "").trim();
 
     // Top-level validation
-    if (!subjectID) qErrors.push("Invalid subjectID");
-    if (!title) qErrors.push("Missing title");
-    if (!solution) qErrors.push("Missing solution");
+    if (!subjectID) qErrors.push("System Error: Invalid Subject ID.");
+    if (!title) qErrors.push("Question Text is missing.");
+    if (!solution) qErrors.push("Solution/Explanation is missing.");
     if (!["MCQ", "MSQ", "FIB"].includes(type))
-      qErrors.push(`Invalid type "${row["Type"]}"`);
-    if (!Number.isInteger(difficultyLevel) || difficultyLevel < 0)
-      qErrors.push(`Invalid difficultyLevel "${row["Level"]}"`);
+      qErrors.push(
+        `Invalid Question Type "${row["Type"]}". Allowed: MCQ, MSQ, FIB.`
+      );
+    if (
+      !Number.isInteger(difficultyLevel) ||
+      difficultyLevel < 1 ||
+      difficultyLevel > 3
+    )
+      qErrors.push(
+        `Invalid Difficulty Level "${row["Level"]}". Must be 0 (Easy), 1 (Medium), or 2 (Hard).`
+      );
 
     // Base object
     const question = {
@@ -54,16 +73,16 @@ export function sanitizeQuestions(rows, subjectID) {
         const text = rawOpt != null ? String(rawOpt).trim() : "";
         if (text) opts.push({ id: opts.length, text, weight: 0 });
       }
-      if (opts.length < 2) qErrors.push("Options must have at least 2 entries");
+      if (opts.length < 2) qErrors.push("At least 2 Options are required.");
 
       // Parse answers
       const rawAns = String(row["Correct answers"] || "").trim();
       const keys = rawAns ? rawAns.split(",").map((s) => s.trim()) : [];
-      if (!rawAns) qErrors.push("Missing correct answers");
+      if (!rawAns) qErrors.push("Correct Answer is missing.");
       if (type === "MSQ" && keys.length < 2)
-        qErrors.push("MSQ must have at least two answers");
+        qErrors.push("MSQ must have at least two correct answers.");
       if (type === "MCQ" && keys.length !== 1)
-        qErrors.push("MCQ must have exactly one answer");
+        qErrors.push("MCQ must have exactly one correct answer.");
 
       // Map keys to option IDs (1-based numbers or exact text)
       const foundSet = new Set();
@@ -82,7 +101,7 @@ export function sanitizeQuestions(rows, subjectID) {
         if (!isNaN(id)) {
           foundSet.add(id);
         } else {
-          qErrors.push(`AnswerKey "${k}" not found`);
+          qErrors.push(`Answer Key "${k}" does not match any provided Option.`);
         }
       });
       const foundKeys = Array.from(foundSet).sort((a, b) => a - b);
@@ -101,7 +120,7 @@ export function sanitizeQuestions(rows, subjectID) {
       // Validate total weight
       const totalWeight = opts.reduce((sum, o) => sum + o.weight, 0);
       if (totalWeight !== 100)
-        qErrors.push(`Total weightage must equal 100, got ${totalWeight}`);
+        qErrors.push(`Total weightage must equal 100, got ${totalWeight}.`);
 
       question.options = opts;
       question.answerKey = foundKeys;
@@ -124,7 +143,7 @@ export function sanitizeQuestions(rows, subjectID) {
           });
         }
       }
-      if (blanks.length < 1) qErrors.push("FIB must have at least one blank");
+      if (blanks.length < 1) qErrors.push("FIB must have at least one blank.");
 
       // Distribute weightages equally
       if (blanks.length) {

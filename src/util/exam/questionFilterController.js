@@ -17,23 +17,10 @@ export default async function getQuestions({
 }) {
   const TABLE = `${process.env.AWS_DB_NAME}content`;
 
-  // We want to query the GSI "contentTableIndex"
-  // Partition Key: GSI1-pKey = "QUESTIONS"
-  // Sort Key: GSI1-sKey = "QUESTIONS" (old) or "QUESTIONS#<timestamp>" (new)
-
-  const keyCondition = " #gsi1pk = :gsi1pk AND begins_with(#gsi1sk, :gsi1sk) ";
-  const exprAttrNames = {
-    "#gsi1pk": "GSI1-pKey",
-    "#gsi1sk": "GSI1-sKey",
-  };
-  const exprAttrValues = {
-    ":gsi1pk": "QUESTIONS",
-    ":gsi1sk": "QUESTIONS",
-  };
-
   const filterClauses = [];
+  const exprAttrNames = {};
+  const exprAttrValues = {};
 
-  // Subject filtering must be done via FilterExpression because GSI1-sKey doesn't contain subjectID
   if (subjectID) {
     filterClauses.push("begins_with(sKey, :subjectPrefix)");
     exprAttrValues[":subjectPrefix"] = `QUESTIONS@${subjectID}`;
@@ -53,30 +40,56 @@ export default async function getQuestions({
     exprAttrValues[":d"] = difficultyLevel;
   }
 
-  const baseParams = {
-    TableName: TABLE,
-    IndexName: "contentTableIndex",
-    KeyConditionExpression: keyCondition,
-    ExpressionAttributeNames: exprAttrNames,
-    ExpressionAttributeValues: exprAttrValues,
-    ...(filterClauses.length && {
-      FilterExpression: filterClauses.join(" AND "),
-    }),
-    ReturnConsumedCapacity: "TOTAL",
-  };
-
   if (!isRandom) {
-    const params = {
-      ...baseParams,
-      Limit: limit,
-      ScanIndexForward: false, // Reverse order (Newest first if GSI1-sKey has timestamp)
-      ...(lastEvaluatedKey && { ExclusiveStartKey: lastEvaluatedKey }),
+    // Use ScanCommand to handle mixed GSI schemas (Old "QUESTIONS" PK vs New "SUBJECT#..." PK)
+    // and to ensure accurate filtering by inspecting all items.
+
+    const scanFilterClauses = [...filterClauses];
+    const scanAttrValues = { ...exprAttrValues };
+    const scanAttrNames = { ...exprAttrNames };
+
+    const scanParams = {
+      TableName: TABLE,
+      IndexName: "contentTableIndex",
+      ExpressionAttributeNames: Object.keys(scanAttrNames).length
+        ? scanAttrNames
+        : undefined,
+      ExpressionAttributeValues: Object.keys(scanAttrValues).length
+        ? scanAttrValues
+        : undefined,
+      FilterExpression: scanFilterClauses.length
+        ? scanFilterClauses.join(" AND ")
+        : undefined,
+      ReturnConsumedCapacity: "TOTAL",
     };
 
-    // Use QueryCommand
-    const page = await dynamoDB.send(new QueryCommand(params));
+    let items = [];
+    let lek = lastEvaluatedKey;
 
-    const questions = (page.Items || []).map((it) => ({
+    do {
+      // No Limit in the Scan command itself to maximize throughput per request
+      const params = {
+        ...scanParams,
+        ...(lek && { ExclusiveStartKey: lek }),
+      };
+
+      const page = await dynamoDB.send(new ScanCommand(params));
+      const pageItems = page.Items || [];
+
+      items.push(...pageItems);
+      lek = page.LastEvaluatedKey;
+    } while (items.length < limit && lek);
+
+    // Sort by createdAt descending (Scan does not guarantee order)
+    items.sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return dateB - dateA;
+    });
+
+    const resultItems = items.slice(0, limit);
+
+    const questions = resultItems.map((it) => ({
       id: it.pKey.split("#")[1],
       subjectID: it.sKey.split("@")[1],
       title: it.title,
@@ -91,7 +104,7 @@ export default async function getQuestions({
 
     return {
       questions,
-      lastEvaluatedKey: page.LastEvaluatedKey || null,
+      lastEvaluatedKey: lek || null,
     };
   }
 
@@ -236,4 +249,53 @@ export async function getQuestionStats() {
     typeCounts,
     recentCount,
   };
+}
+
+export async function searchAllQuestions(searchTerm) {
+  const TABLE = `${process.env.AWS_DB_NAME}content`;
+  const params = {
+    TableName: TABLE,
+    FilterExpression: "contains(titleLower, :q)",
+    ExpressionAttributeValues: {
+      ":q": searchTerm.toLowerCase(),
+    },
+    ProjectionExpression:
+      "pKey, sKey, title, #typeAttr, difficultyLevel, createdAt",
+    ExpressionAttributeNames: {
+      "#typeAttr": "type",
+    },
+    ReturnConsumedCapacity: "TOTAL",
+  };
+
+  let allItems = [];
+  let lek = null;
+  let totalConsumedCapacity = 0;
+
+  do {
+    const command = new ScanCommand({
+      ...params,
+      ...(lek && { ExclusiveStartKey: lek }),
+    });
+    const response = await dynamoDB.send(command);
+    if (response.Items) {
+      allItems.push(...response.Items);
+    }
+    if (response.ConsumedCapacity) {
+      totalConsumedCapacity += response.ConsumedCapacity.CapacityUnits || 0;
+    }
+    lek = response.LastEvaluatedKey;
+  } while (lek);
+
+  console.log(
+    `[Global Search] Term: "${searchTerm}" | Items Scanned: ${allItems.length} | Total Consumed Capacity: ${totalConsumedCapacity} RCUs`
+  );
+
+  return allItems.map((it) => ({
+    id: it.pKey.split("#")[1],
+    subjectID: it.sKey.split("@")[1],
+    title: it.title,
+    type: it.type,
+    difficultyLevel: it.difficultyLevel,
+    createdAt: it.createdAt,
+  }));
 }

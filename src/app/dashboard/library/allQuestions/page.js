@@ -138,35 +138,49 @@ export default function AllQuestions() {
   const fetchQuestions = useCallback(async () => {
     setIsLoading(true);
     try {
-      const currentKey = lastKeys.current[page];
-
-      // build query string
-      const parts = [];
-      Object.entries(filters).forEach(([key, val]) => {
-        if (val !== "" && val != null)
-          parts.push(`${key}=${encodeURIComponent(val)}`);
-      });
-      if (searchQuery) parts.push(`search=${encodeURIComponent(searchQuery)}`);
-
-      parts.push(`limit=${rowsPerPage}`);
-      if (currentKey) {
-        parts.push(`lastKey=${currentKey}`);
-      }
-
-      const query = parts.length ? `?${parts.join("&")}` : "";
-      const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/get${query}`;
-      const data = await apiFetch(url);
-
-      if (data.success) {
-        setQuestionList(data.data);
-        if (data.lastKey) {
-          lastKeys.current[page + 1] = data.lastKey;
-          setHasNextPage(true);
+      if (searchQuery) {
+        // Use Global Search API
+        const url = `${
+          process.env.NEXT_PUBLIC_BASE_URL
+        }/api/questions/search?q=${encodeURIComponent(searchQuery)}`;
+        const data = await apiFetch(url);
+        if (data.success) {
+          setQuestionList(data.data);
+          setHasNextPage(false); // Search returns all results, no pagination for now
         } else {
-          setHasNextPage(false);
+          setQuestionList([]);
         }
       } else {
-        setQuestionList([]);
+        // Use Standard Filter API
+        const currentKey = lastKeys.current[page];
+
+        // build query string
+        const parts = [];
+        Object.entries(filters).forEach(([key, val]) => {
+          if (val !== "" && val != null)
+            parts.push(`${key}=${encodeURIComponent(val)}`);
+        });
+
+        parts.push(`limit=${rowsPerPage}`);
+        if (currentKey) {
+          parts.push(`lastKey=${currentKey}`);
+        }
+
+        const query = parts.length ? `?${parts.join("&")}` : "";
+        const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/get${query}`;
+        const data = await apiFetch(url);
+
+        if (data.success) {
+          setQuestionList(data.data);
+          if (data.lastKey) {
+            lastKeys.current[page + 1] = data.lastKey;
+            setHasNextPage(true);
+          } else {
+            setHasNextPage(false);
+          }
+        } else {
+          setQuestionList([]);
+        }
       }
     } catch (error) {
       console.error("Error fetching questions:", error);
@@ -402,28 +416,30 @@ export default function AllQuestions() {
               </Stack>
 
               {/* Pagination Controls */}
-              <Stack
-                flexDirection="row"
-                justifyContent="center"
-                alignItems="center"
-                gap="10px"
-                sx={{
-                  width: "100%",
-                  marginTop: "auto",
-                  borderTop: "1px solid var(--border-color)",
-                  paddingTop: "20px",
-                }}
-              >
-                <TablePagination
-                  component="div"
-                  count={stats.totalQuestions}
-                  page={page}
-                  onPageChange={handlePageChange}
-                  rowsPerPage={rowsPerPage}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                  rowsPerPageOptions={[10, 25, 50, 100]}
-                />
-              </Stack>
+              {!searchQuery && (
+                <Stack
+                  flexDirection="row"
+                  justifyContent="center"
+                  alignItems="center"
+                  gap="10px"
+                  sx={{
+                    width: "100%",
+                    marginTop: "auto",
+                    borderTop: "1px solid var(--border-color)",
+                    paddingTop: "20px",
+                  }}
+                >
+                  <TablePagination
+                    component="div"
+                    count={stats.totalQuestions}
+                    page={page}
+                    onPageChange={handlePageChange}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    rowsPerPageOptions={[10, 25, 50, 100]}
+                  />
+                </Stack>
+              )}
             </>
           ) : (
             <Stack
