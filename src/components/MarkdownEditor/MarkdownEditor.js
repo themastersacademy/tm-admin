@@ -82,7 +82,12 @@ export default function MarkdownEditor({ value, onChange }) {
   return (
     <div
       className="container"
-      style={{ position: "relative", width: "560px", height: "400px" }}
+      style={{
+        position: "relative",
+        width: "100%",
+        maxWidth: "100%",
+        height: "400px",
+      }}
       data-color-mode="light"
     >
       <MDEditor
@@ -90,7 +95,7 @@ export default function MarkdownEditor({ value, onChange }) {
         onChange={onChange}
         commands={customCommands}
         style={{
-          // width: "560px",
+          width: "100%",
           minHeight: "400px",
         }}
         previewOptions={{

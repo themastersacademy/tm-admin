@@ -31,6 +31,7 @@ export default function QuestionStepper({
   handleBack,
   setInitState,
   onSuccess,
+  initialData,
 }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -55,15 +56,26 @@ export default function QuestionStepper({
     }
 
     try {
-      const res = await apiFetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/add`,
-        {
-          method: "POST",
-          body: JSON.stringify(questionData),
-        }
-      );
+      const isEdit = !!questionData.id;
+      const url = isEdit
+        ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/update`
+        : `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/add`;
+
+      const body = isEdit
+        ? {
+            ...questionData,
+            questionID: questionData.id,
+            oldSubjectID: initialData?.subjectID,
+          }
+        : questionData;
+
+      const res = await apiFetch(url, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+
       if (res.success) {
-        if (addNewQuestion) {
+        if (addNewQuestion && !isEdit) {
           await setInitState();
         } else {
           if (onSuccess) {
@@ -80,7 +92,14 @@ export default function QuestionStepper({
     } finally {
       setIsLoading(false);
     }
-  }, [questionData, addNewQuestion, router, setInitState, onSuccess]);
+  }, [
+    questionData,
+    addNewQuestion,
+    router,
+    setInitState,
+    onSuccess,
+    initialData,
+  ]);
 
   const toggleAddNewQuestion = useCallback(() => {
     setAddNewQuestion((prev) => !prev);
@@ -89,19 +108,17 @@ export default function QuestionStepper({
   return (
     <Stack width="100%" alignItems="center">
       <Stack
-        alignItems="center"
         sx={{
           border: "1px solid var(--border-color)",
-          borderRadius: "10px",
+          borderRadius: "16px",
           backgroundColor: "var(--white)",
-          minHeight: "60vh",
-          width: "650px",
-          p: 2,
-          gap: 2,
+          minHeight: "65vh",
+          width: "100%",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
         }}
       >
         {/* Stepper */}
-        <Stack sx={{ width: "100%" }}>
+        <Stack sx={{ padding: "32px 32px 24px 32px" }}>
           <Stepper
             activeStep={activeStep}
             alternativeLabel
@@ -109,35 +126,52 @@ export default function QuestionStepper({
               <StepConnector
                 sx={{
                   "& .MuiStepConnector-line": {
-                    borderWidth: 7,
+                    borderWidth: 3,
                     borderRadius: "50px",
                     margin: "0px 10px",
-                    borderColor: "var(--primary-color-acc-2)",
+                    borderColor: "rgba(255, 152, 0, 0.2)",
                   },
                   "&.Mui-active .MuiStepConnector-line": {
-                    borderColor: "var(--primary-color) !important",
+                    borderColor: "#FF9800 !important",
                   },
                   "&.Mui-completed .MuiStepConnector-line": {
-                    borderColor: "var(--primary-color) !important",
+                    borderColor: "#FF9800 !important",
                   },
                 }}
               />
             }
           >
-            {steps.map((label) => (
+            {steps.map((label, index) => (
               <Step key={label}>
                 <StepLabel
                   sx={{
                     "& .MuiStepIcon-root": {
-                      color: "var(--primary-color-acc-1)",
-                      width: "30px",
-                      height: "30px",
+                      color: "rgba(255, 152, 0, 0.2)",
+                      width: "36px",
+                      height: "36px",
+                      border: "2px solid rgba(255, 152, 0, 0.3)",
+                      borderRadius: "50%",
                     },
                     "& .Mui-active .MuiStepIcon-root": {
-                      color: "var(--primary-color)",
+                      color: "#FF9800",
+                      border: "2px solid #FF9800",
                     },
                     "& .Mui-completed .MuiStepIcon-root": {
-                      color: "var(--primary-color)",
+                      color: "#FF9800",
+                      border: "2px solid #FF9800",
+                    },
+                    "& .MuiStepLabel-label": {
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "var(--text3)",
+                      marginTop: "8px",
+                    },
+                    "& .Mui-active .MuiStepLabel-label": {
+                      color: "#FF9800",
+                      fontWeight: 700,
+                    },
+                    "& .Mui-completed .MuiStepLabel-label": {
+                      color: "var(--text2)",
                     },
                   }}
                 >
@@ -146,102 +180,182 @@ export default function QuestionStepper({
               </Step>
             ))}
           </Stepper>
-          <hr
-            style={{
-              border: "1px solid var(--border-color)",
-              marginTop: "25px",
-            }}
-          />
         </Stack>
 
         {/* Step Content */}
-        {activeStep === 0 && (
-          <BasicStepper
-            questionData={questionData}
-            setQuestionData={setQuestionData}
-            allSubjects={allSubjects}
-          />
-        )}
-        {activeStep === 1 && (
-          <AdditionalStepper
-            questionData={questionData}
-            setQuestionData={setQuestionData}
-          />
-        )}
-        {activeStep === 2 && (
-          <ExplanationStepper
-            questionData={questionData}
-            setQuestionData={setQuestionData}
-          />
-        )}
-        {activeStep === 3 && (
-          <PreviewStepper
-            questionData={questionData}
-            subjectTitle={subjectTitle}
-          />
-        )}
+        <Stack sx={{ padding: "0 32px 24px 32px", flex: 1 }}>
+          {activeStep === 0 && (
+            <BasicStepper
+              questionData={questionData}
+              setQuestionData={setQuestionData}
+              allSubjects={allSubjects}
+            />
+          )}
+          {activeStep === 1 && (
+            <AdditionalStepper
+              questionData={questionData}
+              setQuestionData={setQuestionData}
+            />
+          )}
+          {activeStep === 2 && (
+            <ExplanationStepper
+              questionData={questionData}
+              setQuestionData={setQuestionData}
+            />
+          )}
+          {activeStep === 3 && (
+            <PreviewStepper
+              questionData={questionData}
+              subjectTitle={subjectTitle}
+            />
+          )}
+        </Stack>
 
-        {/* "Save & add new" checkbox on final step */}
-        {activeStep === steps.length - 1 && (
-          <Stack direction="row" alignItems="center" gap={1} width="100%">
+        {/* "Save & add new" checkbox on final step - Only for new questions */}
+        {activeStep === steps.length - 1 && !questionData.id && (
+          <Stack
+            direction="row"
+            alignItems="center"
+            gap={1}
+            sx={{
+              padding: "0 32px 16px 32px",
+            }}
+          >
             <Checkbox
               checked={addNewQuestion}
               onChange={toggleAddNewQuestion}
               sx={{
-                color: "var(--sec-color)",
-                "&.Mui-checked": { color: "var(--sec-color)" },
+                color: "#FF9800",
+                "&.Mui-checked": { color: "#FF9800" },
+                padding: "4px",
               }}
             />
-            <Typography>Save and add new question</Typography>
+            <Typography
+              sx={{
+                fontSize: "14px",
+                fontWeight: 500,
+                color: "var(--text2)",
+              }}
+            >
+              Save and add new question
+            </Typography>
           </Stack>
         )}
 
         {/* Navigation Buttons */}
-        <Stack direction="row" mt="auto" gap={2}>
-          {activeStep > 0 && (
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          sx={{
+            padding: "20px 32px",
+            borderTop: "1px solid var(--border-color)",
+            backgroundColor: "#FAFAFA",
+            borderBottomLeftRadius: "16px",
+            borderBottomRightRadius: "16px",
+          }}
+        >
+          {activeStep > 0 ? (
             <Button
-              variant="text"
+              variant="outlined"
               startIcon={<West />}
               onClick={handleBack}
               sx={{
                 textTransform: "none",
-                width: 100,
-                color: "var(--primary-color)",
+                minWidth: 120,
+                borderRadius: "8px",
+                padding: "10px 20px",
+                fontWeight: 600,
+                fontSize: "14px",
+                borderColor: "var(--border-color)",
+                color: "var(--text2)",
+                "&:hover": {
+                  borderColor: "#FF9800",
+                  backgroundColor: "rgba(255, 152, 0, 0.04)",
+                  color: "#FF9800",
+                },
               }}
             >
               Previous
             </Button>
+          ) : (
+            <div />
           )}
+
           {activeStep < steps.length - 1 ? (
             <Button
-              variant="text"
+              variant="contained"
               endIcon={<East />}
               onClick={handleNext}
               disabled={isNextDisabled}
               sx={{
                 textTransform: "none",
-                width: 100,
-                color: "var(--primary-color)",
+                minWidth: 120,
+                borderRadius: "8px",
+                padding: "10px 20px",
+                fontWeight: 700,
+                fontSize: "14px",
+                background: isNextDisabled
+                  ? "var(--border-color)"
+                  : "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
+                color: isNextDisabled ? "var(--text3)" : "#FFFFFF",
+                boxShadow: isNextDisabled
+                  ? "none"
+                  : "0 4px 12px rgba(255, 152, 0, 0.25)",
+                "&:hover": {
+                  background: isNextDisabled
+                    ? "var(--border-color)"
+                    : "linear-gradient(135deg, #F57C00 0%, #E65100 100%)",
+                  boxShadow: isNextDisabled
+                    ? "none"
+                    : "0 6px 16px rgba(255, 152, 0, 0.35)",
+                  transform: isNextDisabled ? "none" : "translateY(-1px)",
+                },
+                "&.Mui-disabled": {
+                  background: "var(--border-color)",
+                  color: "var(--text3)",
+                },
+                transition: "all 0.3s ease",
               }}
+              disableElevation
             >
               Next
             </Button>
           ) : (
             <Button
               variant="contained"
-              endIcon={<SaveAlt />}
+              startIcon={<SaveAlt />}
               onClick={handleSave}
               disabled={isLoading}
               sx={{
                 textTransform: "none",
-                width: 100,
-                backgroundColor: "var(--primary-color)",
+                minWidth: 140,
+                borderRadius: "8px",
+                padding: "10px 24px",
+                fontWeight: 700,
+                fontSize: "14px",
+                background: "linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)",
+                color: "#FFFFFF",
+                boxShadow: "0 4px 12px rgba(76, 175, 80, 0.25)",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, #388E3C 0%, #2E7D32 100%)",
+                  boxShadow: "0 6px 16px rgba(76, 175, 80, 0.35)",
+                  transform: "translateY(-1px)",
+                },
+                "&.Mui-disabled": {
+                  background: "var(--border-color)",
+                  color: "var(--text3)",
+                },
+                transition: "all 0.3s ease",
               }}
+              disableElevation
             >
               {isLoading ? (
                 <CircularProgress size={20} sx={{ color: "#fff" }} />
+              ) : questionData.id ? (
+                "Update Question"
               ) : (
-                "Save"
+                "Save Question"
               )}
             </Button>
           )}

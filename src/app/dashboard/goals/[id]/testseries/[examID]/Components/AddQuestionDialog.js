@@ -14,9 +14,109 @@ import {
   IconButton,
   Stack,
   Typography,
+  CircularProgress,
 } from "@mui/material";
-import { useState, useMemo, useEffect } from "react";
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import FilterQuestions from "./FilterQuestions";
+
+// Memoized Row Component to prevent unnecessary re-renders
+const QuestionRow = ({
+  item,
+  index,
+  isSelected,
+  isAlreadyAdded,
+  onSelect,
+  onPreview,
+}) => {
+  return (
+    <QuestionCard
+      questionNumber={`Q${index + 1}`}
+      questionType={item.type || ""}
+      Subject={item.subjectTitle || "Unknown"}
+      question={<MDPreview value={item.title || ""} />}
+      difficulty={item.difficultyLevel}
+      preview={
+        <Stack flexDirection="row" gap="8px" alignItems="center">
+          {isAlreadyAdded && (
+            <Chip
+              label="Already Added"
+              size="small"
+              sx={{
+                height: "22px",
+                fontSize: "10px",
+                fontWeight: 700,
+                backgroundColor: "rgba(255, 152, 0, 0.12)",
+                color: "#FF9800",
+                border: "1px solid rgba(255, 152, 0, 0.3)",
+              }}
+            />
+          )}
+          <Chip
+            icon={<Visibility sx={{ fontSize: "14px" }} />}
+            label="Preview"
+            onClick={() => onPreview(item)}
+            sx={{
+              fontSize: "11px",
+              fontFamily: "Lato",
+              fontWeight: 600,
+              height: "24px",
+              backgroundColor: "transparent",
+              color: "var(--text2)",
+              border: "1px solid var(--border-color)",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              "&:hover": {
+                backgroundColor: "rgba(255, 152, 0, 0.08)",
+                borderColor: "#FF9800",
+                color: "#FF9800",
+              },
+            }}
+          />
+        </Stack>
+      }
+      check={
+        <Checkbox
+          checked={isSelected}
+          onChange={() => onSelect(item)}
+          disabled={isAlreadyAdded}
+          sx={{
+            color: "#FF9800",
+            "&.Mui-checked": {
+              color: "#FF9800",
+            },
+            "&.MuiCheckbox-root": {
+              padding: "0px",
+            },
+            "&.Mui-disabled": {
+              color: "var(--text3)",
+            },
+          }}
+        />
+      }
+      isSelected={isSelected}
+      onSelect={() => onSelect(item)}
+      subjectID={item.subjectID}
+    />
+  );
+};
+
+// Custom comparison function for React.memo
+const arePropsEqual = (prevProps, nextProps) => {
+  return (
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isAlreadyAdded === nextProps.isAlreadyAdded &&
+    prevProps.item.id === nextProps.item.id &&
+    prevProps.index === nextProps.index
+  );
+};
+
+const MemoizedQuestionRow = React.memo(QuestionRow, arePropsEqual);
 
 export default function AddQuestionDialog({
   isDialogOpen,
@@ -34,17 +134,20 @@ export default function AddQuestionDialog({
   const [isPreviewDialog, setIsPreviewDialog] = useState(false);
   const [filteredQuestions, setFilteredQuestions] = useState([]);
   const [isFilterApplied, setIsFilterApplied] = useState(false);
+  const [displayedCount, setDisplayedCount] = useState(20); // Initial load count
+  const observerTarget = useRef(null);
   const { showSnackbar } = useSnackbar();
 
-  const previewDialogOpen = (question) => {
+  const previewDialogOpen = useCallback((question) => {
     setSelectedQuestions(question);
     setIsPreviewDialog(true);
-  };
+  }, []);
+
   const previewDialogClose = () => {
     setIsPreviewDialog(false);
   };
 
-  const handleSelectQuestion = (question) => {
+  const handleSelectQuestion = useCallback((question) => {
     setSelectedQuestions((prevSelected) =>
       Array.isArray(prevSelected)
         ? prevSelected.some((q) => q.id === question.id)
@@ -52,7 +155,7 @@ export default function AddQuestionDialog({
           : [...prevSelected, question]
         : [question]
     );
-  };
+  }, []);
 
   const handleAddQuestions = () => {
     if (!selectedQuestions.length) {
@@ -150,6 +253,43 @@ export default function AddQuestionDialog({
     }
   }, [questionsInOtherSections, selectedQuestions]);
 
+  // Reset displayed count when filters or list changes
+  useEffect(() => {
+    setDisplayedCount(20);
+  }, [isFilterApplied, filteredQuestions, questionList]);
+
+  // Infinite Scroll Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setDisplayedCount((prev) => prev + 20);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [filteredQuestions, questionList]);
+
+  const currentList = isFilterApplied ? filteredQuestions : questionList;
+  const visibleQuestions = currentList.slice(0, displayedCount);
+
+  // Create a Set of selected IDs for O(1) lookup
+  const selectedIds = useMemo(() => {
+    if (!Array.isArray(selectedQuestions)) return new Set();
+    return new Set(selectedQuestions.map((q) => q.id));
+  }, [selectedQuestions]);
+
   return (
     <Stack>
       <LongDialogBox
@@ -180,82 +320,26 @@ export default function AddQuestionDialog({
                   No questions found for selected filters.
                 </Typography>
               ) : (
-                (isFilterApplied ? filteredQuestions : questionList).map(
-                  (item, index) => {
-                    const isAlreadyAdded = questionsInOtherSections.has(
-                      item.id
-                    );
-                    return (
-                      <QuestionCard
-                        key={index}
-                        questionNumber={`Q${index + 1}`}
-                        questionType={item.type || ""}
-                        Subject={item.subjectTitle || "Unknown"}
-                        question={<MDPreview value={item.title || ""} />}
-                        difficulty={item.difficultyLevel}
-                        preview={
-                          <Stack
-                            flexDirection="row"
-                            gap="10px"
-                            alignItems="center"
-                          >
-                            {isAlreadyAdded && (
-                              <Chip
-                                label="Already Added"
-                                size="small"
-                                color="warning"
-                                sx={{
-                                  height: "20px",
-                                  fontSize: "10px",
-                                  fontWeight: "700",
-                                }}
-                              />
-                            )}
-                            <Chip
-                              icon={<Visibility sx={{ fontSize: "small" }} />}
-                              label="Preview"
-                              onClick={() => previewDialogOpen(item)}
-                              sx={{
-                                fontSize: "10px",
-                                fontFamily: "Lato",
-                                fontWeight: "700",
-                                height: "20px",
-                                backgroundColor: "var(--border-color)",
-                                color: "var(--text3)",
-                              }}
-                            />
-                          </Stack>
-                        }
-                        check={
-                          <Checkbox
-                            checked={
-                              Array.isArray(selectedQuestions) &&
-                              selectedQuestions.some((q) => q.id === item.id)
-                            }
-                            onChange={() => handleSelectQuestion(item)}
-                            disabled={isAlreadyAdded}
-                            sx={{
-                              color: "var(--sec-color)",
-                              "&.Mui-checked": { color: "var(--sec-color)" },
-                              "&.MuiCheckbox-root": {
-                                padding: "0px",
-                              },
-                              "&.Mui-disabled": {
-                                color: "var(--text3)",
-                              },
-                            }}
-                          />
-                        }
-                        isSelected={
-                          Array.isArray(selectedQuestions) &&
-                          selectedQuestions.some((q) => q.id === item.id)
-                        }
-                        onSelect={() => handleSelectQuestion(item)}
-                        subjectID={item.subjectID}
-                      />
-                    );
-                  }
-                )
+                <>
+                  {visibleQuestions.map((item, index) => (
+                    <MemoizedQuestionRow
+                      key={item.id || index}
+                      item={item}
+                      index={index}
+                      isSelected={selectedIds.has(item.id)}
+                      isAlreadyAdded={questionsInOtherSections.has(item.id)}
+                      onSelect={handleSelectQuestion}
+                      onPreview={previewDialogOpen}
+                    />
+                  ))}
+                  {/* Sentinel element for infinite scroll */}
+                  {visibleQuestions.length < currentList.length && (
+                    <div
+                      ref={observerTarget}
+                      style={{ height: "20px", margin: "10px 0" }}
+                    />
+                  )}
+                </>
               )}
             </Stack>
           </Stack>

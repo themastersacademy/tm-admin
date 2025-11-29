@@ -7,15 +7,15 @@ export default async function deleteQuestion({ questionID, subjectID }) {
   const params = {
     TableName: `${process.env.AWS_DB_NAME}content`,
     Key: {
-      pKey: `QUESTION#${questionID}`,
-      sKey: `QUESTIONS@${subjectID}`,
+      pKey: `SUBJECT#${subjectID}`,
+      sKey: `QUESTION#${questionID}`,
     },
   };
 
   const subjectResp = await dynamoDB.send(
     new GetCommand({
       TableName: `${process.env.AWS_DB_NAME}content`,
-      Key: { pKey: `SUBJECT#${subjectID}`, sKey: "SUBJECTS" },
+      Key: { pKey: `SUBJECT#${subjectID}`, sKey: "METADATA" },
     })
   );
 

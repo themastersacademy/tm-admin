@@ -176,39 +176,7 @@ export default function Account({ isSideNavOpen }) {
           </Typography>
         </Stack>
         <Divider sx={{ margin: "8px 0" }} />
-        <MenuItem
-          onClick={() => {
-            router.push("/dashboard/profile");
-            handleClose();
-          }}
-          sx={{
-            gap: "12px",
-            fontFamily: "Lato",
-            fontSize: "14px",
-            fontWeight: 600,
-            color: "var(--text1)",
-          }}
-        >
-          <Stack
-            sx={{
-              width: "32px",
-              height: "32px",
-              backgroundColor: "rgba(33, 150, 243, 0.1)",
-              borderRadius: "8px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Image
-              src={students_img.src}
-              alt="profile"
-              width={16}
-              height={16}
-            />
-          </Stack>
-          Profile
-        </MenuItem>
+
         <MenuItem
           onClick={() => {
             router.push("/api/logout");

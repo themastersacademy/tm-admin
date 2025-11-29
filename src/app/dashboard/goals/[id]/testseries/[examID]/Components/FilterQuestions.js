@@ -134,101 +134,187 @@ export default function FilterQuestions({
   };
 
   return (
-    <Stack gap="15px">
-      <Stack flexDirection="row" gap="10px">
-        {selectFields.map(({ name, label, options }) => {
-          let value = "";
-          if (name === "languageSelect") value = filters.subjectID;
-          else if (name === "qTypeSelect") value = filters.type;
-          else if (name === "difficultySelect") value = filters.difficulty;
-          else if (name === "eachSelect") value = filters.eachSelect;
-          return (
-            <StyledSelect
-              key={name}
-              title={label}
-              options={options}
-              value={value}
-              getLabel={(option) => option.label}
-              getValue={(option) => option.value}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (name === "languageSelect") {
-                  setFilters((prev) => ({ ...prev, subjectID: value }));
-                } else if (name === "qTypeSelect") {
-                  setFilters((prev) => ({ ...prev, type: value }));
-                } else if (name === "difficultySelect") {
-                  setFilters((prev) => ({ ...prev, difficulty: value }));
-                } else if (name === "eachSelect") {
+    <Stack gap="20px">
+      {/* Filter Controls Section */}
+      <Stack
+        sx={{
+          background:
+            "linear-gradient(135deg, rgba(255, 152, 0, 0.08) 0%, rgba(245, 124, 0, 0.02) 100%)",
+          borderRadius: "12px",
+          border: "1px solid rgba(255, 152, 0, 0.15)",
+          padding: "20px",
+        }}
+      >
+        <Stack gap="16px">
+          {/* Filter Dropdowns Row */}
+          <Stack flexDirection="row" gap="12px" flexWrap="wrap">
+            {selectFields.map(({ name, label, options }) => {
+              let value = "";
+              if (name === "languageSelect") value = filters.subjectID;
+              else if (name === "qTypeSelect") value = filters.type;
+              else if (name === "difficultySelect") value = filters.difficulty;
+              else if (name === "eachSelect") value = filters.eachSelect;
+              return (
+                <StyledSelect
+                  key={name}
+                  title={label}
+                  options={options}
+                  value={value}
+                  getLabel={(option) => option.label}
+                  getValue={(option) => option.value}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (name === "languageSelect") {
+                      setFilters((prev) => ({ ...prev, subjectID: value }));
+                    } else if (name === "qTypeSelect") {
+                      setFilters((prev) => ({ ...prev, type: value }));
+                    } else if (name === "difficultySelect") {
+                      setFilters((prev) => ({ ...prev, difficulty: value }));
+                    } else if (name === "eachSelect") {
+                      setFilters((prev) => ({
+                        ...prev,
+                        isRandom: value === "Random",
+                        eachSelect: value,
+                      }));
+                    }
+                  }}
+                />
+              );
+            })}
+
+            {/* Random Count or Selected Display */}
+            {filters.isRandom ? (
+              <StyledTextField
+                type="number"
+                placeholder="Number of questions"
+                value={filters.randomCount}
+                onChange={(e) =>
                   setFilters((prev) => ({
                     ...prev,
-                    isRandom: value === "Random",
-                    eachSelect: value,
-                  }));
+                    randomCount: e.target.value,
+                  }))
                 }
-              }}
-            />
-          );
-        })}
-        {filters.isRandom ? (
-          <StyledTextField
-            type="number"
-            placeholder="number of questions"
-            value={filters.randomCount}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, randomCount: e.target.value }))
-            }
-          />
-        ) : (
-          <Stack
-            flexDirection="row"
-            gap="10px"
-            alignItems="center"
-            sx={{
-              border: "1px solid var(--border-color)",
-              width: "200px",
-              borderRadius: "4px",
-              padding: "0px 10px",
-            }}
-          >
-            <Typography sx={{ fontWeight: "500", color: "var(--sec-color)" }}>
-              Selected
-            </Typography>
-            <Typography sx={{ color: "var(--text4)" }}>
-              {selectedQuestions.length}
-            </Typography>
-          </Stack>
-        )}
+              />
+            ) : (
+              <Stack
+                flexDirection="row"
+                gap="10px"
+                alignItems="center"
+                sx={{
+                  border: "1px solid rgba(255, 152, 0, 0.25)",
+                  backgroundColor: "rgba(255, 152, 0, 0.08)",
+                  minWidth: "180px",
+                  borderRadius: "8px",
+                  padding: "0px 16px",
+                  height: "40px",
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontWeight: 700,
+                    color: "#FF9800",
+                    fontSize: "13px",
+                  }}
+                >
+                  Selected
+                </Typography>
+                <Stack
+                  sx={{
+                    backgroundColor: "#FF9800",
+                    color: "#fff",
+                    borderRadius: "12px",
+                    padding: "2px 10px",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                  }}
+                >
+                  {selectedQuestions.length}
+                </Stack>
+              </Stack>
+            )}
 
-        <Button
-          variant="contained"
-          sx={{
-            backgroundColor: "var(--primary-color)",
-            textTransform: "none",
-          }}
-          disableElevation
-          onClick={handleApplyFilters}
-        >
-          Apply
-        </Button>
-      </Stack>
-      <Stack flexDirection="row" gap="15px">
-        <SearchBox
-          onChange={(e) =>
-            setFilters((prev) => ({ ...prev, search: e.target.value }))
-          }
-        />
-        <Button
-          variant="contained"
-          onClick={handleAddQuestions}
-          sx={{
-            backgroundColor: "var(--primary-color)",
-            textTransform: "none",
-            width: "100px",
-          }}
-          disableElevation
-        >
-          Add
-        </Button>
+            {/* Apply Button */}
+            <Button
+              variant="contained"
+              onClick={handleApplyFilters}
+              sx={{
+                background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
+                color: "#FFFFFF",
+                textTransform: "none",
+                borderRadius: "8px",
+                padding: "10px 24px",
+                fontWeight: 700,
+                fontSize: "14px",
+                boxShadow: "0 4px 12px rgba(255, 152, 0, 0.25)",
+                minWidth: "120px",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, #F57C00 0%, #E65100 100%)",
+                  boxShadow: "0 6px 16px rgba(255, 152, 0, 0.35)",
+                  transform: "translateY(-1px)",
+                },
+                transition: "all 0.3s ease",
+              }}
+              disableElevation
+            >
+              Apply Filters
+            </Button>
+          </Stack>
+
+          {/* Search and Add Row */}
+          <Stack flexDirection="row" gap="12px" alignItems="center">
+            <SearchBox
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, search: e.target.value }))
+              }
+            />
+            <Button
+              variant="contained"
+              onClick={handleAddQuestions}
+              disabled={selectedQuestions.length === 0}
+              sx={{
+                background:
+                  selectedQuestions.length === 0
+                    ? "var(--border-color)"
+                    : "linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)",
+                color:
+                  selectedQuestions.length === 0 ? "var(--text3)" : "#FFFFFF",
+                textTransform: "none",
+                borderRadius: "8px",
+                padding: "10px 32px",
+                fontWeight: 700,
+                fontSize: "14px",
+                boxShadow:
+                  selectedQuestions.length === 0
+                    ? "none"
+                    : "0 4px 12px rgba(76, 175, 80, 0.25)",
+                minWidth: "140px",
+                "&:hover": {
+                  background:
+                    selectedQuestions.length === 0
+                      ? "var(--border-color)"
+                      : "linear-gradient(135deg, #388E3C 0%, #2E7D32 100%)",
+                  boxShadow:
+                    selectedQuestions.length === 0
+                      ? "none"
+                      : "0 6px 16px rgba(76, 175, 80, 0.35)",
+                  transform:
+                    selectedQuestions.length === 0
+                      ? "none"
+                      : "translateY(-1px)",
+                },
+                transition: "all 0.3s ease",
+                "&.Mui-disabled": {
+                  background: "var(--border-color)",
+                  color: "var(--text3)",
+                },
+              }}
+              disableElevation
+            >
+              Add Questions
+            </Button>
+          </Stack>
+        </Stack>
       </Stack>
     </Stack>
   );

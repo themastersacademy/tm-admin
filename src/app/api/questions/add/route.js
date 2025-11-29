@@ -1,5 +1,5 @@
 import checkQuestionFormat from "@/src/lib/checkQuestionFormat";
-import { addQuestion } from "@/src/util/questions/addQuestion";
+import addQuestion from "@/src/util/questions/addQuestion";
 
 export async function POST(request) {
   const questionData = await request.json();

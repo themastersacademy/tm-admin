@@ -39,6 +39,14 @@ export default function LinkComp({ isSideNavOpen, sideNavOpen }) {
         bgColor="rgba(255, 152, 0, 0.1)"
       />
       <NavComp
+        icon={goals.src}
+        title="Home Page"
+        href="/dashboard/homepage"
+        isSideNavOpen={isSideNavOpen}
+        color="#FF9800"
+        bgColor="rgba(255, 152, 0, 0.1)"
+      />
+      <NavComp
         icon={library.src}
         title="Library"
         href="#"

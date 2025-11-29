@@ -83,7 +83,12 @@ function validateAdditionalStep(data) {
   return true;
 }
 
-export default function CreateQuestionDialog({ open, onClose, onSuccess }) {
+export default function CreateQuestionDialog({
+  open,
+  onClose,
+  onSuccess,
+  initialData,
+}) {
   const steps = useMemo(
     () => ["Basic Info", "Details", "Solution", "Preview"],
     []
@@ -93,6 +98,18 @@ export default function CreateQuestionDialog({ open, onClose, onSuccess }) {
   const [data, setData] = useState(defaultQuestionData);
   const [isNextDisabled, setIsNextDisabled] = useState(true);
   const [allSubjects, setAllSubjects] = useState([]);
+
+  // Initialize data when dialog opens or initialData changes
+  useEffect(() => {
+    if (open) {
+      if (initialData) {
+        setData(initialData);
+      } else {
+        setData(defaultQuestionData);
+      }
+      setActiveStep(0);
+    }
+  }, [open, initialData]);
 
   const validateStep = useCallback(() => {
     if (activeStep === 0) return validateBasicStep(data);
@@ -154,27 +171,66 @@ export default function CreateQuestionDialog({ open, onClose, onSuccess }) {
       PaperProps={{
         sx: {
           borderRadius: "16px",
-          minHeight: "80vh",
+          minHeight: "85vh",
+          maxWidth: "900px",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
         },
       }}
     >
+      {/* Modern Header with Orange Gradient */}
       <Stack
         direction="row"
         justifyContent="space-between"
         alignItems="center"
         sx={{
-          padding: "20px 24px",
-          borderBottom: "1px solid var(--border-color)",
+          padding: "24px 32px",
+          background:
+            "linear-gradient(135deg, rgba(255, 152, 0, 0.08) 0%, rgba(245, 124, 0, 0.02) 100%)",
+          borderBottom: "1px solid rgba(255, 152, 0, 0.15)",
         }}
       >
-        <Typography variant="h6" fontWeight={700} fontFamily="Lato">
-          Create New Question
-        </Typography>
-        <IconButton onClick={handleClose}>
+        <Stack gap="4px">
+          <Typography
+            sx={{
+              fontSize: "20px",
+              fontWeight: 700,
+              color: "var(--text1)",
+              fontFamily: "Lato",
+            }}
+          >
+            {initialData ? "Edit Question" : "Create New Question"}
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: "13px",
+              color: "var(--text3)",
+              fontFamily: "Lato",
+            }}
+          >
+            {initialData
+              ? "Update the details of the question"
+              : "Follow the steps to create a new question"}
+          </Typography>
+        </Stack>
+        <IconButton
+          onClick={handleClose}
+          sx={{
+            borderRadius: "8px",
+            border: "1px solid var(--border-color)",
+            backgroundColor: "var(--white)",
+            transition: "all 0.2s ease",
+            "&:hover": {
+              backgroundColor: "rgba(255, 152, 0, 0.08)",
+              borderColor: "#FF9800",
+              color: "#FF9800",
+            },
+          }}
+        >
           <Close />
         </IconButton>
       </Stack>
-      <DialogContent sx={{ padding: "24px" }}>
+
+      <DialogContent sx={{ padding: "32px", backgroundColor: "#FAFAFA" }}>
         <QuestionStepper
           questionData={data}
           setQuestionData={setData}
@@ -188,6 +244,7 @@ export default function CreateQuestionDialog({ open, onClose, onSuccess }) {
           resetForm={resetForm}
           setInitState={setInitState}
           onSuccess={handleSuccess}
+          initialData={initialData}
         />
       </DialogContent>
     </Dialog>

@@ -6,20 +6,47 @@ import {
   Stack,
   TextField,
   Typography,
+  InputAdornment,
+  IconButton,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import { useSnackbar } from "../../context/SnackbarContext";
 
 export default function Form() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { showSnackbar } = useSnackbar();
 
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("adminEmail");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
+
   const onSubmit = async (e) => {
     e.preventDefault();
+    if (!email || !password) {
+      showSnackbar("Please fill in all fields", "error", "", "3000");
+      return;
+    }
+
     setIsLoading(true);
+
+    if (rememberMe) {
+      localStorage.setItem("adminEmail", email);
+    } else {
+      localStorage.removeItem("adminEmail");
+    }
+
     await fetch(`/api/login`, {
       method: "POST",
       headers: {
@@ -37,22 +64,20 @@ export default function Form() {
           showSnackbar(data.message, "error", "", "3000");
           setIsLoading(false);
         }
+      })
+      .catch(() => {
+        showSnackbar(
+          "Something went wrong. Please try again.",
+          "error",
+          "",
+          "3000"
+        );
+        setIsLoading(false);
       });
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Enter") {
-        onSubmit(e);
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [email, password]);
-
   return (
+    <form onSubmit={onSubmit}>
       <Stack
         sx={{
           width: "350px",
@@ -63,15 +88,19 @@ export default function Form() {
       >
         <Stack gap={1}>
           <Typography
+            component="label"
+            htmlFor="email-input"
             sx={{ fontSize: "Lato", fontSize: "16px", fontWeight: "500" }}
           >
             Email
           </Typography>
           <TextField
+            id="email-input"
             variant="outlined"
-            label=""
             placeholder="Enter your email"
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoFocus
             sx={{
               "& .MuiInputBase-input": {
                 "&::placeholder": {
@@ -96,16 +125,32 @@ export default function Form() {
         </Stack>
         <Stack gap={1}>
           <Typography
+            component="label"
+            htmlFor="password-input"
             sx={{ fontSize: "Lato", fontSize: "16px", fontWeight: "500" }}
           >
             Password
           </Typography>
           <TextField
+            id="password-input"
             variant="outlined"
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
-            label=""
             placeholder="Enter your password"
-            type="password"
+            type={showPassword ? "text" : "password"}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
             sx={{
               "& .MuiInputBase-input": {
                 "&::placeholder": {
@@ -128,8 +173,38 @@ export default function Form() {
             }}
           />
         </Stack>
+
+        <Stack width="100%" direction="row" alignItems="center">
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                sx={{
+                  color: "var(--primary-color)",
+                  "&.Mui-checked": {
+                    color: "var(--primary-color)",
+                  },
+                }}
+              />
+            }
+            label={
+              <Typography
+                sx={{
+                  fontFamily: "Lato",
+                  fontSize: "14px",
+                  color: "var(--text1)",
+                }}
+              >
+                Remember me
+              </Typography>
+            }
+          />
+        </Stack>
+
         <Stack>
           <Button
+            type="submit"
             variant="contained"
             sx={{
               textTransform: "none",
@@ -141,7 +216,6 @@ export default function Form() {
               width: "350px",
             }}
             disableElevation
-            onClick={onSubmit}
             disabled={isLoading}
           >
             {isLoading ? (
@@ -163,5 +237,6 @@ export default function Form() {
           </Typography>
         </Stack>
       </Stack>
+    </form>
   );
 }

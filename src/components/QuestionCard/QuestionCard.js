@@ -1,16 +1,15 @@
 "use client";
 import SubjectContext from "@/src/app/context/SubjectContext";
-import { MoreVert } from "@mui/icons-material";
+import { Edit, Delete } from "@mui/icons-material";
 import {
-  Checkbox,
   Chip,
   IconButton,
-  Menu,
   Stack,
   Typography,
   Box,
+  Tooltip,
 } from "@mui/material";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect } from "react";
 
 export default function QuestionCard({
   questionNumber,
@@ -19,13 +18,11 @@ export default function QuestionCard({
   question,
   preview,
   check,
-  options = [],
-  isSelected,
-  onSelect,
+  onEdit,
+  onDelete,
   subjectID,
   isLive,
 }) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { subjectList, fetchSubject } = useContext(SubjectContext);
 
   useEffect(() => {
@@ -38,13 +35,6 @@ export default function QuestionCard({
     );
     return subject ? subject.title : "Unknown";
   }, [subjectList, subjectID]);
-
-  const menuOpen = (event) => {
-    setIsMenuOpen(event.currentTarget);
-  };
-  const menuClose = () => {
-    setIsMenuOpen(null);
-  };
 
   return (
     <Stack sx={{ width: "100%" }}>
@@ -160,45 +150,60 @@ export default function QuestionCard({
             </Box>
           </Stack>
           <Stack
-            gap="10px"
+            gap="8px"
             flexDirection="row"
             marginLeft="auto"
             alignItems="center"
           >
             {preview}
-            {options.length > 0 && (
-              <IconButton
-                sx={{ padding: "0px" }}
-                onClick={menuOpen}
-                disableRipple
-              >
-                <MoreVert sx={{ color: "var(--text3)" }} />
-              </IconButton>
-            )}
-            <Menu
-              anchorEl={isMenuOpen}
-              open={Boolean(isMenuOpen)}
-              onClose={menuClose}
-              disableScrollLock={true}
-              sx={{ "& .MuiList-root": { padding: "3px" } }}
-              slotProps={{
-                paper: {
-                  style: {
-                    border: "1px solid",
-                    borderColor: "var(--border-color)",
+            {onEdit && (
+              <Tooltip title="Edit Question" arrow>
+                <IconButton
+                  onClick={onEdit}
+                  sx={{
+                    width: "36px",
+                    height: "36px",
                     borderRadius: "8px",
-                    padding: "0px",
-                  },
-                },
-              }}
-              elevation={0}
-            >
-              {options.map((option, index) => (
-                <Stack key={index} onClick={menuClose}>
-                  {option}
-                </Stack>
-              ))}
-            </Menu>
+                    border: "1px solid var(--border-color)",
+                    backgroundColor: "var(--white)",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      backgroundColor: "rgba(255, 152, 0, 0.08)",
+                      borderColor: "#FF9800",
+                      "& svg": {
+                        color: "#FF9800",
+                      },
+                    },
+                  }}
+                >
+                  <Edit sx={{ fontSize: "18px", color: "var(--text2)" }} />
+                </IconButton>
+              </Tooltip>
+            )}
+            {onDelete && (
+              <Tooltip title="Delete Question" arrow>
+                <IconButton
+                  onClick={onDelete}
+                  sx={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--border-color)",
+                    backgroundColor: "var(--white)",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      backgroundColor: "rgba(244, 67, 54, 0.08)",
+                      borderColor: "#f44336",
+                      "& svg": {
+                        color: "#f44336",
+                      },
+                    },
+                  }}
+                >
+                  <Delete sx={{ fontSize: "18px", color: "var(--text2)" }} />
+                </IconButton>
+              </Tooltip>
+            )}
           </Stack>
         </Stack>
       </Stack>

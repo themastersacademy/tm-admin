@@ -1,17 +1,23 @@
 import { dynamoDB } from "../awsAgent";
 import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
 
-export default async function updateGoal(goalID, { title, icon }) {
+export default async function updateGoal(
+  goalID,
+  { title, icon, tagline, description }
+) {
   const params = {
     TableName: `${process.env.AWS_DB_NAME}master`,
     Key: {
       pKey: `GOAL#${goalID}`,
       sKey: "GOALS",
     },
-    UpdateExpression: "set title = :t, icon = :i, updatedAt = :u",
+    UpdateExpression:
+      "set title = :t, icon = :i, tagline = :tag, description = :desc, updatedAt = :u",
     ExpressionAttributeValues: {
       ":t": title,
       ":i": icon,
+      ":tag": tagline,
+      ":desc": description,
       ":u": Date.now(),
     },
     ReturnValues: "ALL_NEW",

@@ -170,6 +170,34 @@ export default function GoalHead({ goal, goalLoading, fetchGoal }) {
         </Button>
       </Stack>
 
+      {/* Banner Image */}
+      {goal.bannerImage && (
+        <Stack
+          sx={{
+            width: "100%",
+            position: "relative",
+            paddingBottom: "33.33%", // 3:1 aspect ratio (1200/400 = 3)
+            borderBottom: "1px solid var(--border-color)",
+            overflow: "hidden",
+            backgroundColor: "var(--bg-color)",
+          }}
+        >
+          <img
+            src={goal.bannerImage}
+            alt="Goal Banner"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center",
+            }}
+          />
+        </Stack>
+      )}
+
       {/* Main Section: Title & Icon */}
       <Stack padding="24px 24px 20px 24px" gap="16px">
         <Stack direction="row" alignItems="flex-start" gap="20px">
@@ -270,6 +298,17 @@ export default function GoalHead({ goal, goalLoading, fetchGoal }) {
                 </Stack>
               )}
             </Stack>
+            {goal.tagline && (
+              <Typography
+                sx={{
+                  fontSize: "14px",
+                  color: "var(--text2)",
+                  fontStyle: "italic",
+                }}
+              >
+                {goal.tagline}
+              </Typography>
+            )}
             <Typography sx={{ fontSize: "13px", color: "var(--text3)" }}>
               {goalLoading ? (
                 <Skeleton variant="text" width="300px" />

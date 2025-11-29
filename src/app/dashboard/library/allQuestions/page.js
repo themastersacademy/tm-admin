@@ -15,12 +15,12 @@ import {
   Visibility,
   ArrowBack,
   ArrowForward,
+  Edit,
 } from "@mui/icons-material";
 import {
   Button,
   Chip,
   IconButton,
-  MenuItem,
   Stack,
   Typography,
   Box,
@@ -121,7 +121,14 @@ export default function AllQuestions() {
   const importDialogOpen = () => setIsImportDialog(true);
   const importDialogClose = () => setIsImportDialog(false);
 
-  const createDialogOpen = () => setIsCreateDialogOpen(true);
+  const createDialogOpen = () => {
+    setSelectedQuestion(null);
+    setIsCreateDialogOpen(true);
+  };
+  const editDialogOpen = (question) => {
+    setSelectedQuestion(question);
+    setIsCreateDialogOpen(true);
+  };
   const createDialogClose = () => setIsCreateDialogOpen(false);
 
   const toggleDrawer = (open) => () => setIsOpen(open);
@@ -467,11 +474,6 @@ export default function AllQuestions() {
                     key={index}
                     questionNumber={`Q${page * rowsPerPage + index + 1}`}
                     questionType={item.type || "MCQ"}
-                    Subject={
-                      subjectList.find(
-                        (subject) => subject.subjectID === item.subjectID
-                      )?.title || "Unknown"
-                    }
                     subjectID={item.subjectID}
                     question={<MDPreview value={item.title} />}
                     difficulty={item.difficultyLevel}
@@ -494,24 +496,8 @@ export default function AllQuestions() {
                         }}
                       />
                     }
-                    options={[
-                      <MenuItem
-                        key={index}
-                        sx={{
-                          fontFamily: "Lato",
-                          fontSize: "14px",
-                          padding: "8px 16px",
-                          color: "var(--delete-color)",
-                          gap: "8px",
-                        }}
-                        onClick={() =>
-                          dialogDeleteOpen(item.id, item.subjectID)
-                        }
-                      >
-                        <Delete sx={{ fontSize: "18px" }} />
-                        Delete
-                      </MenuItem>,
-                    ]}
+                    onEdit={() => editDialogOpen(item)}
+                    onDelete={() => dialogDeleteOpen(item.id, item.subjectID)}
                   />
                 ))}
               </Stack>
@@ -572,6 +558,21 @@ export default function AllQuestions() {
             width="100%"
           >
             <Button
+              variant="outlined"
+              onClick={dialogDeleteClose}
+              sx={{
+                textTransform: "none",
+                borderColor: "var(--text2)",
+                color: "var(--text2)",
+                "&:hover": {
+                  borderColor: "var(--text1)",
+                  backgroundColor: "rgba(0,0,0,0.04)",
+                },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
               variant="contained"
               onClick={() => {
                 handleDelete(selectedQuestion.id, selectedQuestion.subjectID);
@@ -580,10 +581,13 @@ export default function AllQuestions() {
               sx={{
                 textTransform: "none",
                 backgroundColor: "var(--delete-color)",
+                "&:hover": {
+                  backgroundColor: "#d32f2f",
+                },
               }}
               disableElevation
             >
-              Cancel
+              Delete
             </Button>
           </Stack>
         }
@@ -626,6 +630,9 @@ export default function AllQuestions() {
         open={isCreateDialogOpen}
         onClose={createDialogClose}
         onSuccess={handleCreateSuccess}
+        initialData={
+          isCreateDialogOpen && selectedQuestion?.id ? selectedQuestion : null
+        }
       />
     </Stack>
   );

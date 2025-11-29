@@ -1,8 +1,9 @@
 "use client";
+import { Suspense } from "react";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import Header from "@/src/components/Header/Header";
-import { Stack } from "@mui/material";
+import { Stack, CircularProgress } from "@mui/material";
 import { apiFetch } from "@/src/lib/apiFetch";
 import QuestionStepper from "./Components/QuestionStepper";
 
@@ -79,7 +80,7 @@ function validateAdditionalStep(data) {
   return true;
 }
 
-export default function AddQuestion() {
+function AddQuestionContent() {
   const searchParams = useSearchParams();
   const prefillSubjectID = searchParams.get("subjectID");
 
@@ -163,5 +164,13 @@ export default function AddQuestion() {
         setInitState={setInitState}
       />
     </Stack>
+  );
+}
+
+export default function AddQuestion() {
+  return (
+    <Suspense fallback={<CircularProgress />}>
+      <AddQuestionContent />
+    </Suspense>
   );
 }

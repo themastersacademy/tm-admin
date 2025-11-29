@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { apiFetch } from "@/src/lib/apiFetch";
 import { Close, ArrowForward, Info } from "@mui/icons-material";
 import Image from "next/image";
+import GoalBannerUpload from "@/src/components/GoalBannerUpload/GoalBannerUpload";
 
 export default function GoalDialogBox({
   isOpen,
@@ -28,6 +29,8 @@ export default function GoalDialogBox({
   onUpdateSuccess,
 }) {
   const [title, setTitle] = useState("");
+  const [tagline, setTagline] = useState("");
+  const [description, setDescription] = useState("");
   const [icon, setIcon] = useState(false);
   const router = useRouter();
   const { showSnackbar } = useSnackbar();
@@ -36,9 +39,13 @@ export default function GoalDialogBox({
     if (isOpen) {
       if (isEdit && goalData) {
         setTitle(goalData.title || "");
+        setTagline(goalData.tagline || "");
+        setDescription(goalData.description || "");
         setIcon(goalData.icon || false);
       } else {
         setTitle("");
+        setTagline("");
+        setDescription("");
         setIcon(false);
       }
     }
@@ -62,6 +69,8 @@ export default function GoalDialogBox({
           body: JSON.stringify({
             title,
             icon,
+            tagline,
+            description,
           }),
         },
         showSnackbar
@@ -82,6 +91,8 @@ export default function GoalDialogBox({
           body: JSON.stringify({
             title,
             icon,
+            tagline,
+            description,
           }),
         },
         showSnackbar
@@ -109,12 +120,13 @@ export default function GoalDialogBox({
     <Dialog
       open={isOpen}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="md"
       fullWidth
       PaperProps={{
         sx: {
           borderRadius: "16px",
           border: "1px solid var(--border-color)",
+          maxWidth: "700px",
         },
       }}
     >
@@ -154,48 +166,133 @@ export default function GoalDialogBox({
 
       <Divider />
 
-      <DialogContent sx={{ padding: "24px" }}>
-        <Stack gap="28px">
+      <DialogContent sx={{ padding: "32px" }}>
+        <Stack gap="32px">
           {/* Info Banner */}
-          <Stack
-            direction="row"
-            gap="12px"
-            padding="16px"
-            sx={{
-              backgroundColor: "rgba(var(--primary-rgb), 0.05)",
-              borderRadius: "12px",
-              border: "1px solid rgba(var(--primary-rgb), 0.1)",
-            }}
-          >
-            <Info sx={{ color: "var(--primary-color)", fontSize: "20px" }} />
-            <Typography
-              sx={{ fontSize: "13px", color: "var(--text2)", lineHeight: 1.6 }}
+          {!isEdit && (
+            <Stack
+              direction="row"
+              gap="12px"
+              padding="16px 20px"
+              sx={{
+                backgroundColor: "rgba(var(--primary-rgb), 0.05)",
+                borderRadius: "12px",
+                border: "1px solid rgba(var(--primary-rgb), 0.1)",
+              }}
             >
-              Goals help organize your content. You can add courses, subjects,
-              and blogs to each goal after creation.
-            </Typography>
-          </Stack>
+              <Info sx={{ color: "var(--primary-color)", fontSize: "20px" }} />
+              <Typography
+                sx={{
+                  fontSize: "13px",
+                  color: "var(--text2)",
+                  lineHeight: 1.6,
+                }}
+              >
+                Goals help organize your content. You can add courses, subjects,
+                and blogs to each goal after creation.
+              </Typography>
+            </Stack>
+          )}
 
           {/* Title Input */}
-          <Stack gap="8px">
+          <Stack gap="10px">
             <Typography
               sx={{
                 fontFamily: "Lato",
                 fontSize: "14px",
-                fontWeight: 600,
-                color: "var(--text2)",
+                fontWeight: 700,
+                color: "var(--text1)",
+                letterSpacing: "0.3px",
               }}
             >
               Goal Title *
             </Typography>
             <StyledTextField
-              placeholder="e.g., GATE CSE, Banking Exams, Placements"
+              placeholder="e.g., GATE CSE 2025, Banking Preparation, Placements Prep"
               value={title}
               onChange={(e) => {
                 setTitle(e.target.value);
               }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  fontSize: "15px",
+                  fontWeight: 500,
+                },
+              }}
             />
           </Stack>
+
+          {/* Tagline Input */}
+          <Stack gap="10px">
+            <Typography
+              sx={{
+                fontFamily: "Lato",
+                fontSize: "14px",
+                fontWeight: 700,
+                color: "var(--text1)",
+                letterSpacing: "0.3px",
+              }}
+            >
+              Tagline
+            </Typography>
+            <StyledTextField
+              placeholder="A short catchy phrase (e.g., Master your path to GATE success)"
+              value={tagline}
+              onChange={(e) => {
+                setTagline(e.target.value);
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  fontSize: "14px",
+                },
+              }}
+            />
+          </Stack>
+
+          {/* Description Input */}
+          <Stack gap="10px">
+            <Typography
+              sx={{
+                fontFamily: "Lato",
+                fontSize: "14px",
+                fontWeight: 700,
+                color: "var(--text1)",
+                letterSpacing: "0.3px",
+              }}
+            >
+              Description
+            </Typography>
+            <StyledTextField
+              placeholder="Provide a detailed overview of what this goal covers, learning outcomes, and key features..."
+              value={description}
+              multiline
+              rows={4}
+              onChange={(e) => {
+                setDescription(e.target.value);
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: "auto",
+                  fontSize: "14px",
+                  lineHeight: 1.6,
+                  alignItems: "flex-start",
+                  padding: "12px 14px",
+                },
+              }}
+            />
+          </Stack>
+
+          {/* Banner Upload (Only in Edit Mode) */}
+          {isEdit && goalData && (
+            <GoalBannerUpload
+              goalID={goalData.goalID}
+              bannerImage={goalData.bannerImage}
+              onBannerChange={(url) => {
+                // Optional: Update local state or trigger refresh if needed
+                if (onUpdateSuccess) onUpdateSuccess();
+              }}
+            />
+          )}
 
           {/* Icon Selection */}
           <Stack gap="12px">
@@ -203,8 +300,9 @@ export default function GoalDialogBox({
               sx={{
                 fontFamily: "Lato",
                 fontSize: "14px",
-                fontWeight: 600,
-                color: "var(--text2)",
+                fontWeight: 700,
+                color: "var(--text1)",
+                letterSpacing: "0.3px",
               }}
             >
               Select Icon *

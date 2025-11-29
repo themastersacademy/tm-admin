@@ -47,21 +47,29 @@ const OptionPreview = memo(function OptionPreview({
       elevation={0}
       sx={{
         width: "100%",
-        p: 2,
-        border: "1px solid",
-        borderColor: isCorrect ? "var(--success-color)" : "var(--border-color)",
-        backgroundColor: isCorrect ? "rgba(76, 175, 80, 0.04)" : "var(--white)",
+        p: 2.5,
+        border: "2px solid",
+        borderColor: isCorrect ? "#4CAF50" : "var(--border-color)",
+        backgroundColor: isCorrect
+          ? "linear-gradient(135deg, rgba(76, 175, 80, 0.12) 0%, rgba(56, 142, 60, 0.08) 100%)"
+          : "var(--white)",
+        background: isCorrect
+          ? "linear-gradient(135deg, rgba(76, 175, 80, 0.12) 0%, rgba(56, 142, 60, 0.08) 100%)"
+          : "var(--white)",
         borderRadius: "12px",
-        transition: "all 0.2s ease",
+        transition: "all 0.3s ease",
         position: "relative",
         overflow: "hidden",
+        boxShadow: isCorrect ? "0 4px 12px rgba(76, 175, 80, 0.15)" : "none",
         "&:hover": {
-          borderColor: isCorrect
-            ? "var(--success-color)"
-            : "var(--primary-color)",
+          borderColor: isCorrect ? "#388E3C" : "#FF9800",
           backgroundColor: isCorrect
-            ? "rgba(76, 175, 80, 0.08)"
-            : "rgba(102, 126, 234, 0.02)",
+            ? "rgba(76, 175, 80, 0.18)"
+            : "rgba(255, 152, 0, 0.04)",
+          transform: "translateY(-2px)",
+          boxShadow: isCorrect
+            ? "0 6px 16px rgba(76, 175, 80, 0.2)"
+            : "0 4px 12px rgba(255, 152, 0, 0.1)",
         },
       }}
     >
@@ -72,8 +80,8 @@ const OptionPreview = memo(function OptionPreview({
             top: 0,
             left: 0,
             bottom: 0,
-            width: "4px",
-            backgroundColor: "var(--success-color)",
+            width: "5px",
+            background: "linear-gradient(180deg, #4CAF50 0%, #388E3C 100%)",
           }}
         />
       )}
@@ -82,52 +90,94 @@ const OptionPreview = memo(function OptionPreview({
           <>
             <Box
               sx={{
-                width: "32px",
-                height: "32px",
+                width: "40px",
+                height: "40px",
                 borderRadius: "50%",
-                backgroundColor: isCorrect
-                  ? "var(--success-color)"
-                  : "var(--bg-color)",
-                color: isCorrect ? "white" : "var(--text2)",
+                background: isCorrect
+                  ? "linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)"
+                  : "#FAFAFA",
+                color: isCorrect ? "#FFFFFF" : "var(--text2)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontWeight: "700",
-                fontSize: "14px",
+                fontSize: "15px",
                 flexShrink: 0,
+                border: isCorrect ? "none" : "2px solid var(--border-color)",
+                boxShadow: isCorrect
+                  ? "0 4px 12px rgba(76, 175, 80, 0.3)"
+                  : "none",
+                transition: "all 0.3s ease",
               }}
             >
-              {isCorrect ? <CheckCircle sx={{ fontSize: "20px" }} /> : label}
+              {isCorrect ? <CheckCircle sx={{ fontSize: "24px" }} /> : label}
             </Box>
-            <Box sx={{ flex: 1 }}>
+            <Box
+              sx={{
+                flex: 1,
+                "& .wmde-markdown": {
+                  background: "transparent !important",
+                  backgroundColor: "transparent !important",
+                },
+                "& p, & span, & div, & code, & pre": {
+                  color: "var(--text1) !important",
+                },
+                "& *": {
+                  color: "inherit",
+                },
+              }}
+            >
               <MDPreview value={option.text || "No option text"} />
             </Box>
+            {isCorrect && (
+              <Chip
+                label="Correct Answer"
+                sx={{
+                  height: "26px",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  background:
+                    "linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)",
+                  color: "#FFFFFF",
+                  border: "none",
+                  boxShadow: "0 2px 8px rgba(76, 175, 80, 0.25)",
+                }}
+              />
+            )}
           </>
         ) : (
           <Stack direction="row" alignItems="center" gap={2} width="100%">
             <Typography
               sx={{
-                fontWeight: "600",
-                color: "var(--text2)",
+                fontWeight: "700",
+                color: "#4CAF50",
                 minWidth: "80px",
+                fontSize: "14px",
               }}
             >
               Blank {index + 1}:
             </Typography>
             <Box
               sx={{
-                p: "8px 16px",
-                backgroundColor: "var(--white)",
-                border: "1px dashed var(--border-color)",
-                borderRadius: "6px",
+                p: "10px 16px",
+                backgroundColor: "#FFFFFF",
+                border: "2px solid #4CAF50",
+                borderRadius: "8px",
                 flex: 1,
-                fontWeight: "500",
-                color: "var(--text1)",
+                fontWeight: "600",
+                color: "#4CAF50",
+                fontSize: "14px",
               }}
             >
               {blankAnswer || ""}
             </Box>
-            <CheckCircle sx={{ color: "var(--success-color)" }} />
+            <CheckCircle
+              sx={{
+                color: "#4CAF50",
+                fontSize: "28px",
+                filter: "drop-shadow(0 2px 4px rgba(76, 175, 80, 0.3))",
+              }}
+            />
           </Stack>
         )}
       </Stack>
