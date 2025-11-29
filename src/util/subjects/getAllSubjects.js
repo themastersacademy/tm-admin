@@ -6,7 +6,7 @@ export default async function getAllSubjects() {
     TableName: `${process.env.AWS_DB_NAME}content`,
     FilterExpression: "sKey = :sKey",
     ExpressionAttributeValues: {
-      ":sKey": "SUBJECTS",
+      ":sKey": "METADATA",
     },
   };
   try {

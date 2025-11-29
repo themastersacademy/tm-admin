@@ -24,7 +24,7 @@ export default function LinkComp({ isSideNavOpen, sideNavOpen }) {
           width: "4px",
         },
         "&::-webkit-scrollbar-thumb": {
-          backgroundColor: "rgba(var(--primary-rgb), 0.2)",
+          backgroundColor: "rgba(255, 152, 0, 0.2)",
           borderRadius: "10px",
         },
       }}
@@ -35,8 +35,8 @@ export default function LinkComp({ isSideNavOpen, sideNavOpen }) {
         href="/"
         isSideNavOpen={isSideNavOpen}
         isRoot={true}
-        color="#2196F3"
-        bgColor="rgba(33, 150, 243, 0.1)"
+        color="#FF9800"
+        bgColor="rgba(255, 152, 0, 0.1)"
       />
       <NavComp
         icon={library.src}
@@ -49,8 +49,8 @@ export default function LinkComp({ isSideNavOpen, sideNavOpen }) {
         ]}
         isSideNavOpen={isSideNavOpen}
         sideNavOpen={sideNavOpen}
-        color="#9C27B0"
-        bgColor="rgba(156, 39, 176, 0.1)"
+        color="#FF9800"
+        bgColor="rgba(255, 152, 0, 0.1)"
       />
       <NavComp
         icon={institute.src}
@@ -70,16 +70,16 @@ export default function LinkComp({ isSideNavOpen, sideNavOpen }) {
         title="Students"
         href="/dashboard/students"
         isSideNavOpen={isSideNavOpen}
-        color="#4CAF50"
-        bgColor="rgba(76, 175, 80, 0.1)"
+        color="#FF9800"
+        bgColor="rgba(255, 152, 0, 0.1)"
       />
       <NavComp
         icon={payments.src}
         title="Payments & Coupons"
         href="/dashboard/payments"
         isSideNavOpen={isSideNavOpen}
-        color="#009688"
-        bgColor="rgba(0, 150, 136, 0.1)"
+        color="#FF9800"
+        bgColor="rgba(255, 152, 0, 0.1)"
       />
     </Stack>
   );

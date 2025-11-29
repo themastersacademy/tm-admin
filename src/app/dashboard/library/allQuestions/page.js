@@ -27,7 +27,8 @@ import {
   TablePagination,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useContext } from "react";
+import SubjectContext from "@/src/app/context/SubjectContext";
 import PreviewStepper from "./addQuestion/Components/PreviewStepper";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
 import DialogBox from "@/src/components/DialogBox/DialogBox";
@@ -38,6 +39,7 @@ import CreateQuestionDialog from "./Components/CreateQuestionDialog";
 
 export default function AllQuestions() {
   const router = useRouter();
+  const { subjectList, fetchSubject } = useContext(SubjectContext);
   const [questionList, setQuestionList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
@@ -45,7 +47,6 @@ export default function AllQuestions() {
   const [isPreviewDialog, setIsPreviewDialog] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [subjects, setSubjects] = useState([]);
   const [isImportDialog, setIsImportDialog] = useState(false);
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -72,16 +73,18 @@ export default function AllQuestions() {
     {
       name: "difficulty",
       label: "Difficulty",
+      type: "chip",
       options: [
         { label: "All", value: "" },
-        { label: "Easy", value: 1 },
-        { label: "Medium", value: 2 },
-        { label: "Hard", value: 3 },
+        { label: "Easy", value: 1, color: "#10B981" },
+        { label: "Medium", value: 2, color: "#F59E0B" },
+        { label: "Hard", value: 3, color: "#EF4444" },
       ],
     },
     {
       name: "type",
       label: "Type",
+      type: "chip",
       options: [
         { label: "All", value: "" },
         { label: "MCQ", value: "MCQ" },
@@ -92,9 +95,10 @@ export default function AllQuestions() {
     {
       name: "subjectID",
       label: "Subject",
+      type: "select",
       options: [
         { label: "All", value: "" },
-        ...subjects.map((subject) => ({
+        ...subjectList.map((subject) => ({
           label: subject.title,
           value: subject.subjectID,
         })),
@@ -124,8 +128,18 @@ export default function AllQuestions() {
 
   const fetchStats = useCallback(async () => {
     try {
+      const parts = [];
+      Object.entries(filters).forEach(([key, val]) => {
+        if (val !== "" && val != null)
+          parts.push(`${key}=${encodeURIComponent(val)}`);
+      });
+      if (searchQuery) {
+        parts.push(`search=${encodeURIComponent(searchQuery)}`);
+      }
+      const query = parts.length ? `?${parts.join("&")}` : "";
+
       const res = await apiFetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/stats`
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/stats${query}`
       );
       if (res.success) {
         setStats(res.data);
@@ -133,7 +147,7 @@ export default function AllQuestions() {
     } catch (error) {
       console.error("Failed to fetch stats:", error);
     }
-  }, []);
+  }, [filters, searchQuery]);
 
   const fetchQuestions = useCallback(async () => {
     setIsLoading(true);
@@ -236,30 +250,10 @@ export default function AllQuestions() {
     }
   };
 
+  // Fetch subjects on mount
   useEffect(() => {
-    async function fetchSubjects() {
-      try {
-        const res = await apiFetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/subjects/get-all-subjects`
-        );
-        if (res.success) {
-          const subjectsList = res.data.subjects;
-          localStorage.setItem("subjects", JSON.stringify(subjectsList));
-          setSubjects(subjectsList);
-        }
-      } catch (error) {
-        console.error("Failed to fetch subjects:", error);
-      }
-    }
-
-    const localSubjects = localStorage.getItem("subjects");
-
-    if (localSubjects) {
-      setSubjects(JSON.parse(localSubjects));
-    } else {
-      fetchSubjects();
-    }
-  }, []);
+    fetchSubject();
+  }, [fetchSubject]);
 
   const handleCreateSuccess = () => {
     createDialogClose();
@@ -270,23 +264,44 @@ export default function AllQuestions() {
     fetchStats();
   };
 
+  const handleBulkImportSuccess = () => {
+    // Refresh questions list, stats, and subjects after bulk import
+    setPage(0);
+    lastKeys.current = { 0: null };
+    fetchQuestions();
+    fetchStats();
+    fetchSubject(true); // Force refresh subjects to update counts
+  };
+
   return (
     <Stack padding="20px" gap="20px">
       <QuestionsHeader
         stats={stats}
+        totalCount={stats?.totalQuestions || 0}
         actions={
           <>
             <Button
               key="Import"
-              variant="outlined"
+              variant="contained"
               endIcon={<ExpandMore />}
               sx={{
+                background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
+                color: "#FFFFFF",
                 textTransform: "none",
-                borderRadius: "8px",
-                borderColor: "var(--border-color)",
-                color: "var(--text2)",
-                backgroundColor: "white",
-                "&:hover": { backgroundColor: "#f5f5f5" },
+                borderRadius: "10px",
+                padding: "10px 20px",
+                fontWeight: 700,
+                fontSize: "14px",
+                boxShadow: "0 4px 12px rgba(255, 152, 0, 0.25)",
+                minWidth: "120px",
+                height: "48px",
+                transition: "all 0.2s ease",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, #F57C00 0%, #E65100 100%)",
+                  boxShadow: "0 6px 16px rgba(255, 152, 0, 0.35)",
+                  transform: "translateY(-1px)",
+                },
               }}
               onClick={importDialogOpen}
               disableElevation
@@ -299,10 +314,23 @@ export default function AllQuestions() {
               startIcon={<Add />}
               onClick={createDialogOpen}
               sx={{
-                backgroundColor: "var(--primary-color)",
+                background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
+                color: "#FFFFFF",
                 textTransform: "none",
-                borderRadius: "8px",
-                boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
+                borderRadius: "10px",
+                padding: "10px 24px",
+                fontWeight: 700,
+                fontSize: "14px",
+                boxShadow: "0 4px 12px rgba(255, 152, 0, 0.25)",
+                minWidth: "160px",
+                height: "48px",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, #F57C00 0%, #E65100 100%)",
+                  boxShadow: "0 6px 16px rgba(255, 152, 0, 0.35)",
+                  transform: "translateY(-1px)",
+                },
+                transition: "all 0.2s ease",
               }}
               disableElevation
             >
@@ -313,30 +341,103 @@ export default function AllQuestions() {
       />
 
       <Stack
-        direction={{ xs: "column", md: "row" }}
+        direction="row"
         justifyContent="space-between"
-        gap="16px"
         alignItems="center"
+        gap="20px"
+        padding="16px 20px"
+        sx={{
+          backgroundColor: "var(--white)",
+          border: "1px solid var(--border-color)",
+          borderRadius: "12px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+        }}
       >
-        <Box sx={{ width: { xs: "100%", md: "400px" } }}>
+        <Stack sx={{ position: "relative", width: "100%", maxWidth: "400px" }}>
           <SearchQuestions onSearch={handleSearch} />
-        </Box>
-        <Button
-          variant="outlined"
-          startIcon={<FilterAlt />}
+          {searchQuery && (
+            <Stack
+              sx={{
+                position: "absolute",
+                right: "40px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                padding: "2px 8px",
+                backgroundColor: "#2196F3",
+                borderRadius: "10px",
+              }}
+            >
+              <Typography
+                sx={{ fontSize: "10px", color: "#fff", fontWeight: 700 }}
+              >
+                {questionList.length}
+              </Typography>
+            </Stack>
+          )}
+        </Stack>
+
+        <Stack
           onClick={toggleDrawer(true)}
           sx={{
-            textTransform: "none",
-            borderRadius: "8px",
-            borderColor: "var(--border-color)",
-            color: "var(--text2)",
-            backgroundColor: "white",
-            height: "44px",
-            minWidth: "100px",
+            border: `1.5px solid ${
+              Object.values(filters).some((v) => v)
+                ? "#4CAF50"
+                : "var(--border-color)"
+            }`,
+            borderRadius: "10px",
+            backgroundColor: Object.values(filters).some((v) => v)
+              ? "rgba(76, 175, 80, 0.08)"
+              : "var(--white)",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            padding: "8px 16px",
+            minWidth: "120px",
+            height: "48px",
+            "&:hover": {
+              borderColor: "#4CAF50",
+              backgroundColor: "rgba(76, 175, 80, 0.08)",
+              transform: "translateY(-1px)",
+              boxShadow: "0 2px 8px rgba(76, 175, 80, 0.15)",
+            },
           }}
         >
-          Filters
-        </Button>
+          <Stack direction="row" alignItems="center" gap="10px">
+            <Stack
+              sx={{
+                width: "32px",
+                height: "32px",
+                backgroundColor: Object.values(filters).some((v) => v)
+                  ? "rgba(76, 175, 80, 0.15)"
+                  : "var(--bg-color)",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <FilterAlt
+                sx={{
+                  fontSize: "18px",
+                  color: Object.values(filters).some((v) => v)
+                    ? "#4CAF50"
+                    : "var(--text2)",
+                }}
+              />
+            </Stack>
+            <Typography
+              sx={{
+                fontSize: "14px",
+                color: Object.values(filters).some((v) => v)
+                  ? "#4CAF50"
+                  : "var(--text1)",
+                fontWeight: 700,
+              }}
+            >
+              Filters
+            </Typography>
+          </Stack>
+        </Stack>
+
         <FilterSideNav
           isOpen={isOpen}
           toggleDrawer={toggleDrawer}
@@ -367,7 +468,7 @@ export default function AllQuestions() {
                     questionNumber={`Q${page * rowsPerPage + index + 1}`}
                     questionType={item.type || "MCQ"}
                     Subject={
-                      subjects.find(
+                      subjectList.find(
                         (subject) => subject.subjectID === item.subjectID
                       )?.title || "Unknown"
                     }
@@ -479,22 +580,6 @@ export default function AllQuestions() {
               sx={{
                 textTransform: "none",
                 backgroundColor: "var(--delete-color)",
-                borderRadius: "8px",
-                width: "120px",
-              }}
-              disableElevation
-            >
-              Delete
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={dialogDeleteClose}
-              sx={{
-                textTransform: "none",
-                color: "var(--text2)",
-                borderColor: "var(--border-color)",
-                borderRadius: "8px",
-                width: "120px",
               }}
               disableElevation
             >
@@ -521,7 +606,7 @@ export default function AllQuestions() {
             <PreviewStepper
               questionData={selectedQuestion}
               subjectTitle={
-                subjects.find(
+                subjectList.find(
                   (subject) => subject.subjectID === selectedQuestion.subjectID
                 )?.title || "Unknown"
               }
@@ -531,9 +616,10 @@ export default function AllQuestions() {
       </DialogBox>
 
       <BulkImport
-        subjectTitle={subjects}
+        subjectTitle={subjectList}
         isOpen={isImportDialog}
         close={importDialogClose}
+        onSuccess={handleBulkImportSuccess}
       />
 
       <CreateQuestionDialog

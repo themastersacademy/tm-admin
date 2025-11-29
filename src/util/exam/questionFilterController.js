@@ -5,7 +5,7 @@ import {
   ScanCommand,
 } from "@aws-sdk/lib-dynamodb";
 
-export default async function getQuestions({
+export async function getQuestions({
   subjectID,
   type,
   difficultyLevel,
@@ -17,81 +17,129 @@ export default async function getQuestions({
 }) {
   const TABLE = `${process.env.AWS_DB_NAME}content`;
 
-  const filterClauses = [];
-  const exprAttrNames = {};
-  const exprAttrValues = {};
+  // --- HELPER: Build Filters ---
+  const buildFilters = () => {
+    const clauses = [];
+    const names = {};
+    const values = {};
 
-  if (subjectID) {
-    filterClauses.push("begins_with(sKey, :subjectPrefix)");
-    exprAttrValues[":subjectPrefix"] = `QUESTIONS@${subjectID}`;
-  }
+    if (searchTerm) {
+      clauses.push("contains(titleLower, :q)");
+      values[":q"] = searchTerm.toLowerCase();
+    }
+    if (type) {
+      clauses.push("#t = :t");
+      names["#t"] = "type";
+      values[":t"] = type;
+    }
+    if (difficultyLevel) {
+      clauses.push("difficultyLevel = :d");
+      values[":d"] = difficultyLevel;
+    }
 
-  if (searchTerm) {
-    filterClauses.push("contains(titleLower, :q)");
-    exprAttrValues[":q"] = searchTerm.toLowerCase();
-  }
-  if (type) {
-    filterClauses.push("#t = :t");
-    exprAttrNames["#t"] = "type";
-    exprAttrValues[":t"] = type;
-  }
-  if (difficultyLevel) {
-    filterClauses.push("difficultyLevel = :d");
-    exprAttrValues[":d"] = difficultyLevel;
-  }
-
-  if (!isRandom) {
-    // Use ScanCommand to handle mixed GSI schemas (Old "QUESTIONS" PK vs New "SUBJECT#..." PK)
-    // and to ensure accurate filtering by inspecting all items.
-
-    const scanFilterClauses = [...filterClauses];
-    const scanAttrValues = { ...exprAttrValues };
-    const scanAttrNames = { ...exprAttrNames };
-
-    const scanParams = {
-      TableName: TABLE,
-      IndexName: "contentTableIndex",
-      ExpressionAttributeNames: Object.keys(scanAttrNames).length
-        ? scanAttrNames
+    return {
+      FilterExpression: clauses.length ? clauses.join(" AND ") : undefined,
+      ExpressionAttributeNames: Object.keys(names).length ? names : undefined,
+      ExpressionAttributeValues: Object.keys(values).length
+        ? values
         : undefined,
-      ExpressionAttributeValues: Object.keys(scanAttrValues).length
-        ? scanAttrValues
-        : undefined,
-      FilterExpression: scanFilterClauses.length
-        ? scanFilterClauses.join(" AND ")
-        : undefined,
-      ReturnConsumedCapacity: "TOTAL",
     };
+  };
 
+  // ==========================================
+  // NON-RANDOM MODE
+  // ==========================================
+  if (!isRandom) {
     let items = [];
     let lek = lastEvaluatedKey;
+    let params;
+
+    const {
+      FilterExpression,
+      ExpressionAttributeNames,
+      ExpressionAttributeValues,
+    } = buildFilters();
+
+    // PATH 1: Subject Filtering (Optimized Folder Query)
+    // PK = SUBJECT#<id>, SK begins_with QUESTION#
+    if (subjectID) {
+      params = {
+        TableName: TABLE,
+        KeyConditionExpression: "pKey = :pk AND begins_with(sKey, :sk)",
+        ExpressionAttributeValues: {
+          ...ExpressionAttributeValues,
+          ":pk": `SUBJECT#${subjectID}`,
+          ":sk": "QUESTION#",
+        },
+        ExpressionAttributeNames,
+        FilterExpression,
+        ReturnConsumedCapacity: "TOTAL",
+      };
+    }
+    // PATH 2: Global Filtering (Optimized Global Index Query)
+    // GSI1-PK = ALL_QUESTIONS, GSI1-SK begins_with TIMESTAMP#
+    else {
+      params = {
+        TableName: TABLE,
+        IndexName: "contentTableIndex",
+        KeyConditionExpression:
+          "#gsi1pk = :gsi1pk AND begins_with(#gsi1sk, :gsi1sk)",
+        ExpressionAttributeNames: {
+          ...ExpressionAttributeNames,
+          "#gsi1pk": "GSI1-pKey",
+          "#gsi1sk": "GSI1-sKey",
+        },
+        ExpressionAttributeValues: {
+          ...ExpressionAttributeValues,
+          ":gsi1pk": "ALL_QUESTIONS",
+          ":gsi1sk": "TIMESTAMP#",
+        },
+        FilterExpression,
+        ReturnConsumedCapacity: "TOTAL",
+      };
+    }
 
     do {
-      // No Limit in the Scan command itself to maximize throughput per request
-      const params = {
-        ...scanParams,
+      const cmdParams = {
+        ...params,
         ...(lek && { ExclusiveStartKey: lek }),
       };
 
-      const page = await dynamoDB.send(new ScanCommand(params));
+      const page = await dynamoDB.send(new QueryCommand(cmdParams));
       const pageItems = page.Items || [];
 
       items.push(...pageItems);
       lek = page.LastEvaluatedKey;
     } while (items.length < limit && lek);
 
-    // Sort by createdAt descending (Scan does not guarantee order)
-    items.sort((a, b) => {
-      const dateA = new Date(a.createdAt).getTime();
-      const dateB = new Date(b.createdAt).getTime();
-      return dateB - dateA;
-    });
-
     const resultItems = items.slice(0, limit);
 
+    // Construct LastEvaluatedKey from the last item in the result set
+    // This is crucial because we might have fetched more items than the limit
+    let nextKey = null;
+    if (items.length > limit) {
+      const lastItem = resultItems[resultItems.length - 1];
+      if (subjectID) {
+        nextKey = {
+          pKey: lastItem.pKey,
+          sKey: lastItem.sKey,
+        };
+      } else {
+        nextKey = {
+          pKey: lastItem.pKey,
+          sKey: lastItem.sKey,
+          "GSI1-pKey": lastItem["GSI1-pKey"],
+          "GSI1-sKey": lastItem["GSI1-sKey"],
+        };
+      }
+    } else if (lek) {
+      // If we didn't exceed the limit but have a key from DynamoDB (e.g. hit scan limit but found exactly 'limit' items)
+      nextKey = lek;
+    }
+
     const questions = resultItems.map((it) => ({
-      id: it.pKey.split("#")[1],
-      subjectID: it.sKey.split("@")[1],
+      id: it.sKey.split("#")[1], // sKey is QUESTION#<id>
+      subjectID: it.pKey.split("#")[1], // pKey is SUBJECT#<id>
       title: it.title,
       type: it.type,
       difficultyLevel: it.difficultyLevel,
@@ -104,22 +152,63 @@ export default async function getQuestions({
 
     return {
       questions,
-      lastEvaluatedKey: lek || null,
+      lastEvaluatedKey: nextKey,
     };
   }
 
-  // Random mode:
+  // ==========================================
+  // RANDOM MODE
+  // ==========================================
   let allIDs = [];
   let lek = null;
+
   do {
-    // Use QueryCommand to get all IDs efficiently
-    const page = await dynamoDB.send(
-      new QueryCommand({
-        ...baseParams,
+    let cmd;
+    const {
+      FilterExpression,
+      ExpressionAttributeNames,
+      ExpressionAttributeValues,
+    } = buildFilters();
+
+    if (subjectID) {
+      // Query Subject Partition
+      cmd = new QueryCommand({
+        TableName: TABLE,
+        KeyConditionExpression: "pKey = :pk AND begins_with(sKey, :sk)",
+        ExpressionAttributeValues: {
+          ...ExpressionAttributeValues,
+          ":pk": `SUBJECT#${subjectID}`,
+          ":sk": "QUESTION#",
+        },
+        ExpressionAttributeNames,
+        FilterExpression,
         ProjectionExpression: "pKey, sKey",
         ...(lek && { ExclusiveStartKey: lek }),
-      })
-    );
+      });
+    } else {
+      // Query Global Index
+      cmd = new QueryCommand({
+        TableName: TABLE,
+        IndexName: "contentTableIndex",
+        KeyConditionExpression:
+          "#gsi1pk = :gsi1pk AND begins_with(#gsi1sk, :gsi1sk)",
+        ExpressionAttributeNames: {
+          ...ExpressionAttributeNames,
+          "#gsi1pk": "GSI1-pKey",
+          "#gsi1sk": "GSI1-sKey",
+        },
+        ExpressionAttributeValues: {
+          ...ExpressionAttributeValues,
+          ":gsi1pk": "ALL_QUESTIONS",
+          ":gsi1sk": "TIMESTAMP#",
+        },
+        FilterExpression,
+        ProjectionExpression: "pKey, sKey",
+        ...(lek && { ExclusiveStartKey: lek }),
+      });
+    }
+
+    const page = await dynamoDB.send(cmd);
     allIDs.push(
       ...(page.Items || []).map((i) => ({ pKey: i.pKey, sKey: i.sKey }))
     );
@@ -164,8 +253,8 @@ export default async function getQuestions({
   }
 
   const questions = detailed.map((it) => ({
-    id: it.pKey.split("#")[1],
-    subjectID: it.sKey.split("@")[1],
+    id: it.sKey.split("#")[1],
+    subjectID: it.pKey.split("#")[1],
     title: it.title,
     type: it.type,
     difficultyLevel: it.difficultyLevel,
@@ -178,30 +267,90 @@ export default async function getQuestions({
   return { questions, lastEvaluatedKey: null };
 }
 
-export async function getQuestionStats() {
+export async function getQuestionStats({
+  subjectID,
+  type,
+  difficultyLevel,
+  searchTerm,
+} = {}) {
   const TABLE = `${process.env.AWS_DB_NAME}content`;
-  const keyCondition = " #gsi1pk = :gsi1pk AND begins_with(#gsi1sk, :gsi1sk) ";
-  const exprAttrNames = {
-    "#gsi1pk": "GSI1-pKey",
-    "#gsi1sk": "GSI1-sKey",
-  };
-  const exprAttrValues = {
-    ":gsi1pk": "QUESTIONS",
-    ":gsi1sk": "QUESTIONS",
+
+  // --- HELPER: Build Filters (Duplicated from getQuestions for independence) ---
+  const buildFilters = () => {
+    const clauses = [];
+    const names = {};
+    const values = {};
+
+    if (searchTerm) {
+      clauses.push("contains(titleLower, :q)");
+      values[":q"] = searchTerm.toLowerCase();
+    }
+    if (type) {
+      clauses.push("#t = :t");
+      names["#t"] = "type";
+      values[":t"] = type;
+    }
+    if (difficultyLevel) {
+      clauses.push("difficultyLevel = :d");
+      values[":d"] = difficultyLevel;
+    }
+
+    return {
+      FilterExpression: clauses.length ? clauses.join(" AND ") : undefined,
+      ExpressionAttributeNames: Object.keys(names).length ? names : undefined,
+      ExpressionAttributeValues: Object.keys(values).length
+        ? values
+        : undefined,
+    };
   };
 
-  const params = {
-    TableName: TABLE,
-    IndexName: "contentTableIndex",
-    KeyConditionExpression: keyCondition,
-    ExpressionAttributeNames: exprAttrNames,
-    ExpressionAttributeValues: exprAttrValues,
-    ProjectionExpression: "difficultyLevel, #typeAttr, createdAt",
-    ExpressionAttributeNames: {
-      ...exprAttrNames,
-      "#typeAttr": "type",
-    },
-  };
+  const {
+    FilterExpression,
+    ExpressionAttributeNames,
+    ExpressionAttributeValues,
+  } = buildFilters();
+
+  let params;
+  if (subjectID) {
+    // Query Subject Partition
+    params = {
+      TableName: TABLE,
+      KeyConditionExpression: "pKey = :pk AND begins_with(sKey, :sk)",
+      ExpressionAttributeValues: {
+        ...ExpressionAttributeValues,
+        ":pk": `SUBJECT#${subjectID}`,
+        ":sk": "QUESTION#",
+      },
+      ExpressionAttributeNames,
+      FilterExpression,
+      ProjectionExpression: "difficultyLevel, #typeAttr, createdAt",
+      ExpressionAttributeNames: {
+        ...ExpressionAttributeNames,
+        "#typeAttr": "type",
+      },
+    };
+  } else {
+    // Query Global Index
+    params = {
+      TableName: TABLE,
+      IndexName: "contentTableIndex",
+      KeyConditionExpression:
+        "#gsi1pk = :gsi1pk AND begins_with(#gsi1sk, :gsi1sk)",
+      ExpressionAttributeNames: {
+        ...ExpressionAttributeNames,
+        "#gsi1pk": "GSI1-pKey",
+        "#gsi1sk": "GSI1-sKey",
+        "#typeAttr": "type",
+      },
+      ExpressionAttributeValues: {
+        ...ExpressionAttributeValues,
+        ":gsi1pk": "ALL_QUESTIONS",
+        ":gsi1sk": "TIMESTAMP#",
+      },
+      FilterExpression,
+      ProjectionExpression: "difficultyLevel, #typeAttr, createdAt",
+    };
+  }
 
   let totalQuestions = 0;
   let difficultyCounts = { 1: 0, 2: 0, 3: 0 };
@@ -253,17 +402,26 @@ export async function getQuestionStats() {
 
 export async function searchAllQuestions(searchTerm) {
   const TABLE = `${process.env.AWS_DB_NAME}content`;
+
+  // Use Query on ALL_QUESTIONS GSI instead of Scan
   const params = {
     TableName: TABLE,
+    IndexName: "contentTableIndex",
+    KeyConditionExpression:
+      "#gsi1pk = :gsi1pk AND begins_with(#gsi1sk, :gsi1sk)",
     FilterExpression: "contains(titleLower, :q)",
+    ExpressionAttributeNames: {
+      "#gsi1pk": "GSI1-pKey",
+      "#gsi1sk": "GSI1-sKey",
+      "#typeAttr": "type",
+    },
     ExpressionAttributeValues: {
+      ":gsi1pk": "ALL_QUESTIONS",
+      ":gsi1sk": "TIMESTAMP#",
       ":q": searchTerm.toLowerCase(),
     },
     ProjectionExpression:
       "pKey, sKey, title, #typeAttr, difficultyLevel, createdAt",
-    ExpressionAttributeNames: {
-      "#typeAttr": "type",
-    },
     ReturnConsumedCapacity: "TOTAL",
   };
 
@@ -272,7 +430,7 @@ export async function searchAllQuestions(searchTerm) {
   let totalConsumedCapacity = 0;
 
   do {
-    const command = new ScanCommand({
+    const command = new QueryCommand({
       ...params,
       ...(lek && { ExclusiveStartKey: lek }),
     });
@@ -291,8 +449,8 @@ export async function searchAllQuestions(searchTerm) {
   );
 
   return allItems.map((it) => ({
-    id: it.pKey.split("#")[1],
-    subjectID: it.sKey.split("@")[1],
+    id: it.sKey.split("#")[1],
+    subjectID: it.pKey.split("#")[1],
     title: it.title,
     type: it.type,
     difficultyLevel: it.difficultyLevel,

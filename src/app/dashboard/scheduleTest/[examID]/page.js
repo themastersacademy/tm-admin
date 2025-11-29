@@ -2,6 +2,7 @@
 import ExamInfoCard from "@/src/components/CreateExam/Components/ExamInfoCard";
 import CustomTabs from "@/src/components/CustomTabs/CustomTabs";
 import Header from "@/src/components/Header/Header";
+import ExamDetailHeader from "./Components/ExamDetailHeader";
 import { Skeleton, Stack } from "@mui/material";
 import mocks from "@/public/Icons/series.svg";
 import ExamQuestions from "@/src/components/CreateExam/Components/ExamQuestions";
@@ -102,49 +103,19 @@ export default function TestID() {
 
   return (
     <Stack gap="20px" padding="20px">
-      <Header title="Schedule Test" back />
-      <Stack
-        sx={{
-          backgroundColor: "var(--white)",
-          border: "1px solid",
-          borderColor: "var(--border-color)",
-          borderRadius: "10px",
-          padding: "20px",
-          gap: "25px",
-          minHeight: "80vh",
-        }}
-      >
-        <ExamInfoCard
-          examTitle={
-            isLoading ? (
-              <Skeleton variant="text" width={200} />
-            ) : (
-              testList.title || "Untitled Exam"
-            )
-          }
-          icon={mocks.src}
-          date={getFormattedDate()}
-          questions={
-            isLoading ? (
-              <Skeleton variant="text" width={100} />
-            ) : (
-              `${totalQuestions} Questions`
-            )
-          }
-          duration={
-            isLoading ? (
-              <Skeleton variant="text" width={100} />
-            ) : (
-              `${testList.duration || 0} Minutes`
-            )
-          }
-          type="scheduled"
-          examID={testList.id}
-          isLive={testList.isLive}
-          fetchTestSeries={fetchScheduledTest}
-        />
-        <CustomTabs tabs={tabs} width="100%" />
-      </Stack>
+      <ExamDetailHeader
+        examTitle={testList.title}
+        isLoading={isLoading}
+        totalQuestions={totalQuestions}
+        totalSections={testList?.questionSection?.length || 0}
+        duration={testList.duration}
+        isLive={testList.isLive}
+        createdAt={testList.createdAt}
+        examID={testList.id}
+        type="scheduled"
+        fetchTestSeries={fetchScheduledTest}
+      />
+      <CustomTabs tabs={tabs} width="100%" />
     </Stack>
   );
 }

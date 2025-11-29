@@ -7,7 +7,7 @@ export default async function createSubject({ title }) {
     TableName: `${process.env.AWS_DB_NAME}content`,
     Item: {
       pKey: `SUBJECT#${randomUUID()}`,
-      sKey: "SUBJECTS",
+      sKey: "METADATA",
       title,
       titleLower: title.toLowerCase(),
       totalQuestions: 0,
@@ -45,7 +45,7 @@ export async function updateSubject({ subjectID, totalQuestions, title }) {
     TableName: `${process.env.AWS_DB_NAME}content`,
     Key: {
       pKey: `SUBJECT#${subjectID}`,
-      sKey: "SUBJECTS",
+      sKey: "METADATA",
     },
     UpdateExpression: "SET",
     ExpressionAttributeValues: {},

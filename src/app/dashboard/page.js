@@ -9,6 +9,7 @@ import GoalDialogBox from "./goals/[id]/components/GoalDialogBox/GoalDialogBox";
 import { apiFetch } from "@/src/lib/apiFetch";
 import PrimaryCardSkeleton from "@/src/components/PrimaryCardSkeleton/PrimaryCardSkeleton";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
+import GoalsHeader from "@/src/components/GoalsHeader/GoalsHeader";
 import gate_cse from "@/public/Icons/gate_cse.svg";
 import placements from "@/public/Icons/placements.svg";
 import banking from "@/public/Icons/banking.svg";
@@ -55,145 +56,37 @@ export default function Home() {
 
   return (
     <Stack padding="20px" gap="24px">
-      <Stack gap="16px">
-        <Header
-          title="Goals"
-          button={[
-            <Button
-              key="goal"
-              variant="contained"
-              onClick={dialogOpen}
-              startIcon={<Add />}
-              sx={{
-                backgroundColor: "var(--primary-color)",
-                textTransform: "none",
-                borderRadius: "8px",
-                fontWeight: 600,
-                padding: "8px 24px",
-                boxShadow: "none",
-                "&:hover": {
-                  backgroundColor: "var(--primary-color-dark)",
-                  boxShadow: "0 4px 12px rgba(var(--primary-rgb), 0.3)",
-                },
-              }}
-              disableElevation
-            >
-              Create Goal
-            </Button>,
-          ]}
-        />
-
-        {/* Statistics Overview */}
-        {!isLoading && goalList.length > 0 && (
-          <Stack
-            direction="row"
-            gap="16px"
-            flexWrap="wrap"
+      <GoalsHeader
+        totalCount={goalList.length}
+        stats={statistics}
+        actions={
+          <Button
+            variant="contained"
+            onClick={dialogOpen}
+            startIcon={<Add />}
             sx={{
-              padding: "20px",
-              backgroundColor: "var(--white)",
-              borderRadius: "12px",
-              border: "1px solid var(--border-color)",
+              background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
+              color: "white",
+              textTransform: "none",
+              borderRadius: "10px",
+              padding: "10px 24px",
+              fontWeight: 700,
+              fontSize: "14px",
+              minWidth: "140px",
+              height: "48px",
+              boxShadow: "0 4px 12px rgba(255, 152, 0, 0.25)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #F57C00 0%, #E65100 100%)",
+                boxShadow: "0 6px 16px rgba(255, 152, 0, 0.35)",
+                transform: "translateY(-1px)",
+              },
             }}
+            disableElevation
           >
-            <Stack
-              direction="row"
-              alignItems="center"
-              gap="12px"
-              padding="12px 20px"
-              sx={{
-                backgroundColor: "rgba(var(--primary-rgb), 0.05)",
-                borderRadius: "8px",
-                border: "1px solid rgba(var(--primary-rgb), 0.1)",
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "var(--text3)",
-                }}
-              >
-                Total Goals:
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "20px",
-                  fontWeight: 700,
-                  color: "var(--primary-color)",
-                  fontFamily: "Lato",
-                }}
-              >
-                {statistics.total}
-              </Typography>
-            </Stack>
-
-            <Stack
-              direction="row"
-              alignItems="center"
-              gap="12px"
-              padding="12px 20px"
-              sx={{
-                backgroundColor: "rgba(76, 175, 80, 0.05)",
-                borderRadius: "8px",
-                border: "1px solid rgba(76, 175, 80, 0.1)",
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "var(--text3)",
-                }}
-              >
-                Published:
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "20px",
-                  fontWeight: 700,
-                  color: "var(--success-color)",
-                  fontFamily: "Lato",
-                }}
-              >
-                {statistics.live}
-              </Typography>
-            </Stack>
-
-            <Stack
-              direction="row"
-              alignItems="center"
-              gap="12px"
-              padding="12px 20px"
-              sx={{
-                backgroundColor: "rgba(158, 158, 158, 0.05)",
-                borderRadius: "8px",
-                border: "1px solid rgba(158, 158, 158, 0.1)",
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "var(--text3)",
-                }}
-              >
-                Drafts:
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "20px",
-                  fontWeight: 700,
-                  color: "var(--text3)",
-                  fontFamily: "Lato",
-                }}
-              >
-                {statistics.draft}
-              </Typography>
-            </Stack>
-          </Stack>
-        )}
-      </Stack>
+            Create Goal
+          </Button>
+        }
+      />
 
       <GoalDialogBox
         isOpen={isDialogOpen}

@@ -1,4 +1,4 @@
-import getQuestions from "@/src/util/exam/questionFilterController";
+import { getQuestions } from "@/src/util/exam/questionFilterController";
 
 /**
  * GET /api/questions

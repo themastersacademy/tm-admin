@@ -273,7 +273,7 @@ export default function ExamQuestions({
                       height={24}
                     />
                   }
-                  sectionTitle={section.sectionTitle}
+                  sectionTitle={section.title || section.sectionTitle}
                   selected={section.selected || "0"}
                   nMark={section.nMark}
                   pMark={section.pMark}

@@ -1,37 +1,23 @@
 "use client";
-import { useSnackbar } from "@/src/app/context/SnackbarContext";
 import SubjectContext from "@/src/app/context/SubjectContext";
-import DeleteDialogBox from "@/src/components/DeleteDialogBox/DeleteDialogBox";
-import DialogBox from "@/src/components/DialogBox/DialogBox";
-import Header from "@/src/components/Header/Header";
+import SubjectsHeader from "./Components/SubjectsHeader";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
-import SecondaryCard from "@/src/components/SecondaryCard/SecondaryCard";
 import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
-import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
 import { apiFetch } from "@/src/lib/apiFetch";
-import {
-  Add,
-  Close,
-  DeleteRounded,
-  East,
-  EditRounded,
-  InsertDriveFile,
-} from "@mui/icons-material";
-import {
-  Button,
-  CircularProgress,
-  DialogContent,
-  IconButton,
-  MenuItem,
-  Stack,
-} from "@mui/material";
-import { useEffect, useState, useCallback, useMemo, useContext } from "react";
+import { Add } from "@mui/icons-material";
+import { Button, Stack, Box, Pagination } from "@mui/material";
+import { useEffect, useState, useCallback, useContext, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { enqueueSnackbar } from "notistack";
+import SubjectCard from "./Components/SubjectCard";
+import SubjectDialog from "./Components/SubjectDialog";
+import DeleteSubjectDialog from "./Components/DeleteSubjectDialog";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 export default function AllSubjects() {
-  const { subjectList, fetchSubject, isLoading } = useContext(SubjectContext); // Use context
+  const router = useRouter();
+  const { subjectList, fetchSubject, isLoading } = useContext(SubjectContext);
   const [title, setTitle] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDialogDelete, setIsDialogDelete] = useState(false);
@@ -42,26 +28,36 @@ export default function AllSubjects() {
   );
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
   const [editSubject, setEditSubject] = useState(null);
+  const [isSubmitLoading, setIsSubmitLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortValue, setSortValue] = useState("newest");
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 24;
 
   // Fetch subjects on mount
   useEffect(() => {
-    fetchSubject(); // Use fetchSubject from context
+    fetchSubject();
   }, [fetchSubject]);
+
+  // Reset page when search or sort changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, sortValue]);
 
   // Dialog open/close handlers
   const dialogOpen = useCallback(() => setIsDialogOpen(true), []);
   const dialogClose = useCallback(() => {
     setIsDialogOpen(false);
-    setEditSubject(null); // Clear edit subject on close
-    setTitle(""); // Clear title
+    setEditSubject(null);
+    setTitle("");
   }, []);
 
   // Handle edit click
   const handleEditClick = useCallback(
     (subject) => {
-      setEditSubject(subject); // Set subject to edit
-      setTitle(subject.title); // Prefill title
-      setSelectedSubject(subject.subjectID); // Set subjectID
+      setEditSubject(subject);
+      setTitle(subject.title);
+      setSelectedSubject(subject.subjectID);
       dialogOpen();
     },
     [dialogOpen]
@@ -87,8 +83,9 @@ export default function AllSubjects() {
         `${BASE_URL}/api/subjects/delete/${selectedSubject}`
       );
       if (data.success) {
-        await fetchSubject(true); // Force refresh after deletion
+        await fetchSubject(true);
         deleteDialogState(false);
+        enqueueSnackbar("Subject deleted successfully", { variant: "success" });
       } else {
         setDeleteError(true);
         setDeleteWarning(data.message);
@@ -110,136 +107,21 @@ export default function AllSubjects() {
     [deleteDialogState]
   );
 
-  // Memoize subject cards
-  const subjectCards = useMemo(() => {
-    return subjectList.map((item) => (
-      <SecondaryCard
-        key={item.subjectID}
-        icon={<InsertDriveFile sx={{ color: "var(--sec-color)" }} />}
-        title={item.title}
-        subTitle={`${item.totalQuestions} questions`}
-        cardWidth="350px"
-        options={[
-          <MenuItem
-            key={`edit-${item.subjectID}`}
-            sx={{ fontSize: "14px", color: "var(--edit-color)", gap: "5px" }}
-            disableRipple
-            onClick={() => handleEditClick(item)}
-          >
-            <EditRounded sx={{ fontSize: "16px" }} />
-            Edit
-          </MenuItem>,
-          <MenuItem
-            key={`delete-${item.subjectID}`}
-            sx={{ fontSize: "14px", color: "var(--delete-color)", gap: "5px" }}
-            disableRipple
-            onClick={() => handleDeleteClick(item.subjectID)}
-          >
-            <DeleteRounded sx={{ fontSize: "16px" }} />
-            Delete
-          </MenuItem>,
-        ]}
-      />
-    ));
-  }, [subjectList, handleDeleteClick, handleEditClick]);
-
-  return (
-    <Stack padding="20px" gap="20px">
-      <Header
-        title="All Subjects"
-        search
-        button={[
-          <Button
-            key="createSubject"
-            variant="contained"
-            startIcon={<Add />}
-            onClick={dialogOpen}
-            sx={{
-              backgroundColor: "var(--primary-color)",
-              textTransform: "none",
-            }}
-            disableElevation
-          >
-            Subject
-          </Button>,
-        ]}
-      />
-      <SubjectCreateDialog
-        isDialogOpen={isDialogOpen}
-        dialogClose={dialogClose}
-        title={title}
-        setTitle={setTitle}
-        fetchSubject={fetchSubject}
-        editSubject={editSubject}
-        selectedSubject={selectedSubject}
-      />
-      <DeleteSubjectDialog
-        deleteDialogState={deleteDialogState}
-        handleDelete={handleDelete}
-        isDialogDelete={isDialogDelete}
-        deleteWarning={deleteWarning}
-        isDeleteLoading={isDeleteLoading}
-        isError={deleteError}
-      />
-      <Stack
-        sx={{
-          border: "1px solid var(--border-color)",
-          backgroundColor: "var(--white)",
-          borderRadius: "10px",
-          padding: "20px",
-          minHeight: "80vh",
-        }}
-      >
-        <Stack flexDirection="row" gap="20px" flexWrap="wrap">
-          {!isLoading ? (
-            subjectList.length > 0 ? (
-              subjectCards
-            ) : (
-              <Stack width="100%" minHeight="60vh">
-                <NoDataFound info="No subject Created yet" />
-              </Stack>
-            )
-          ) : (
-            Array.from({ length: 3 }).map((_, index) => (
-              <SecondaryCardSkeleton key={index} />
-            ))
-          )}
-        </Stack>
-      </Stack>
-    </Stack>
-  );
-}
-
-// SubjectCreateDialog and DeleteSubjectDialog remain unchanged
-const SubjectCreateDialog = ({
-  isDialogOpen,
-  dialogClose,
-  title,
-  setTitle,
-  fetchSubject,
-  editSubject,
-  selectedSubject,
-}) => {
-  const { showSnackbar } = useSnackbar();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const onSubjectCreate = useCallback(async () => {
-    if (!title) {
-      showSnackbar("Fill all data", "error", "", "3000");
+  // Handle Create/Update Subject
+  const handleSubmit = useCallback(async () => {
+    if (!title.trim()) {
+      enqueueSnackbar("Please enter a subject name", { variant: "warning" });
       return;
     }
-    setIsLoading(true);
+    setIsSubmitLoading(true);
     try {
       let data;
       if (editSubject) {
         // Update subject
-        data = await apiFetch(
-          `${BASE_URL}/api/subjects/update/${selectedSubject}`,
-          {
-            method: "PUT",
-            body: JSON.stringify({ title }),
-          }
-        );
+        data = await apiFetch(`${BASE_URL}/api/subjects/update-title`, {
+          method: "POST",
+          body: JSON.stringify({ title, subjectID: selectedSubject }),
+        });
       } else {
         // Create subject
         data = await apiFetch(`${BASE_URL}/api/subjects/create-subject`, {
@@ -247,166 +129,186 @@ const SubjectCreateDialog = ({
           body: JSON.stringify({ title }),
         });
       }
+
       if (data.success) {
-        showSnackbar(data.message, "success", "", "3000");
+        enqueueSnackbar(data.message, { variant: "success" });
         setTitle("");
         dialogClose();
-        fetchSubject(true); // Force refresh after creation
+        fetchSubject(true);
       } else {
-        showSnackbar(data.message, "error", "", "3000");
+        enqueueSnackbar(data.message, { variant: "error" });
       }
     } catch (error) {
-      showSnackbar("An error occurred", "error", "", "3000");
+      enqueueSnackbar("An error occurred", { variant: "error" });
     } finally {
-      setIsLoading(false);
+      setIsSubmitLoading(false);
     }
-  }, [
-    title,
-    dialogClose,
-    fetchSubject,
-    setTitle,
-    showSnackbar,
-    editSubject,
-    selectedSubject,
-  ]);
+  }, [title, editSubject, selectedSubject, dialogClose, fetchSubject]);
 
-  const onSubjectUpdate = useCallback(async () => {
-    if (!title) {
-      enqueueSnackbar("Fill all data", {
-        variant: "error",
-        autoHideDuration: 3000,
-      });
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const data = await apiFetch(`${BASE_URL}/api/subjects/update-title`, {
-        method: "POST",
-        body: JSON.stringify({ title, subjectID: selectedSubject }),
-      });
-      if (data.success) {
-        enqueueSnackbar(data.message, {
-          variant: "success",
-          autoHideDuration: 3000,
-        });
-        setTitle("");
-        dialogClose();
-        fetchSubject(true); // Force refresh after creation
-      } else {
-        enqueueSnackbar(data.message, {
-          variant: "error",
-          autoHideDuration: 3000,
-        });
-      }
-    } catch (error) {
-      enqueueSnackbar("An error occurred", {
-        variant: "error",
-        autoHideDuration: 3000,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [title, setTitle, dialogClose, fetchSubject]);
+  // Filter and Sort subjects
+  const processedSubjects = useMemo(() => {
+    let result = [...subjectList];
 
-  return (
-    <DialogBox
-      isOpen={isDialogOpen}
-      title={editSubject ? "Edit Subject" : "Add Subject"}
-      actionButton={
-        <Button
-          variant="text"
-          endIcon={<East />}
-          onClick={editSubject ? onSubjectUpdate : onSubjectCreate}
-          sx={{ textTransform: "none", color: "var(--primary-color)" }}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <CircularProgress
-              size={20}
-              sx={{ color: "var(--primary-color)" }}
-            />
-          ) : editSubject ? (
-            "Update"
-          ) : (
-            "Create"
-          )}
-        </Button>
+    // Filter
+    if (searchQuery) {
+      result = result.filter((subject) =>
+        subject.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      switch (sortValue) {
+        case "newest":
+          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+        case "oldest":
+          return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+        case "a-z":
+          return a.title.localeCompare(b.title);
+        case "z-a":
+          return b.title.localeCompare(a.title);
+        default:
+          return 0;
       }
-      icon={
-        <IconButton
-          onClick={dialogClose}
-          sx={{ borderRadius: "10px", padding: "6px" }}
-        >
-          <Close sx={{ color: "var(--text2)" }} />
-        </IconButton>
-      }
-    >
-      <DialogContent>
-        <StyledTextField
-          placeholder="Enter Subject"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-      </DialogContent>
-    </DialogBox>
+    });
+
+    return result;
+  }, [subjectList, searchQuery, sortValue]);
+
+  // Pagination
+  const totalPages = Math.ceil(processedSubjects.length / rowsPerPage);
+  const paginatedSubjects = processedSubjects.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage
   );
-};
 
-const DeleteSubjectDialog = ({
-  deleteDialogState,
-  handleDelete,
-  isDialogDelete,
-  deleteWarning,
-  isDeleteLoading,
-  isError,
-}) => {
+  const handlePageChange = (event, value) => {
+    setPage(value);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
-    <DeleteDialogBox
-      isOpen={isDialogDelete}
-      warning={deleteWarning}
-      isError={isError}
-      onClose={() => deleteDialogState(false)}
-      actionButton={
-        <Stack
-          flexDirection="row"
-          justifyContent="center"
-          sx={{ gap: "20px", width: "100%" }}
-        >
-          <Button
-            variant="contained"
-            onClick={handleDelete}
-            disabled={isDeleteLoading}
-            sx={{
+    <Stack padding="20px" gap="24px">
+      <SubjectsHeader
+        title="All Subjects"
+        totalCount={subjectList.length}
+        search
+        searchValue={searchQuery}
+        onSearchChange={(e) => setSearchQuery(e.target.value)}
+        sortValue={sortValue}
+        onSortChange={(e) => setSortValue(e.target.value)}
+        actions={[
+          {
+            label: "New Subject",
+            icon: <Add />,
+            onClick: dialogOpen,
+            sx: {
+              background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
+              color: "white",
               textTransform: "none",
-              backgroundColor: "var(--delete-color)",
-              borderRadius: "5px",
-              width: "130px",
-            }}
-            disableElevation
-          >
-            {isDeleteLoading ? (
-              <CircularProgress size={20} color="var(--delete-color)" />
+              borderRadius: "10px",
+              padding: "10px 24px",
+              fontWeight: 600,
+              minWidth: "160px",
+              boxShadow: "0 4px 12px rgba(255, 152, 0, 0.3)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #F57C00 0%, #E65100 100%)",
+                boxShadow: "0 6px 16px rgba(255, 152, 0, 0.4)",
+              },
+            },
+          },
+        ]}
+      />
+
+      <SubjectDialog
+        isOpen={isDialogOpen}
+        onClose={dialogClose}
+        title={title}
+        setTitle={setTitle}
+        onSubmit={handleSubmit}
+        isLoading={isSubmitLoading}
+        isEdit={!!editSubject}
+      />
+
+      <DeleteSubjectDialog
+        isOpen={isDialogDelete}
+        onClose={() => deleteDialogState(false)}
+        onDelete={handleDelete}
+        isLoading={isDeleteLoading}
+        warning={deleteWarning}
+        isError={deleteError}
+      />
+
+      <Stack
+        sx={{
+          border: "1px solid var(--border-color)",
+          backgroundColor: "var(--white)",
+          borderRadius: "16px",
+          padding: "32px",
+          minHeight: "75vh",
+          justifyContent: "space-between",
+        }}
+      >
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+            gap: "24px",
+            width: "100%",
+            alignContent: "start",
+          }}
+        >
+          {!isLoading ? (
+            paginatedSubjects.length > 0 ? (
+              paginatedSubjects.map((item) => (
+                <SubjectCard
+                  key={item.subjectID}
+                  title={item.title}
+                  totalQuestions={item.totalQuestions}
+                  updatedAt={item.updatedAt}
+                  onClick={() =>
+                    router.push(`/dashboard/library/subject/${item.subjectID}`)
+                  }
+                  onEdit={() => handleEditClick(item)}
+                  onDelete={() => handleDeleteClick(item.subjectID)}
+                />
+              ))
             ) : (
-              "Delete"
-            )}
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => deleteDialogState(false)}
-            sx={{
-              textTransform: "none",
-              borderRadius: "5px",
-              backgroundColor: "white",
-              color: "var(--text2)",
-              border: "1px solid var(--border-color)",
-              width: "130px",
-            }}
-            disableElevation
-          >
-            Cancel
-          </Button>
-        </Stack>
-      }
-    />
+              <Box sx={{ gridColumn: "1 / -1", height: "100%" }}>
+                <NoDataFound
+                  info={
+                    searchQuery
+                      ? "No subjects found matching your search"
+                      : "No subjects created yet"
+                  }
+                />
+              </Box>
+            )
+          ) : (
+            Array.from({ length: 6 }).map((_, index) => (
+              <SecondaryCardSkeleton key={index} />
+            ))
+          )}
+        </Box>
+
+        {/* Pagination */}
+        {!isLoading && totalPages > 1 && (
+          <Stack alignItems="center" mt={4}>
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={handlePageChange}
+              color="primary"
+              shape="rounded"
+              sx={{
+                "& .MuiPaginationItem-root": {
+                  fontWeight: 600,
+                },
+              }}
+            />
+          </Stack>
+        )}
+      </Stack>
+    </Stack>
   );
-};
+}

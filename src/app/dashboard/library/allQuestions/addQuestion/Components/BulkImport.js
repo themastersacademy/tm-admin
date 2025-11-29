@@ -35,7 +35,7 @@ import ErrorQuestionCard from "./ErrorQuestionCard";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
 import { enqueueSnackbar } from "notistack";
 
-export default function BulkImport({ subjectTitle, isOpen, close }) {
+export default function BulkImport({ subjectTitle, isOpen, close, onSuccess }) {
   const fileInputRef = useRef(null);
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -148,6 +148,10 @@ export default function BulkImport({ subjectTitle, isOpen, close }) {
         });
         handleRemoveFile();
         close();
+        // Call onSuccess callback to refresh data in parent component
+        if (onSuccess) {
+          onSuccess();
+        }
       } else {
         enqueueSnackbar("Import failed: " + result.error, { variant: "error" });
       }

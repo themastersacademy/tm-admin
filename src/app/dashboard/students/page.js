@@ -38,29 +38,32 @@ export default function Students() {
     {
       name: "status",
       label: "Status",
+      type: "chip",
       options: [
         { label: "All", value: "" },
-        { label: "Active", value: "active" },
-        { label: "Deactivated", value: "deactivated" },
+        { label: "Active", value: "active", color: "#4CAF50" },
+        { label: "Deactivated", value: "deactivated", color: "#F44336" },
       ],
     },
     {
       name: "gender",
       label: "Gender",
+      type: "chip",
       options: [
         { label: "All", value: "" },
-        { label: "Male", value: "Male" },
-        { label: "Female", value: "Female" },
-        { label: "Other", value: "Other" },
+        { label: "Male", value: "Male", color: "#2196F3" },
+        { label: "Female", value: "Female", color: "#E91E63" },
+        { label: "Other", value: "Other", color: "#9C27B0" },
       ],
     },
     {
       name: "emailVerified",
       label: "Email Verified",
+      type: "chip",
       options: [
         { label: "All", value: "" },
-        { label: "Verified", value: "true" },
-        { label: "Unverified", value: "false" },
+        { label: "Verified", value: "true", color: "#4CAF50" },
+        { label: "Unverified", value: "false", color: "#FF9800" },
       ],
     },
   ];

@@ -24,6 +24,7 @@ export default function StudentProgressCard({
   percent,
   examName,
   marks,
+  onClick,
 }) {
   const percentageValue = parseInt(percent) || 0;
 
@@ -38,6 +39,7 @@ export default function StudentProgressCard({
 
   return (
     <Box
+      onClick={onClick}
       sx={{
         width: "100%",
         backgroundColor: "var(--white)",

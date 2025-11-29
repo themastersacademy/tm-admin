@@ -1,10 +1,11 @@
 import { dynamoDB } from "../awsAgent.js";
 import {
-  ScanCommand,
-  GetCommand,
   UpdateCommand,
   QueryCommand,
   PutCommand,
+  DeleteCommand,
+  ScanCommand,
+  GetCommand,
 } from "@aws-sdk/lib-dynamodb";
 import getCourse from "../courses/getCourse.js";
 import { getSubscriptionPlanByID } from "../subscription/subscriptionController.js";
@@ -138,7 +139,14 @@ export async function getUserByID(id) {
   }
 }
 
-export async function updateUser({ id, name, phone, gender, address }) {
+export async function updateUser({
+  id,
+  name,
+  phone,
+  gender,
+  address,
+  studentMeta,
+}) {
   const params = {
     TableName: `${process.env.AWS_DB_NAME}users`,
     Key: {
@@ -146,12 +154,13 @@ export async function updateUser({ id, name, phone, gender, address }) {
       sKey: `USER#${id}`,
     },
     UpdateExpression:
-      "set #name = :name, #phone = :phone, #gender = :gender, #address = :address, #updatedAt = :updatedAt",
+      "set #name = :name, #phone = :phone, #gender = :gender, #address = :address, #studentMeta = :studentMeta, #updatedAt = :updatedAt",
     ExpressionAttributeNames: {
       "#name": "name",
       "#phone": "phone",
       "#gender": "gender",
       "#address": "address",
+      "#studentMeta": "studentMeta",
       "#updatedAt": "updatedAt",
     },
     ExpressionAttributeValues: {
@@ -159,6 +168,7 @@ export async function updateUser({ id, name, phone, gender, address }) {
       ":phone": phone,
       ":gender": gender,
       ":address": address,
+      ":studentMeta": studentMeta,
       ":updatedAt": Date.now(),
     },
     ConditionExpression: "attribute_exists(pKey)",
@@ -182,6 +192,27 @@ export async function updateUser({ id, name, phone, gender, address }) {
     };
   } catch (error) {
     console.error("Error updating user:", error);
+    throw new Error("Internal server error");
+  }
+}
+
+export async function deleteUser(id) {
+  const params = {
+    TableName: `${process.env.AWS_DB_NAME}users`,
+    Key: {
+      pKey: `USER#${id}`,
+      sKey: `USER#${id}`,
+    },
+  };
+
+  try {
+    await dynamoDB.send(new DeleteCommand(params));
+    return {
+      success: true,
+      message: "User deleted successfully",
+    };
+  } catch (error) {
+    console.error("Error deleting user:", error);
     throw new Error("Internal server error");
   }
 }
@@ -246,7 +277,7 @@ export async function getExamAttemptsByUserID(id) {
       ":pKey": "EXAM_ATTEMPTS",
       ":sKey": `EXAM_ATTEMPT@${id}`,
     },
-    ProjectionExpression: `title, #status, obtainedMarks, 
+    ProjectionExpression: `pKey, sKey, title, #status, obtainedMarks, 
                             totalMarks, totalAttemptedAnswers, totalCorrectAnswers, 
                             totalWrongAnswers, totalSkippedAnswers, totalSections, startTimeStamp, 
                             blobVersion, #duration, createdAt, settings, #type, totalQuestions`,
@@ -258,7 +289,7 @@ export async function getExamAttemptsByUserID(id) {
   };
 }
 
-export async function getCourseEnrollByUserID(id) {
+export async function getCourseEnrollByUserID(userID) {
   const params = {
     TableName: USER_TABLE,
     IndexName: USER_GSI_INDEX,
@@ -268,30 +299,21 @@ export async function getCourseEnrollByUserID(id) {
       "#gsi1sk": "GSI1-sKey",
     },
     ExpressionAttributeValues: {
-      ":pKey": `COURSE_ENROLLMENT#${id}`,
-      ":sKey": `COURSE_ENROLLMENTS`,
+      ":pKey": `COURSE_ENROLLMENT#${userID}`,
+      ":sKey": "COURSE_ENROLLMENTS",
     },
   };
 
-  const result = await dynamoDB.send(new QueryCommand(params));
-  console.log("result", result);
-  const courseEnrollments = result.Items;
-  // const courseIDs = courseEnrollments.map((item) => item.courseID);
-  // const courses = await getCourseInBatch(courseIDs, goalID);
-
-  return {
-    success: true,
-    data: courseEnrollments.map((course) => {
-      return {
-        id: course.pKey.split("#")[1],
-        ...course,
-        pKey: undefined,
-        sKey: undefined,
-        "GSI1-pKey": undefined,
-        "GSI1-sKey": undefined,
-      };
-    }),
-  };
+  try {
+    const response = await dynamoDB.send(new QueryCommand(params));
+    return {
+      success: true,
+      data: response.Items,
+    };
+  } catch (error) {
+    console.error("Error fetching course enrollments:", error);
+    throw new Error("Internal server error");
+  }
 }
 
 export async function createCourseEnrollment(

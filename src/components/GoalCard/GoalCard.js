@@ -34,22 +34,21 @@ export default function GoalCard({
     <Card
       sx={{
         width: "280px",
-        height: "auto",
         border: "1px solid var(--border-color)",
         borderRadius: "12px",
-        position: "relative",
         backgroundColor: "var(--white)",
         overflow: "hidden",
         transition: "all 0.2s ease",
-        display: "flex",
-        flexDirection: "column",
+        cursor: "pointer",
+        position: "relative",
         "&:hover": {
-          transform: "translateY(-4px)",
-          boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
-          borderColor: "var(--primary-color)",
+          transform: "translateY(-2px)",
+          boxShadow: "0 8px 24px rgba(255, 152, 0, 0.12)",
+          borderColor: "#FF9800",
         },
       }}
       elevation={0}
+      onClick={onClick}
     >
       {/* Status Badge */}
       {isLive && (
@@ -57,15 +56,15 @@ export default function GoalCard({
           size="small"
           label={isLive}
           sx={{
-            borderRadius: "0px 8px 0px 8px",
+            borderRadius: "0px 6px 0px 6px",
             position: "absolute",
             top: "0px",
             right: "0px",
             backgroundColor: isLive === "Live" ? "#4CAF50" : "#9E9E9E",
             color: "var(--white)",
-            fontWeight: 700,
+            fontWeight: 600,
             fontSize: "10px",
-            height: "20px",
+            height: "18px",
             zIndex: 2,
           }}
         />
@@ -73,34 +72,34 @@ export default function GoalCard({
 
       {/* Header Section */}
       <Stack
-        padding="20px"
-        gap="12px"
+        padding="16px"
+        gap="8px"
         sx={{
-          backgroundColor: "var(--bg-color)",
-          borderBottom: "1px solid var(--border-color)",
+          background: "linear-gradient(135deg, #FFF3E0 0%, #FFFFFF 100%)",
+          borderBottom: "1px solid rgba(255, 152, 0, 0.1)",
         }}
       >
-        <Stack direction="row" alignItems="flex-start" gap="12px">
+        <Stack direction="row" alignItems="center" gap="12px">
           <Stack
             sx={{
-              width: "48px",
-              height: "48px",
-              backgroundColor: "var(--white)",
+              width: "42px",
+              height: "42px",
+              background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
               borderRadius: "10px",
               justifyContent: "center",
               alignItems: "center",
-              border: "1px solid var(--border-color)",
+              boxShadow: "0 2px 8px rgba(255, 152, 0, 0.2)",
               flexShrink: 0,
             }}
           >
-            <Image src={icon} alt={title} width={24} height={28} />
+            <Image src={icon} alt={title} width={22} height={24} />
           </Stack>
 
-          <Stack flex={1} gap="4px">
+          <Stack flex={1} gap="2px">
             <Typography
               sx={{
                 fontFamily: "Lato",
-                fontSize: "16px",
+                fontSize: "15px",
                 fontWeight: 700,
                 color: "var(--text1)",
                 lineHeight: 1.3,
@@ -121,127 +120,74 @@ export default function GoalCard({
         </Stack>
       </Stack>
 
-      {/* Content Section */}
-      <Stack padding="20px" gap="16px" flex={1}>
+      {/* Content Section - Compact Stats */}
+      <Stack padding="16px" gap="12px">
         {totalContent > 0 ? (
-          <>
-            {/* Analytics Row */}
-            <Stack direction="row" gap="10px" justifyContent="space-between">
-              <StatItem
-                icon={<School sx={{ fontSize: "16px", color: "#2196F3" }} />}
-                value={coursesCount}
-                label="Courses"
-                bgColor="rgba(33, 150, 243, 0.08)"
-              />
-              <StatItem
-                icon={<MenuBook sx={{ fontSize: "16px", color: "#9C27B0" }} />}
-                value={subjectsCount}
-                label="Subjects"
-                bgColor="rgba(156, 39, 176, 0.08)"
-              />
-              <StatItem
-                icon={<Article sx={{ fontSize: "16px", color: "#FF9800" }} />}
-                value={blogsCount}
-                label="Blogs"
-                bgColor="rgba(255, 152, 0, 0.08)"
-              />
-            </Stack>
-
-            {/* Total Summary */}
-            <Stack
-              padding="10px 12px"
-              sx={{
-                backgroundColor: "rgba(var(--primary-rgb), 0.06)",
-                borderRadius: "8px",
-                border: "1px solid rgba(var(--primary-rgb), 0.12)",
-              }}
-            >
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-              >
-                <Typography
-                  sx={{
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    color: "var(--text2)",
-                  }}
-                >
-                  Total Content
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: "18px",
-                    fontWeight: 800,
-                    color: "var(--primary-color)",
-                    fontFamily: "Lato",
-                  }}
-                >
-                  {totalContent}
-                </Typography>
-              </Stack>
-            </Stack>
-          </>
+          <Stack
+            direction="row"
+            gap="8px"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <StatBadge
+              icon={<School sx={{ fontSize: "14px" }} />}
+              value={coursesCount}
+              label="Courses"
+              color="#FF9800"
+            />
+            <StatBadge
+              icon={<MenuBook sx={{ fontSize: "14px" }} />}
+              value={subjectsCount}
+              label="Subjects"
+              color="#4CAF50"
+            />
+            <StatBadge
+              icon={<Article sx={{ fontSize: "14px" }} />}
+              value={blogsCount}
+              label="Blogs"
+              color="#2196F3"
+            />
+          </Stack>
         ) : (
           <Stack
             alignItems="center"
-            justifyContent="center"
-            padding="20px 12px"
-            gap="6px"
+            padding="12px"
+            gap="4px"
             sx={{
-              backgroundColor: "var(--bg-color)",
+              backgroundColor: "rgba(255, 152, 0, 0.04)",
               borderRadius: "8px",
-              border: "1px dashed var(--border-color)",
+              border: "1px dashed rgba(255, 152, 0, 0.2)",
             }}
           >
             <Typography
               sx={{
-                fontSize: "13px",
+                fontSize: "12px",
                 fontWeight: 600,
                 color: "var(--text3)",
               }}
             >
               No content yet
             </Typography>
-            <Typography
-              sx={{
-                fontSize: "11px",
-                color: "var(--text4)",
-                textAlign: "center",
-              }}
-            >
-              Add courses, subjects, or blogs
-            </Typography>
           </Stack>
         )}
-      </Stack>
 
-      {/* Footer with Button */}
-      <Stack
-        padding="16px 20px"
-        sx={{
-          borderTop: "1px solid var(--border-color)",
-          backgroundColor: "var(--white)",
-        }}
-      >
+        {/* View Button */}
         <Button
-          variant="contained"
-          endIcon={<TrendingFlat />}
-          onClick={onClick}
+          variant="outlined"
+          endIcon={<TrendingFlat sx={{ fontSize: "18px" }} />}
           fullWidth
           sx={{
-            backgroundColor: "var(--primary-color)",
+            borderColor: "#FF9800",
+            color: "#FF9800",
             textTransform: "none",
             borderRadius: "8px",
-            padding: "10px 20px",
+            padding: "8px 16px",
             fontFamily: "Lato",
             fontSize: "13px",
             fontWeight: 600,
-            boxShadow: "none",
             "&:hover": {
-              backgroundColor: "var(--primary-color-dark)",
-              boxShadow: "none",
+              borderColor: "#F57C00",
+              backgroundColor: "rgba(255, 152, 0, 0.04)",
             },
           }}
         >
@@ -252,26 +198,28 @@ export default function GoalCard({
   );
 }
 
-// Stat Item Component
-const StatItem = ({ icon, value, label, bgColor }) => (
+// Compact Stat Badge Component
+const StatBadge = ({ icon, value, label, color }) => (
   <Stack
-    flex={1}
     alignItems="center"
-    gap="6px"
-    padding="10px 6px"
+    gap="4px"
+    flex={1}
     sx={{
-      backgroundColor: bgColor,
+      padding: "8px 6px",
+      backgroundColor: `${color}08`,
       borderRadius: "8px",
+      border: `1px solid ${color}20`,
     }}
   >
     <Stack
       sx={{
-        width: "28px",
-        height: "28px",
+        width: "24px",
+        height: "24px",
         backgroundColor: "var(--white)",
         borderRadius: "6px",
         justifyContent: "center",
         alignItems: "center",
+        color: color,
       }}
     >
       {icon}
@@ -280,7 +228,7 @@ const StatItem = ({ icon, value, label, bgColor }) => (
       sx={{
         fontSize: "16px",
         fontWeight: 800,
-        color: "var(--text1)",
+        color: color,
         fontFamily: "Lato",
         lineHeight: 1,
       }}
@@ -289,12 +237,11 @@ const StatItem = ({ icon, value, label, bgColor }) => (
     </Typography>
     <Typography
       sx={{
-        fontSize: "10px",
+        fontSize: "9px",
         fontWeight: 600,
         color: "var(--text3)",
         textTransform: "uppercase",
         letterSpacing: "0.3px",
-        textAlign: "center",
       }}
     >
       {label}

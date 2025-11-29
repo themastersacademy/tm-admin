@@ -1,12 +1,12 @@
 import { dynamoDB } from "../awsAgent";
-import { GetCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 
 export default async function getSubject({ subjectID }) {
   const params = {
     TableName: `${process.env.AWS_DB_NAME}content`,
     Key: {
       pKey: `SUBJECT#${subjectID}`,
-      sKey: "SUBJECTS",
+      sKey: "METADATA",
     },
   };
   try {
@@ -25,6 +25,7 @@ export default async function getSubject({ subjectID }) {
         title: response.Item.title,
         createdAt: response.Item.createdAt,
         updatedAt: response.Item.updatedAt,
+        totalQuestions: response.Item.totalQuestions || 0,
       },
     };
   } catch (err) {

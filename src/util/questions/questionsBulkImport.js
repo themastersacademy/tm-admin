@@ -1,26 +1,45 @@
 import { dynamoDB } from "../awsAgent";
-import { BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  BatchWriteCommand,
+  TransactWriteCommand,
+  GetCommand,
+} from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
-import { updateSubject } from "../subjects/createSubject";
 
 const TABLE_NAME = `${process.env.AWS_DB_NAME}content`;
 
 /**
  * Batch‑writes an array of already‑sanitized question objects into DynamoDB.
- * Splits into chunks of 25 (DynamoDB limit) and returns per‑item results.
+ * Uses the NEW folder schema:
+ *  - PK: SUBJECT#<subjectID>
+ *  - SK: QUESTION#<questionID>
+ *  - GSI1-PK: ALL_QUESTIONS
+ *  - GSI1-SK: TIMESTAMP#<createdAt>
  *
  * @param {Array<Object>} questions – each must have:
  *   { subjectID, title, difficultyLevel, type, options, answerKey, blanks, solution }
  * @returns {Promise<Array<{ success: boolean, id?: string, error?: string }>>}
  */
 export async function batchAddQuestions(questions) {
-  // Helper to build a single PutRequest
+  if (!questions || questions.length === 0) {
+    return [];
+  }
+
+  // Group questions by subjectID for counting
+  const subjectGroups = {};
+  for (const q of questions) {
+    if (!subjectGroups[q.subjectID]) {
+      subjectGroups[q.subjectID] = [];
+    }
+    subjectGroups[q.subjectID].push(q);
+  }
+
+  // Helper to build a single PutRequest with NEW schema
   const toPutRequest = (q) => {
-    const now = Date.now();
-    const pKey = `QUESTION#${randomUUID()}`;
-    const sKey = `QUESTIONS@${q.subjectID}`;
-    const gsi1pKey = `QUESTIONS`;
-    const gsi1sKey = `QUESTIONS`;
+    const questionID = randomUUID();
+    const now = new Date().toISOString();
+    const pKey = `SUBJECT#${q.subjectID}`;
+    const sKey = `QUESTION#${questionID}`;
 
     return {
       PutRequest: {
@@ -31,14 +50,13 @@ export async function batchAddQuestions(questions) {
           titleLower: q.title.toLowerCase(),
           difficultyLevel: q.difficultyLevel,
           type: q.type,
-          options: q.options,
-          answerKey: q.answerKey,
-          blanks: q.blanks,
-          solution: q.solution,
+          options: q.options || [],
+          answerKey: q.answerKey || [],
+          blanks: q.blanks || [],
+          solution: q.solution || "",
           isDeleted: false,
-          rand: Math.random(),
-          "GSI1-pKey": gsi1pKey,
-          "GSI1-sKey": gsi1sKey,
+          "GSI1-pKey": "ALL_QUESTIONS",
+          "GSI1-sKey": `TIMESTAMP#${now}`,
           createdAt: now,
           updatedAt: now,
         },
@@ -68,8 +86,8 @@ export async function batchAddQuestions(questions) {
       // Successes = batch.length – unproc.length
       batch.forEach((q, idx) => {
         const thisReq = requestItems[TABLE_NAME][idx];
-        const putKey = thisReq.PutRequest.Item.pKey;
-        const wasUnproc = unproc.some((u) => u.PutRequest.Item.pKey === putKey);
+        const putKey = thisReq.PutRequest.Item.sKey; // SK is QUESTION#<id>
+        const wasUnproc = unproc.some((u) => u.PutRequest.Item.sKey === putKey);
         if (wasUnproc) {
           results.push({ success: false, error: "Unprocessed by DynamoDB" });
         } else {
@@ -87,11 +105,53 @@ export async function batchAddQuestions(questions) {
     }
   }
 
-  // Update subject totalQuestions
-  await updateSubject({
-    subjectID: questions[0].subjectID,
-    totalQuestions: questions.length,
-  });
+  // Update totalQuestions for each subject atomically
+  for (const [subjectID, subjectQuestions] of Object.entries(subjectGroups)) {
+    try {
+      // First, get current totalQuestions
+      const getResp = await dynamoDB.send(
+        new GetCommand({
+          TableName: TABLE_NAME,
+          Key: {
+            pKey: `SUBJECT#${subjectID}`,
+            sKey: "METADATA",
+          },
+          ProjectionExpression: "totalQuestions",
+        })
+      );
+
+      const currentTotal = getResp.Item?.totalQuestions || 0;
+      const newTotal = currentTotal + subjectQuestions.length;
+
+      // Update atomically
+      await dynamoDB.send(
+        new TransactWriteCommand({
+          TransactItems: [
+            {
+              Update: {
+                TableName: TABLE_NAME,
+                Key: {
+                  pKey: `SUBJECT#${subjectID}`,
+                  sKey: "METADATA",
+                },
+                UpdateExpression:
+                  "SET totalQuestions = :total, updatedAt = :now",
+                ExpressionAttributeValues: {
+                  ":total": newTotal,
+                  ":now": new Date().toISOString(),
+                },
+              },
+            },
+          ],
+        })
+      );
+    } catch (err) {
+      console.error(
+        `Failed to update totalQuestions for subject ${subjectID}:`,
+        err
+      );
+    }
+  }
 
   return results;
 }

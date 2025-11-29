@@ -24,7 +24,7 @@ export async function getAllExamAttemptsByExamID(examID) {
         ":examID": examID,
       },
       FilterExpression: "examID = :examID",
-      ProjectionExpression: `userMeta, batchMeta,
+      ProjectionExpression: `pKey, userMeta, batchMeta,
                             title, #status, obtainedMarks,
                             totalMarks, totalAttemptedAnswers, totalCorrectAnswers,
                             totalWrongAnswers, totalSkippedAnswers, totalSections, startTimeStamp,

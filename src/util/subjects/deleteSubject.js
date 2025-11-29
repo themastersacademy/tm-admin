@@ -1,5 +1,5 @@
 import { dynamoDB } from "../awsAgent";
-import { GetCommand, ScanCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { QueryCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 
 export default async function deleteSubject(subjectId) {
   if (!subjectId) {
@@ -9,52 +9,41 @@ export default async function deleteSubject(subjectId) {
     };
   }
 
-  // 1. Check if the subject exists.
-  const subjectParams = {
-    TableName: `${process.env.AWS_DB_NAME}content`,
-    Key: {
-      pKey: `SUBJECT#${subjectId}`,
-      sKey: "SUBJECTS",
-    },
-  };
+  const TABLE = `${process.env.AWS_DB_NAME}content`;
+  const pKey = `SUBJECT#${subjectId}`;
 
   try {
-    const subjectResult = await dynamoDB.send(new GetCommand(subjectParams));
-    if (!subjectResult.Item) {
-      return {
-        success: false,
-        message: "Subject not found",
-      };
-    }
-
-    // 2. Check if any questions exist for the subject.
-    // Use Select: "COUNT" to minimize data read.
-    const questionParams = {
-      TableName: `${process.env.AWS_DB_NAME}content`,
-      FilterExpression: "sKey = :skeyVal",
+    // 1. Check for questions in the Subject partition
+    // We only need to know if ANY question exists, so Limit=1 is enough.
+    const params = {
+      TableName: TABLE,
+      KeyConditionExpression: "pKey = :pk AND begins_with(sKey, :sk)",
       ExpressionAttributeValues: {
-        ":skeyVal": `QUESTIONS@${subjectId}`,
+        ":pk": pKey,
+        ":sk": "QUESTION#",
       },
-      Select: "COUNT",
+      ProjectionExpression: "pKey",
+      Limit: 1,
     };
 
-    const questionResult = await dynamoDB.send(new ScanCommand(questionParams));
-    console.log("questionResult", questionResult);
+    const result = await dynamoDB.send(new QueryCommand(params));
 
-    if (questionResult.Count && questionResult.Count > 0) {
+    if (result.Items && result.Items.length > 0) {
       return {
         success: false,
-        message: `This subject has ${questionResult.Count} associated question(s). Please delete all associated questions before deleting the subject.`,
+        message:
+          "Cannot delete subject. It contains questions. Please delete all questions first.",
       };
     }
 
-    // 3. Delete the subject record.
+    // 2. If no questions, delete the Subject Metadata
     const deleteParams = {
-      TableName: `${process.env.AWS_DB_NAME}content`,
+      TableName: TABLE,
       Key: {
-        pKey: `SUBJECT#${subjectId}`,
-        sKey: "SUBJECTS",
+        pKey: pKey,
+        sKey: "METADATA",
       },
+      ConditionExpression: "attribute_exists(pKey)",
     };
 
     await dynamoDB.send(new DeleteCommand(deleteParams));
@@ -64,6 +53,12 @@ export default async function deleteSubject(subjectId) {
       message: "Subject deleted successfully",
     };
   } catch (error) {
+    if (error.name === "ConditionalCheckFailedException") {
+      return {
+        success: false,
+        message: "Subject not found",
+      };
+    }
     console.error("DynamoDB Error in deleteSubject:", error);
     throw new Error("Internal server error");
   }

@@ -204,21 +204,22 @@ export default function ScheduleTestHeader({
             startIcon={<Add />}
             onClick={onCreateClick}
             sx={{
-              background: "linear-gradient(135deg, #4CAF50 0%, #45A049 100%)",
+              background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
               color: "#FFFFFF",
               textTransform: "none",
               borderRadius: "10px",
               padding: "10px 24px",
               fontWeight: 700,
               fontSize: "14px",
-              boxShadow: "0 4px 12px rgba(76, 175, 80, 0.25)",
-              minWidth: "140px",
+              boxShadow: "0 4px 12px rgba(255, 152, 0, 0.25)",
+              minWidth: "160px",
               height: "48px",
               "&:hover": {
-                background: "linear-gradient(135deg, #45A049 0%, #3D8B40 100%)",
-                boxShadow: "0 6px 16px rgba(76, 175, 80, 0.35)",
+                background: "linear-gradient(135deg, #F57C00 0%, #E65100 100%)",
+                boxShadow: "0 6px 16px rgba(255, 152, 0, 0.35)",
                 transform: "translateY(-1px)",
               },
+              transition: "all 0.2s ease",
             }}
             disableElevation
           >

@@ -10,6 +10,7 @@ import {
 import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { randomUUID } from "crypto";
 import { getExamGroup } from "./groupExamController";
+import { validateExamForBlob, validateBatchListLimit } from "./examValidation";
 
 export async function createExam({
   type,
@@ -32,6 +33,9 @@ export async function createExam({
   }
   if (type === "scheduled" && !batchList.length) {
     throw new Error("Batch list is required");
+  }
+  if (type === "scheduled") {
+    validateBatchListLimit(batchList);
   }
 
   // --- 2. Prepare keys & timestamps ---
@@ -130,7 +134,7 @@ export async function createExam({
     };
   } catch (error) {
     console.error("error", error);
-    throw new Error(error);
+    throw error;
   }
 }
 
@@ -173,7 +177,7 @@ export async function getExamByID(examID) {
       },
     };
   } catch (error) {
-    throw new Error(error);
+    throw error;
   }
 }
 
@@ -218,7 +222,7 @@ export async function getExamByGoalID({ goalID, type }) {
       })),
     };
   } catch (error) {
-    throw new Error(error);
+    throw error;
   }
 }
 
@@ -344,7 +348,7 @@ export async function updateExamBasicInfo({
       message: "Exam updated successfully",
     };
   } catch (error) {
-    throw new Error(error);
+    throw error;
   }
 }
 
@@ -356,6 +360,8 @@ export async function updateBatchListExamBasicInfo({ batchList, examID }) {
 
   const existing = res.data.batchList || [];
   const now = Date.now();
+
+  validateBatchListLimit(batchList);
 
   // 2) Compute diffs
   const oldSet = new Set(existing);
@@ -443,7 +449,7 @@ export async function updateBatchListExamBasicInfo({ batchList, examID }) {
     await dynamoDB.send(new UpdateCommand(updateExamParams));
     return { success: true, message: "Batch list updated successfully" };
   } catch (error) {
-    throw new Error(error);
+    throw error;
   }
 }
 
@@ -534,7 +540,7 @@ export async function createAndUpdateExamSection({
     };
   } catch (error) {
     console.log(error);
-    throw new Error(error);
+    throw error;
   }
 }
 
@@ -619,7 +625,7 @@ export async function addQuestionToExamSection({
       message: "Questions added to exam successfully",
     };
   } catch (error) {
-    throw new Error(error);
+    throw error;
   }
 }
 
@@ -630,6 +636,7 @@ export async function getQuestionListBySection({ examID, type, sectionIndex }) {
       pKey: `EXAM#${examID}`,
       sKey: `EXAMS@${type}`,
     },
+    ProjectionExpression: "questionSection",
   };
 
   try {
@@ -661,8 +668,8 @@ export async function getQuestionListBySection({ examID, type, sectionIndex }) {
     }
     // Build an array of keys for each question using its own questionID and subjectID.
     const questionKeys = questionSection.questions.map((q) => ({
-      pKey: `QUESTION#${q.questionID}`,
-      sKey: `QUESTIONS@${q.subjectID}`,
+      pKey: `SUBJECT#${q.subjectID}`,
+      sKey: `QUESTION#${q.questionID}`,
     }));
 
     const questionParams = {
@@ -692,7 +699,7 @@ export async function getQuestionListBySection({ examID, type, sectionIndex }) {
       ),
     };
   } catch (error) {
-    throw new Error(error);
+    throw error;
   }
 }
 
@@ -749,7 +756,7 @@ export async function removeQuestionsFromSection({
       message: "Questions removed from section successfully",
     };
   } catch (error) {
-    throw new Error(error);
+    throw error;
   }
 }
 
@@ -799,85 +806,7 @@ export async function deleteSection({ examID, type, sectionIndex }) {
       message: "Section deleted successfully",
     };
   } catch (error) {
-    throw new Error(error);
-  }
-}
-
-/**
- * Ensure that your exam item has everything we need
- * to produce a student‐facing “blob.”
- */
-function validateExamForBlob(exam) {
-  if (!exam || typeof exam !== "object") {
-    throw new Error("Exam object is required");
-  }
-
-  // Top‐level string fields
-  for (const key of ["title", "type"]) {
-    if (typeof exam[key] !== "string" || !exam[key].trim()) {
-      throw new Error(`Exam.${key} must be a non-empty string`);
-    }
-  }
-
-  // Numeric fields
-  for (const key of ["duration", "startTimeStamp"]) {
-    if (typeof exam[key] !== "number") {
-      throw new Error(`Exam.${key} must be a number`);
-    }
-  }
-
-  // questionSection
-  if (!Array.isArray(exam.questionSection) || !exam.questionSection.length) {
-    throw new Error("Exam.questionSection must be a non-empty array");
-  }
-  exam.questionSection.forEach((sec, si) => {
-    if (typeof sec.title !== "string") {
-      throw new Error(`section[${si}].title must be a string`);
-    }
-    ["pMark", "nMark"].forEach((mk) => {
-      if (sec[mk] == null || isNaN(sec[mk])) {
-        throw new Error(`section[${si}].${mk} is required and must be numeric`);
-      }
-    });
-    if (!Array.isArray(sec.questions) || !sec.questions.length) {
-      throw new Error(`section[${si}].questions must be a non-empty array`);
-    }
-    sec.questions.forEach((q, qi) => {
-      if (!q.questionID || !q.subjectID) {
-        throw new Error(
-          `section[${si}].questions[${qi}] must have questionID & subjectID`
-        );
-      }
-    });
-  });
-
-  // settings
-  if (typeof exam.settings !== "object" || exam.settings === null) {
-    throw new Error("Exam.settings must be an object");
-  }
-  for (const flag of [
-    "isShowResult",
-    "isAntiCheat",
-    "isFullScreenMode",
-    "isProTest",
-    "isRandomQuestion",
-  ]) {
-    if (typeof exam.settings[flag] !== "boolean") {
-      throw new Error(`settings.${flag} must be a boolean`);
-    }
-  }
-  const r = exam.settings.mCoinReward;
-  if (typeof r !== "object" || r === null) {
-    throw new Error("settings.mCoinReward must be an object");
-  }
-  if (typeof r.isEnabled !== "boolean") {
-    throw new Error("settings.mCoinReward.isEnabled must be a boolean");
-  }
-  if (typeof r.conditionPercent !== "number") {
-    throw new Error("settings.mCoinReward.conditionPercent must be a number");
-  }
-  if (typeof r.rewardCoin !== "number") {
-    throw new Error("settings.mCoinReward.rewardCoin must be a number");
+    throw error;
   }
 }
 
@@ -941,11 +870,11 @@ export async function markExamAsLive({ examID, type }) {
   // Deduplicate keys using a Map to prevent BatchGetCommand error
   const uniqueKeysMap = new Map();
   questionRefs.forEach((q) => {
-    const pKey = `QUESTION#${q.questionID}`;
-    if (!uniqueKeysMap.has(pKey)) {
-      uniqueKeysMap.set(pKey, {
-        pKey,
-        sKey: `QUESTIONS@${q.subjectID}`,
+    // Use questionID as the unique identifier for the map
+    if (!uniqueKeysMap.has(q.questionID)) {
+      uniqueKeysMap.set(q.questionID, {
+        pKey: `SUBJECT#${q.subjectID}`,
+        sKey: `QUESTION#${q.questionID}`,
       });
     }
   });
@@ -974,7 +903,7 @@ export async function markExamAsLive({ examID, type }) {
     questionItems.push(...(resp.Responses?.[CONTENT] || []));
   }
   const byId = Object.fromEntries(
-    questionItems.map((qi) => [qi.pKey.split("#")[1], qi])
+    questionItems.map((qi) => [qi.sKey.split("#")[1], qi])
   );
 
   // 5) Build “sections” + “answerList”
@@ -984,6 +913,11 @@ export async function markExamAsLive({ examID, type }) {
     nMark: Number(sec.nMark),
     questions: sec.questions.map(({ questionID, subjectID }) => {
       const src = byId[questionID];
+      if (!src) {
+        throw new Error(
+          `Question data not found for ID: ${questionID}. It may have been deleted.`
+        );
+      }
       return {
         questionID,
         subjectID,
@@ -1001,6 +935,11 @@ export async function markExamAsLive({ examID, type }) {
   const answerList = sections.flatMap((sec) =>
     sec.questions.map((q) => {
       const src = byId[q.questionID];
+      if (!src) {
+        throw new Error(
+          `Question data not found for ID: ${q.questionID}. It may have been deleted.`
+        );
+      }
       return {
         questionID: q.questionID,
         type: src.type,

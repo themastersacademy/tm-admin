@@ -1,13 +1,12 @@
 "use client";
-import React, { createContext, useState, useContext, useCallback } from "react";
-import Snackbar from "@mui/material/Snackbar";
-import IconButton from "@mui/material/IconButton";
-import CloseIcon from "@mui/icons-material/Close";
-import { Alert, CircularProgress, styled } from "@mui/material";
+import React, { createContext, useContext, useCallback } from "react";
 import {
-  SnackbarProvider as SnackbarProvider2,
+  SnackbarProvider as NotistackProvider,
+  useSnackbar as useNotistack,
   MaterialDesignContent,
 } from "notistack";
+import { CircularProgress, styled, IconButton } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 
 const StyledMaterialDesignContent = styled(MaterialDesignContent)(() => ({
   "&.notistack-MuiContent-success": {
@@ -32,45 +31,48 @@ const StyledMaterialDesignContent = styled(MaterialDesignContent)(() => ({
 
 const SnackbarContext = createContext();
 
-export const useSnackbar = () => useContext(SnackbarContext);
-
-export const SnackbarProvider = ({ children }) => {
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: undefined,
-    icon: null,
-    autoHideDuration: null,
-  });
+const InnerSnackbarProvider = ({ children }) => {
+  const { enqueueSnackbar, closeSnackbar } = useNotistack();
 
   const showSnackbar = useCallback(
-    (message, severity, icon = null, autoHideDuration = 6000) => {
-      setSnackbar({
-        open: true,
-        message,
-        severity,
-        icon,
-        autoHideDuration: icon ? null : autoHideDuration,
+    (message, severity, icon = null, autoHideDuration = 3000) => {
+      const action = (key) => (
+        <IconButton
+          size="small"
+          aria-label="close"
+          color="inherit"
+          onClick={() => closeSnackbar(key)}
+          sx={{
+            "&.MuiIconButton-root": {
+              fontSize: "16px",
+              padding: "4px",
+              color: "var(--white)",
+            },
+          }}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      );
+
+      enqueueSnackbar(message, {
+        variant: severity || "default",
+        autoHideDuration: parseInt(autoHideDuration) || 3000,
+        action: icon === "close" || !icon ? action : undefined,
       });
     },
-    []
+    [enqueueSnackbar, closeSnackbar]
   );
 
-  const handleClose = (event, reason) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    setSnackbar({
-      open: false,
-      message: "",
-      severity: undefined,
-      icon: null,
-      autoHideDuration: null,
-    });
-  };
-
   return (
-    <SnackbarProvider2
+    <SnackbarContext.Provider value={{ showSnackbar }}>
+      {children}
+    </SnackbarContext.Provider>
+  );
+};
+
+export const SnackbarProvider = ({ children }) => {
+  return (
+    <NotistackProvider
       maxSnack={3}
       anchorOrigin={{ vertical: "top", horizontal: "center" }}
       autoHideDuration={3000}
@@ -91,55 +93,9 @@ export const SnackbarProvider = ({ children }) => {
         info: StyledMaterialDesignContent,
       }}
     >
-      <SnackbarContext.Provider value={{ showSnackbar }}>
-        {children}
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={snackbar.autoHideDuration}
-          onClose={handleClose}
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
-          elevation={0}
-          sx={{
-            "& .MuiPaper-root": {
-              padding: "8px",
-              alignItems: "center",
-            },
-          }}
-        >
-          <Alert
-            severity={snackbar.severity}
-            action={
-              snackbar.icon ? (
-                <IconButton
-                  aria-label="close"
-                  color="inherit"
-                  onClick={handleClose}
-                  sx={{
-                    "&.MuiIconButton-root": {
-                      fontSize: "16px",
-                      padding: "4px",
-                      color: "var(--text3)",
-                    },
-                  }}
-                >
-                  {snackbar.icon === "close" ? (
-                    <CloseIcon fontSize="small" />
-                  ) : (
-                    snackbar.icon
-                  )}
-                </IconButton>
-              ) : null
-            }
-            sx={{
-              "& .MuiAlert-action": {
-                padding: "0px",
-              },
-            }}
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-      </SnackbarContext.Provider>
-    </SnackbarProvider2>
+      <InnerSnackbarProvider>{children}</InnerSnackbarProvider>
+    </NotistackProvider>
   );
 };
+
+export const useSnackbar = () => useContext(SnackbarContext);

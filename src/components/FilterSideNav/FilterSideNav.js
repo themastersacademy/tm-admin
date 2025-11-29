@@ -5,15 +5,15 @@ import {
   FilterAlt,
   Category,
   SignalCellularAlt,
-  CalendarToday,
-  Sort,
   Cancel,
+  CheckCircle,
+  Person,
+  Email,
 } from "@mui/icons-material";
 import {
   Button,
   Drawer,
   FormControl,
-  InputLabel,
   MenuItem,
   Select,
   Stack,
@@ -71,35 +71,46 @@ function FilterSideNav({
   const activeFilters = useMemo(() => {
     const active = [];
 
-    // Difficulty
-    if (filters.difficulty) {
-      const label =
-        filters.difficulty === 1
-          ? "Easy"
-          : filters.difficulty === 2
-          ? "Medium"
-          : "Hard";
-      active.push({ key: "difficulty", label: `Difficulty: ${label}` });
-    }
-
-    // Type
-    if (filters.type) {
-      active.push({ key: "type", label: `Type: ${filters.type}` });
-    }
-
-    // Subject
-    if (filters.subjectID) {
-      const subjectConfig = filtersConfig.find((f) => f.name === "subjectID");
-      const subject = subjectConfig?.options.find(
-        (o) => o.value === filters.subjectID
-      );
-      if (subject) {
-        active.push({ key: "subjectID", label: `Subject: ${subject.label}` });
+    filtersConfig.forEach((config) => {
+      const currentValue = filters[config.name];
+      if (
+        currentValue !== "" &&
+        currentValue !== undefined &&
+        currentValue !== null
+      ) {
+        const option = config.options.find((opt) => opt.value === currentValue);
+        if (option) {
+          active.push({
+            key: config.name,
+            label: `${config.label}: ${option.label}`,
+          });
+        }
       }
-    }
+    });
 
     return active;
   }, [filters, filtersConfig]);
+
+  // Helper to get icon based on filter name (optional, can be passed in config too)
+  const getFilterIcon = (name) => {
+    switch (name) {
+      case "difficulty":
+        return (
+          <SignalCellularAlt sx={{ fontSize: "18px", color: "var(--text3)" }} />
+        );
+      case "type":
+      case "subjectID":
+        return <Category sx={{ fontSize: "18px", color: "var(--text3)" }} />;
+      case "status":
+        return <CheckCircle sx={{ fontSize: "18px", color: "var(--text3)" }} />;
+      case "gender":
+        return <Person sx={{ fontSize: "18px", color: "var(--text3)" }} />;
+      case "emailVerified":
+        return <Email sx={{ fontSize: "18px", color: "var(--text3)" }} />;
+      default:
+        return <FilterAlt sx={{ fontSize: "18px", color: "var(--text3)" }} />;
+    }
+  };
 
   return (
     <Drawer
@@ -135,15 +146,13 @@ function FilterSideNav({
                 width: "36px",
                 height: "36px",
                 borderRadius: "10px",
-                backgroundColor: "rgba(102, 126, 234, 0.1)",
+                backgroundColor: "rgba(255, 152, 0, 0.1)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <FilterAlt
-                sx={{ color: "var(--primary-color)", fontSize: "20px" }}
-              />
+              <FilterAlt sx={{ color: "#FF9800", fontSize: "20px" }} />
             </Box>
             <Typography
               sx={{
@@ -162,8 +171,8 @@ function FilterSideNav({
                   height: "20px",
                   fontSize: "11px",
                   fontWeight: "700",
-                  backgroundColor: "var(--primary-color)",
-                  color: "white",
+                  backgroundColor: "rgba(255, 152, 0, 0.1)",
+                  color: "#FF9800",
                 }}
               />
             )}
@@ -198,7 +207,7 @@ function FilterSideNav({
                   textTransform: "none",
                   fontSize: "11px",
                   fontWeight: "600",
-                  color: "var(--primary-color)",
+                  color: "#FF9800",
                   minWidth: "auto",
                   p: "4px 8px",
                 }}
@@ -218,10 +227,10 @@ function FilterSideNav({
                     height: "26px",
                     fontSize: "12px",
                     fontWeight: "600",
-                    backgroundColor: "rgba(102, 126, 234, 0.1)",
-                    color: "var(--primary-color)",
+                    backgroundColor: "rgba(255, 152, 0, 0.1)",
+                    color: "#FF9800",
                     "& .MuiChip-deleteIcon": {
-                      color: "var(--primary-color)",
+                      color: "#FF9800",
                       "&:hover": {
                         color: "#DC2626",
                       },
@@ -235,137 +244,91 @@ function FilterSideNav({
 
         {/* Filter Content */}
         <Stack flex={1} sx={{ overflowY: "auto", p: "20px", gap: "20px" }}>
-          {/* Difficulty Filter */}
-          <Stack gap={1.5}>
-            <Stack direction="row" alignItems="center" gap={1}>
-              <SignalCellularAlt
-                sx={{ fontSize: "18px", color: "var(--text3)" }}
-              />
-              <Typography fontSize="13px" fontWeight="700" color="var(--text2)">
-                Difficulty Level
-              </Typography>
-            </Stack>
-            <Stack direction="row" flexWrap="wrap" gap={1}>
-              {[
-                { label: "Easy", value: 1, color: "#10B981" },
-                { label: "Medium", value: 2, color: "#F59E0B" },
-                { label: "Hard", value: 3, color: "#EF4444" },
-              ].map((option) => (
-                <Chip
-                  key={option.value}
-                  label={option.label}
-                  onClick={() => handleChipSelect("difficulty", option.value)}
-                  sx={{
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    backgroundColor:
-                      filters.difficulty === option.value
-                        ? option.color
-                        : "white",
-                    color:
-                      filters.difficulty === option.value
-                        ? "white"
-                        : "var(--text2)",
-                    border: `1.5px solid ${
-                      filters.difficulty === option.value
-                        ? option.color
-                        : "var(--border-color)"
-                    }`,
-                    "&:hover": {
-                      backgroundColor:
-                        filters.difficulty === option.value
-                          ? option.color
-                          : "rgba(0, 0, 0, 0.04)",
-                    },
-                  }}
-                />
-              ))}
-            </Stack>
-          </Stack>
+          {filtersConfig.map((config, index) => (
+            <Stack key={config.name} gap={1.5}>
+              {index > 0 && <Divider sx={{ mb: 1.5 }} />}
 
-          <Divider />
+              <Stack direction="row" alignItems="center" gap={1}>
+                {getFilterIcon(config.name)}
+                <Typography
+                  fontSize="13px"
+                  fontWeight="700"
+                  color="var(--text2)"
+                >
+                  {config.label}
+                </Typography>
+              </Stack>
 
-          {/* Type Filter */}
-          <Stack gap={1.5}>
-            <Stack direction="row" alignItems="center" gap={1}>
-              <Category sx={{ fontSize: "18px", color: "var(--text3)" }} />
-              <Typography fontSize="13px" fontWeight="700" color="var(--text2)">
-                Question Type
-              </Typography>
-            </Stack>
-            <Stack direction="row" flexWrap="wrap" gap={1}>
-              {["MCQ", "MSQ", "FIB"].map((type) => (
-                <Chip
-                  key={type}
-                  label={type}
-                  onClick={() => handleChipSelect("type", type)}
-                  sx={{
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    backgroundColor:
-                      filters.type === type ? "var(--primary-color)" : "white",
-                    color: filters.type === type ? "white" : "var(--text2)",
-                    border: `1.5px solid ${
-                      filters.type === type
-                        ? "var(--primary-color)"
-                        : "var(--border-color)"
-                    }`,
-                    "&:hover": {
-                      backgroundColor:
-                        filters.type === type
-                          ? "var(--primary-color)"
-                          : "rgba(0, 0, 0, 0.04)",
-                    },
-                  }}
-                />
-              ))}
-            </Stack>
-          </Stack>
+              {config.type === "chip" && (
+                <Stack direction="row" flexWrap="wrap" gap={1}>
+                  {config.options
+                    .filter((opt) => opt.value !== "") // Skip "All" option for chips if desired, or keep it
+                    .map((option) => {
+                      const isSelected = filters[config.name] == option.value; // Loose equality for numbers/strings
+                      const activeColor = option.color || "#FF9800"; // Default to orange if no color specified
 
-          <Divider />
+                      return (
+                        <Chip
+                          key={option.value}
+                          label={option.label}
+                          onClick={() =>
+                            handleChipSelect(config.name, option.value)
+                          }
+                          sx={{
+                            fontSize: "13px",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            backgroundColor: isSelected ? activeColor : "white",
+                            color: isSelected ? "white" : "var(--text2)",
+                            border: `1.5px solid ${
+                              isSelected ? activeColor : "var(--border-color)"
+                            }`,
+                            "&:hover": {
+                              backgroundColor: isSelected
+                                ? activeColor
+                                : "rgba(0, 0, 0, 0.04)",
+                            },
+                          }}
+                        />
+                      );
+                    })}
+                </Stack>
+              )}
 
-          {/* Subject Filter */}
-          <Stack gap={1.5}>
-            <Stack direction="row" alignItems="center" gap={1}>
-              <Category sx={{ fontSize: "18px", color: "var(--text3)" }} />
-              <Typography fontSize="13px" fontWeight="700" color="var(--text2)">
-                Subject
-              </Typography>
+              {config.type === "select" && (
+                <FormControl size="small" fullWidth>
+                  <Select
+                    value={filters[config.name] || ""}
+                    onChange={(e) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        [config.name]: e.target.value,
+                      }))
+                    }
+                    displayEmpty
+                    sx={{
+                      backgroundColor: "white",
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "var(--border-color)",
+                      },
+                      "&:hover .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#FF9800",
+                      },
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#FF9800",
+                      },
+                    }}
+                  >
+                    {config.options.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
             </Stack>
-            <FormControl size="small" fullWidth>
-              <Select
-                value={filters.subjectID || ""}
-                onChange={(e) =>
-                  setFilters((prev) => ({ ...prev, subjectID: e.target.value }))
-                }
-                displayEmpty
-                sx={{
-                  backgroundColor: "white",
-                  "& .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "var(--border-color)",
-                  },
-                  "&:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "var(--primary-color)",
-                  },
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "var(--primary-color)",
-                  },
-                }}
-              >
-                <MenuItem value="">All Subjects</MenuItem>
-                {filtersConfig
-                  .find((f) => f.name === "subjectID")
-                  ?.options.filter((opt) => opt.value !== "")
-                  .map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
-          </Stack>
+          ))}
         </Stack>
 
         {/* Apply Button */}
@@ -382,7 +345,7 @@ function FilterSideNav({
               onClick={onApply}
               fullWidth
               sx={{
-                backgroundColor: "var(--primary-color)",
+                backgroundColor: "#FF9800",
                 textTransform: "none",
                 borderRadius: "8px",
                 height: "44px",
@@ -390,8 +353,8 @@ function FilterSideNav({
                 fontWeight: "600",
                 boxShadow: "none",
                 "&:hover": {
-                  backgroundColor: "var(--primary-color)",
-                  boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
+                  backgroundColor: "#F57C00",
+                  boxShadow: "0 4px 12px rgba(255, 152, 0, 0.3)",
                 },
               }}
             >

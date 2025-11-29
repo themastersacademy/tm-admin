@@ -5,39 +5,30 @@ import {
   useCallback,
   useMemo,
   useEffect,
+  useRef,
 } from "react";
 import { useRouter } from "next/navigation";
 
 const SubjectContext = createContext();
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-const CACHE_DURATION = 25 * 60 * 1000; // 25 minutes
 
 export const SubjectProvider = ({ children }) => {
   const [subjectList, setSubjectList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [cacheTimestamp, setCacheTimestamp] = useState(null);
   const [hasSessionExpired, setHasSessionExpired] = useState(false);
   const router = useRouter();
 
-  const fetchSubject = useCallback(
-    async (forceRefresh = false) => {
-      const now = Date.now();
-      const cachedData =
-        JSON.parse(localStorage.getItem("subjectsCache")) || {};
-      const { subjects = [], timestamp = 0 } = cachedData;
+  // Request deduplication: prevent duplicate concurrent API calls
+  const fetchPromiseRef = useRef(null);
 
-      if (
-        !forceRefresh &&
-        now - timestamp < CACHE_DURATION &&
-        subjects.length > 0
-      ) {
-        setSubjectList(subjects);
-        setCacheTimestamp(timestamp);
-        setIsLoading(false);
-        return;
-      }
+  const fetchSubject = useCallback(async (forceRefresh = false) => {
+    // If already fetching and not forcing refresh, return existing promise
+    if (fetchPromiseRef.current && !forceRefresh) {
+      return fetchPromiseRef.current;
+    }
 
+    fetchPromiseRef.current = (async () => {
       setIsLoading(true);
       try {
         const response = await fetch(
@@ -57,33 +48,29 @@ export const SubjectProvider = ({ children }) => {
         const fetchedSubjects = data.success ? data.data.subjects : [];
 
         setSubjectList(fetchedSubjects);
-        setCacheTimestamp(now);
-        localStorage.setItem(
-          "subjectsCache",
-          JSON.stringify({ subjects: fetchedSubjects, timestamp: now })
-        );
       } catch (error) {
         console.error("Fetch error:", error);
         setSubjectList([]);
-        setCacheTimestamp(null);
       } finally {
         setIsLoading(false);
       }
-    },
-    [BASE_URL]
-  );
+    })();
 
+    try {
+      await fetchPromiseRef.current;
+    } finally {
+      fetchPromiseRef.current = null;
+    }
+  }, []);
+
+  // Fetch subjects on mount
   useEffect(() => {
-    const cachedData = JSON.parse(localStorage.getItem("subjectsCache")) || {};
-    if (cachedData.subjects) setSubjectList(cachedData.subjects);
-    if (cachedData.timestamp) setCacheTimestamp(cachedData.timestamp);
     fetchSubject();
   }, [fetchSubject]);
 
+  // Handle session expiration
   useEffect(() => {
     if (hasSessionExpired) {
-      // Clear cache and navigate to login
-      localStorage.removeItem("subjectsCache");
       router.push("/login");
     }
   }, [hasSessionExpired, router]);
@@ -93,9 +80,8 @@ export const SubjectProvider = ({ children }) => {
       subjectList,
       fetchSubject,
       isLoading,
-      cacheTimestamp,
     }),
-    [subjectList, fetchSubject, isLoading, cacheTimestamp]
+    [subjectList, fetchSubject, isLoading]
   );
 
   return (

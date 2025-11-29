@@ -1,6 +1,6 @@
 "use client";
-import { Stack, Typography, Button } from "@mui/material";
-import { Add, BusinessOutlined, Groups, Domain } from "@mui/icons-material";
+import { Stack, Typography, Button, Chip } from "@mui/material";
+import { Add, Business, Groups, Domain } from "@mui/icons-material";
 import React from "react";
 
 export default function InstituteHeader({
@@ -36,16 +36,16 @@ export default function InstituteHeader({
               width: "52px",
               height: "52px",
               background:
-                "linear-gradient(135deg, rgba(255, 152, 0, 0.12) 0%, rgba(255, 152, 0, 0.06) 100%)",
+                "linear-gradient(135deg, rgba(var(--primary-rgb), 0.12) 0%, rgba(var(--primary-rgb), 0.06) 100%)",
               borderRadius: "14px",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              border: "1.5px solid rgba(255, 152, 0, 0.25)",
+              border: "1.5px solid rgba(var(--primary-rgb), 0.25)",
               boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
             }}
           >
-            <BusinessOutlined sx={{ fontSize: "26px", color: "#FF9800" }} />
+            <Business sx={{ fontSize: "26px", color: "var(--primary-color)" }} />
           </Stack>
 
           <Stack gap="6px">
@@ -60,6 +60,20 @@ export default function InstituteHeader({
               >
                 Institute Management
               </Typography>
+              <Chip
+                label={`${instituteCount} ${
+                  instituteCount === 1 ? "Institute" : "Institutes"
+                }`}
+                size="small"
+                sx={{
+                  backgroundColor: "rgba(255, 152, 0, 0.1)",
+                  color: "#F57C00",
+                  fontWeight: 700,
+                  fontSize: "11px",
+                  height: "24px",
+                  border: "1px solid rgba(255, 152, 0, 0.2)",
+                }}
+              />
             </Stack>
             <Typography
               sx={{ fontSize: "13px", color: "var(--text3)", lineHeight: 1.4 }}

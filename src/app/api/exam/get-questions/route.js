@@ -1,4 +1,4 @@
-import getQuestions from "@/src/util/exam/questionFilterController";
+import { getQuestions } from "@/src/util/exam/questionFilterController";
 
 export async function POST(request) {
   const {
@@ -8,7 +8,7 @@ export async function POST(request) {
     searchTerm,
     limit,
     lastEvaluatedKey,
-    isRandom,  // Use isRandom as provided
+    isRandom, // Use isRandom as provided
     randomCount,
   } = await request.json();
 
@@ -20,7 +20,7 @@ export async function POST(request) {
       searchTerm,
       limit,
       lastEvaluatedKey,
-      isRandom,  // Pass isRandom as random
+      isRandom, // Pass isRandom as random
       randomCount,
     });
 

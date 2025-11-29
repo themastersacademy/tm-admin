@@ -48,16 +48,16 @@ export default function StudentsHeader({
               width: "52px",
               height: "52px",
               background:
-                "linear-gradient(135deg, rgba(76, 175, 80, 0.12) 0%, rgba(76, 175, 80, 0.06) 100%)",
+                "linear-gradient(135deg, rgba(var(--primary-rgb), 0.12) 0%, rgba(var(--primary-rgb), 0.06) 100%)",
               borderRadius: "14px",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              border: "1.5px solid rgba(76, 175, 80, 0.25)",
+              border: `1.5px solid rgba(var(--primary-rgb), 0.25)`,
               boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
             }}
           >
-            <Group sx={{ fontSize: "26px", color: "#4CAF50" }} />
+            <Group sx={{ fontSize: "26px", color: "var(--primary-color)" }} />
           </Stack>
 
           <Stack gap="6px">
@@ -76,12 +76,12 @@ export default function StudentsHeader({
                 label={`${stats.total || 0} Total`}
                 size="small"
                 sx={{
-                  backgroundColor: "rgba(76, 175, 80, 0.1)",
-                  color: "#4CAF50",
+                  backgroundColor: "rgba(255, 152, 0, 0.1)",
+                  color: "#F57C00",
                   fontWeight: 700,
                   fontSize: "11px",
                   height: "24px",
-                  border: "1px solid rgba(76, 175, 80, 0.2)",
+                  border: "1px solid rgba(255, 152, 0, 0.2)",
                 }}
               />
             </Stack>
@@ -160,19 +160,19 @@ export default function StudentsHeader({
             startIcon={<Add />}
             onClick={onAddClick}
             sx={{
-              background: "linear-gradient(135deg, #4CAF50 0%, #45A049 100%)",
+              background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
               color: "#FFFFFF",
               textTransform: "none",
               borderRadius: "10px",
               padding: "10px 24px",
               fontWeight: 700,
               fontSize: "14px",
-              boxShadow: "0 4px 12px rgba(76, 175, 80, 0.25)",
+              boxShadow: "0 4px 12px rgba(255, 152, 0, 0.25)",
               minWidth: "140px",
               height: "48px",
               "&:hover": {
-                background: "linear-gradient(135deg, #45A049 0%, #3D8B40 100%)",
-                boxShadow: "0 6px 16px rgba(76, 175, 80, 0.35)",
+                background: "linear-gradient(135deg, #F57C00 0%, #E65100 100%)",
+                boxShadow: "0 6px 16px rgba(255, 152, 0, 0.35)",
                 transform: "translateY(-1px)",
               },
             }}
@@ -207,7 +207,7 @@ export default function StudentsHeader({
                 width: "32px",
                 height: "2px",
                 background:
-                  "linear-gradient(90deg, #4CAF50 0%, transparent 100%)",
+                  "linear-gradient(90deg, #FF9800 0%, transparent 100%)",
               }}
             />
           </Stack>

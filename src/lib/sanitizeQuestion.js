@@ -23,15 +23,16 @@ export function sanitizeQuestions(rows, subjectID) {
       .toUpperCase();
     const rawLevel = Number(row["Level"]);
 
-    // Normalize difficulty level: Excel uses 0,1,2 but DB expects 1,2,3
-    // So we add 1 to convert 0->1, 1->2, 2->3
+    // Difficulty level: CSV uses 1, 2, 3 which DB also expects
+    // 1 = Easy, 2 = Medium, 3 = Hard
     let difficultyLevel = NaN;
     if (
       Number.isFinite(rawLevel) &&
       Number.isInteger(rawLevel) &&
-      rawLevel >= 0
+      rawLevel >= 1 &&
+      rawLevel <= 3
     ) {
-      difficultyLevel = rawLevel + 1; // Convert 0-based to 1-based
+      difficultyLevel = rawLevel; // Use as-is (1-based)
     }
 
     const solution = String(row["Solution"] || "").trim();
@@ -50,7 +51,7 @@ export function sanitizeQuestions(rows, subjectID) {
       difficultyLevel > 3
     )
       qErrors.push(
-        `Invalid Difficulty Level "${row["Level"]}". Must be 0 (Easy), 1 (Medium), or 2 (Hard).`
+        `Invalid Difficulty Level "${row["Level"]}". Must be 1 (Easy), 2 (Medium), or 3 (Hard).`
       );
 
     // Base object

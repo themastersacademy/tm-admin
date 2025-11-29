@@ -81,14 +81,14 @@ export default function Coursebank() {
     <Stack padding="20px" gap="24px">
       <CourseBankHeader
         title="Course Bank"
-        breadcrumbs={[{ label: "Course Bank" }]}
+        totalCount={courseList.length}
         actions={[
           {
             label: "New Folder",
             icon: <CreateNewFolder />,
             onClick: dialogOpen,
             sx: {
-              background: "linear-gradient(135deg, #2196F3 0%, #1976D2 100%)",
+              background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
               color: "white",
             },
           },

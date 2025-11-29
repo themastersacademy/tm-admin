@@ -6,15 +6,23 @@ import PropTypes from "prop-types";
 import { useState } from "react";
 
 const StyledTabs = styled(Tabs)(({ customstyles, width }) => ({
-  backgroundColor: "var(--white)",
-  borderRadius: "10px",
+  backgroundColor: "transparent",
+  borderRadius: "0px",
   width: width,
-  padding: "4px",
-  minHeight: "40px",
-  boxShadow: "inset .2px .1px 4px var(--border-color)",
+  padding: "0px",
+  minHeight: "56px",
+  position: "relative",
+  borderBottom: "2px solid var(--border-color)",
   ...customstyles?.tabs,
   "& .MuiTabs-indicator": {
-    display: "none",
+    height: "3px",
+    borderRadius: "3px 3px 0 0",
+    background:
+      "linear-gradient(90deg, var(--primary-color) 0%, rgba(var(--primary-rgb), 0.7) 100%)",
+    boxShadow: "0 -2px 8px rgba(var(--primary-rgb), 0.3)",
+  },
+  "& .MuiTabs-flexContainer": {
+    gap: "8px",
   },
 }));
 
@@ -22,15 +30,40 @@ const StyledTab = styled(Tab)(({ customstyles }) => ({
   textTransform: "none",
   fontFamily: "Lato",
   fontWeight: 600,
-  borderRadius: "8px",
-  width: "140px",
-  transition: "all 0.4s ease",
-  minHeight: "32px",
-  padding: "0px",
+  fontSize: "15px",
+  color: "var(--text2)",
+  borderRadius: "0px",
+  minWidth: "120px",
+  maxWidth: "200px",
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  minHeight: "56px",
+  padding: "12px 24px",
   whiteSpace: "nowrap",
+  position: "relative",
+  letterSpacing: "0.3px",
   "&.Mui-selected": {
-    color: "var(--sec-color)",
-    backgroundColor: "var(--sec-color-acc-1)",
+    color: "var(--primary-color)",
+    fontWeight: 700,
+    "& .tab-icon": {
+      transform: "scale(1.1)",
+    },
+  },
+  "&:hover:not(.Mui-selected)": {
+    color: "var(--text1)",
+    backgroundColor: "rgba(var(--primary-rgb), 0.04)",
+  },
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "3px",
+    backgroundColor: "transparent",
+    transition: "background-color 0.3s ease",
+  },
+  "&.Mui-selected::before": {
+    backgroundColor: "transparent",
   },
   ...customstyles?.tab,
 }));
@@ -46,7 +79,20 @@ function CustomTabPanel(props) {
       aria-labelledby={`simple-tab-${index}`}
       {...other}
     >
-      {value === index && <Box>{children}</Box>}
+      {value === index && (
+        <Box
+          sx={{
+            marginTop: "24px",
+            animation: "fadeIn 0.3s ease-in-out",
+            "@keyframes fadeIn": {
+              from: { opacity: 0, transform: "translateY(8px)" },
+              to: { opacity: 1, transform: "translateY(0)" },
+            },
+          }}
+        >
+          {children}
+        </Box>
+      )}
     </div>
   );
 }
@@ -85,27 +131,52 @@ export default function CustomTabs({
           />
         )}
 
-        <StyledTabs
-          value={value}
-          onChange={handleChange}
-          customstyles={customstyles}
-          width={width}
+        <Stack
+          sx={{
+            backgroundColor: "var(--white)",
+            borderRadius: "12px 12px 0 0",
+            border: "1px solid var(--border-color)",
+            borderBottom: "none",
+            overflow: "hidden",
+            width: width,
+          }}
         >
-          {tabs.map((tab, index) => (
-            <StyledTab
-              // value={value}
-              key={index}
-              label={tab.label}
-              customstyles={customstyles}
-            />
-          ))}
-        </StyledTabs>
+          <StyledTabs
+            value={value}
+            onChange={handleChange}
+            customstyles={customstyles}
+            width={width}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
+          >
+            {tabs.map((tab, index) => (
+              <StyledTab
+                key={index}
+                label={tab.label}
+                customstyles={customstyles}
+              />
+            ))}
+          </StyledTabs>
+        </Stack>
       </Stack>
-      {tabs.map((tab, index) => (
-        <CustomTabPanel key={index} value={value} index={index}>
-          {tab.content}
-        </CustomTabPanel>
-      ))}
+
+      <Stack
+        sx={{
+          backgroundColor: "var(--white)",
+          border: "1px solid var(--border-color)",
+          borderTop: "none",
+          borderRadius: "0 0 12px 12px",
+          padding: "24px",
+          minHeight: "400px",
+        }}
+      >
+        {tabs.map((tab, index) => (
+          <CustomTabPanel key={index} value={value} index={index}>
+            {tab.content}
+          </CustomTabPanel>
+        ))}
+      </Stack>
     </Stack>
   );
 }
