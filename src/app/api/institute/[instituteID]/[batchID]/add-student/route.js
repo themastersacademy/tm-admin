@@ -10,7 +10,7 @@ export async function POST(req, { params }) {
     );
   }
   try {
-    const result = await enrollStudentInBatch(userID, batchID);
+    const result = await enrollStudentInBatch({ userID, batchID });
     return Response.json(result);
   } catch (error) {
     return Response.json(

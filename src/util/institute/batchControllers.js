@@ -225,7 +225,7 @@ export async function getBatch({ batchID }) {
  *
  * Uses a single TransactWrite to guarantee atomicity.
  */
-export async function enrollStudentInBatch(userID, batchID) {
+export async function enrollStudentInBatch({ userID, batchID, rollNo }) {
   const now = Date.now();
 
   // 1) Fetch user and batch metadata (we need studentMeta and batchMeta)
@@ -265,6 +265,7 @@ export async function enrollStudentInBatch(userID, batchID) {
                   instituteID: batchData.instituteID,
                   instituteMeta: batchData.instituteMeta,
                 },
+                rollNo: rollNo || null,
                 joinedAt: now,
               },
               ConditionExpression:
@@ -424,6 +425,7 @@ export async function getStudentsForBatch(batchID) {
       batchID: item.batchID,
       studentMeta: item.studentMeta,
       batchMeta: item.batchMeta,
+      rollNo: item.rollNo,
       joinedAt: item.joinedAt,
     }));
     return {

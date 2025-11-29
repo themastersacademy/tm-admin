@@ -12,18 +12,37 @@ import {
 import gatecse_img from "@/public/Icons/gate_cse.svg";
 import placements_img from "@/public/Icons/placements.svg";
 import banking_img from "@/public/Icons/banking.svg";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/src/lib/apiFetch";
 import { Close, ArrowForward, Info } from "@mui/icons-material";
 import Image from "next/image";
 
-export default function GoalDialogBox({ isOpen, onClose, setGoalList }) {
+export default function GoalDialogBox({
+  isOpen,
+  onClose,
+  setGoalList,
+  isEdit = false,
+  goalData = null,
+  onUpdateSuccess,
+}) {
   const [title, setTitle] = useState("");
   const [icon, setIcon] = useState(false);
   const router = useRouter();
   const { showSnackbar } = useSnackbar();
+
+  useEffect(() => {
+    if (isOpen) {
+      if (isEdit && goalData) {
+        setTitle(goalData.title || "");
+        setIcon(goalData.icon || false);
+      } else {
+        setTitle("");
+        setIcon(false);
+      }
+    }
+  }, [isOpen, isEdit, goalData]);
 
   const onIconSelect = (value) => {
     setIcon(value);
@@ -35,33 +54,55 @@ export default function GoalDialogBox({ isOpen, onClose, setGoalList }) {
       return;
     }
 
-    apiFetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/goals/create-goal`,
-      {
-        method: "POST",
-        body: JSON.stringify({
-          title,
-          icon,
-        }),
-      },
-      showSnackbar
-    ).then((data) => {
-      if (data.success) {
-        showSnackbar(data.message, "success", "", "3000");
-        // Refresh goal list
-        apiFetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/goals/get-all-goals`
-        ).then((response) => {
-          if (response.success) {
-            setGoalList(response.data.goals);
-          }
-        });
-        onClose();
-        router.push(`dashboard/goals/${data.data.goalID}`);
-      } else {
-        showSnackbar(data.message, "error", "", "3000");
-      }
-    });
+    if (isEdit) {
+      apiFetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/goals/${goalData.goalID}/update`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            title,
+            icon,
+          }),
+        },
+        showSnackbar
+      ).then((data) => {
+        if (data.success) {
+          showSnackbar("Goal updated successfully", "success", "", "3000");
+          if (onUpdateSuccess) onUpdateSuccess();
+          onClose();
+        } else {
+          showSnackbar(data.message, "error", "", "3000");
+        }
+      });
+    } else {
+      apiFetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/goals/create-goal`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            title,
+            icon,
+          }),
+        },
+        showSnackbar
+      ).then((data) => {
+        if (data.success) {
+          showSnackbar(data.message, "success", "", "3000");
+          // Refresh goal list
+          apiFetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/goals/get-all-goals`
+          ).then((response) => {
+            if (response.success) {
+              setGoalList(response.data.goals);
+            }
+          });
+          onClose();
+          router.push(`dashboard/goals/${data.data.goalID}`);
+        } else {
+          showSnackbar(data.message, "error", "", "3000");
+        }
+      });
+    }
   }
 
   return (
@@ -93,7 +134,7 @@ export default function GoalDialogBox({ isOpen, onClose, setGoalList }) {
               color: "var(--text1)",
             }}
           >
-            Create New Goal
+            {isEdit ? "Edit Goal" : "Create New Goal"}
           </Typography>
           <Typography
             sx={{
@@ -101,7 +142,9 @@ export default function GoalDialogBox({ isOpen, onClose, setGoalList }) {
               color: "var(--text3)",
             }}
           >
-            Set up a new learning objective for your students
+            {isEdit
+              ? "Update the details of this goal"
+              : "Set up a new learning objective for your students"}
           </Typography>
         </Stack>
         <IconButton onClick={onClose} size="small">
@@ -247,7 +290,7 @@ export default function GoalDialogBox({ isOpen, onClose, setGoalList }) {
             },
           }}
         >
-          Create Goal
+          {isEdit ? "Update Goal" : "Create Goal"}
         </Button>
       </Stack>
     </Dialog>

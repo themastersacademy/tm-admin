@@ -21,7 +21,9 @@ import {
   MenuBook,
   Article,
   Quiz,
+  Edit,
 } from "@mui/icons-material";
+import GoalDialogBox from "../GoalDialogBox/GoalDialogBox";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/src/lib/apiFetch";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
@@ -31,6 +33,7 @@ export default function GoalHead({ goal, goalLoading, fetchGoal }) {
   const router = useRouter();
   const { showSnackbar } = useSnackbar();
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const handleLive = () => {
     setIsLoading(true);
@@ -220,21 +223,51 @@ export default function GoalHead({ goal, goalLoading, fetchGoal }) {
                 </Typography>
               )}
               {!goalLoading && (
-                <Chip
-                  label={goal.isLive ? "Published" : "Draft"}
-                  size="small"
-                  sx={{
-                    backgroundColor: goal.isLive
-                      ? "rgba(76, 175, 80, 0.1)"
-                      : "rgba(158, 158, 158, 0.1)",
-                    color: goal.isLive
-                      ? "var(--success-color)"
-                      : "var(--text3)",
-                    fontWeight: 700,
-                    fontSize: "11px",
-                    height: "24px",
-                  }}
-                />
+                <Stack direction="row" gap="8px" alignItems="center">
+                  <Chip
+                    label={goal.isLive ? "Published" : "Draft"}
+                    size="small"
+                    sx={{
+                      backgroundColor: goal.isLive
+                        ? "rgba(76, 175, 80, 0.1)"
+                        : "rgba(158, 158, 158, 0.1)",
+                      color: goal.isLive
+                        ? "var(--success-color)"
+                        : "var(--text3)",
+                      fontWeight: 700,
+                      fontSize: "11px",
+                      height: "24px",
+                    }}
+                  />
+                  <Stack
+                    onClick={() => setIsEditDialogOpen(true)}
+                    sx={{
+                      width: "24px",
+                      height: "24px",
+                      borderRadius: "50%",
+                      backgroundColor: "var(--bg-color)",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      cursor: "pointer",
+                      border: "1px solid var(--border-color)",
+                      "&:hover": {
+                        backgroundColor: "var(--primary-color)",
+                        borderColor: "var(--primary-color)",
+                        "& svg": {
+                          color: "white",
+                        },
+                      },
+                    }}
+                  >
+                    <Edit
+                      sx={{
+                        fontSize: "14px",
+                        color: "var(--text3)",
+                        transition: "all 0.2s ease",
+                      }}
+                    />
+                  </Stack>
+                </Stack>
               )}
             </Stack>
             <Typography sx={{ fontSize: "13px", color: "var(--text3)" }}>
@@ -272,6 +305,13 @@ export default function GoalHead({ goal, goalLoading, fetchGoal }) {
           />
         </Stack>
       </Stack>
+      <GoalDialogBox
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        isEdit={true}
+        goalData={goal}
+        onUpdateSuccess={fetchGoal}
+      />
     </Stack>
   );
 }

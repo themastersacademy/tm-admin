@@ -1,4 +1,10 @@
-import { Delete, Email, Person, CalendarToday } from "@mui/icons-material";
+import {
+  Delete,
+  Email,
+  Person,
+  CalendarToday,
+  Badge,
+} from "@mui/icons-material";
 import {
   Avatar,
   Box,
@@ -106,6 +112,21 @@ export default function BatchStudentCard({ student, onRemove }) {
               {email}
             </Typography>
           </Stack>
+          {student.rollNo && (
+            <Stack flexDirection="row" alignItems="center" gap="6px" mt={0.5}>
+              <Badge sx={{ fontSize: 14, color: "var(--primary-color)" }} />
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "var(--primary-color)",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                }}
+              >
+                Roll No: {student.rollNo}
+              </Typography>
+            </Stack>
+          )}
         </Box>
 
         <Divider sx={{ borderStyle: "dashed" }} />

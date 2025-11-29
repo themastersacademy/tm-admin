@@ -4,7 +4,15 @@ import BatchStudentCard from "@/src/components/BatchStudentCard/BatchStudentCard
 import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
 import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
 import { apiFetch } from "@/src/lib/apiFetch";
-import { Add, Close, East, Search, People } from "@mui/icons-material";
+import {
+  Add,
+  Close,
+  East,
+  Search,
+  People,
+  UploadFile,
+} from "@mui/icons-material";
+import BulkStudentImport from "./BulkStudentImport";
 import {
   Button,
   DialogContent,
@@ -26,6 +34,7 @@ export default function BatchStudents({ setStudentCount }) {
   const params = useParams();
   const [studentsList, setStudentsList] = useState([]);
   const [studentDialog, setStudentDialog] = useState(false);
+  const [bulkImportDialog, setBulkImportDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -147,6 +156,20 @@ export default function BatchStudents({ setStudentCount }) {
             >
               Add Student
             </Button>
+            <Button
+              variant="outlined"
+              startIcon={<UploadFile />}
+              onClick={() => setBulkImportDialog(true)}
+              sx={{
+                borderColor: "var(--primary-color)",
+                color: "var(--primary-color)",
+                textTransform: "none",
+                fontFamily: "Lato",
+                height: "40px",
+              }}
+            >
+              Bulk Upload
+            </Button>
           </Stack>
         </Stack>
         <Stack
@@ -185,6 +208,11 @@ export default function BatchStudents({ setStudentCount }) {
           instituteID={params.instituteID}
           batchID={params.batchID}
           fetchStudents={fetchStudents}
+        />
+        <BulkStudentImport
+          isOpen={bulkImportDialog}
+          close={() => setBulkImportDialog(false)}
+          onSuccess={fetchStudents}
         />
         <DialogBox
           isOpen={deleteDialog}
