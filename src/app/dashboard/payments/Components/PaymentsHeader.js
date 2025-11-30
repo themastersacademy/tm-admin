@@ -1,5 +1,5 @@
 "use client";
-import { Stack, Typography, Chip } from "@mui/material";
+import { Stack, Typography, Chip, Skeleton } from "@mui/material";
 import {
   Payments,
   CurrencyRupee,
@@ -9,7 +9,7 @@ import {
 } from "@mui/icons-material";
 import React from "react";
 
-export default function PaymentsHeader({ stats = {} }) {
+export default function PaymentsHeader({ stats = {}, loading = false }) {
   const {
     totalRevenue = 0,
     activePlans = 0,
@@ -73,18 +73,22 @@ export default function PaymentsHeader({ stats = {} }) {
               >
                 Revenue Management
               </Typography>
-              <Chip
-                label={`${totalItems} ${totalItems === 1 ? "Item" : "Items"}`}
-                size="small"
-                sx={{
-                  backgroundColor: "rgba(255, 152, 0, 0.1)",
-                  color: "#F57C00",
-                  fontWeight: 700,
-                  fontSize: "11px",
-                  height: "24px",
-                  border: "1px solid rgba(255, 152, 0, 0.2)",
-                }}
-              />
+              {loading ? (
+                <Skeleton width={60} height={24} />
+              ) : (
+                <Chip
+                  label={`${totalItems} ${totalItems === 1 ? "Item" : "Items"}`}
+                  size="small"
+                  sx={{
+                    backgroundColor: "rgba(255, 152, 0, 0.1)",
+                    color: "#F57C00",
+                    fontWeight: 700,
+                    fontSize: "11px",
+                    height: "24px",
+                    border: "1px solid rgba(255, 152, 0, 0.2)",
+                  }}
+                />
+              )}
             </Stack>
             <Typography
               sx={{ fontSize: "13px", color: "var(--text3)", lineHeight: 1.4 }}
@@ -128,6 +132,7 @@ export default function PaymentsHeader({ stats = {} }) {
             value={`₹${totalRevenue.toLocaleString("en-IN")}`}
             color="#FF9800"
             bgColor="rgba(255, 152, 0, 0.08)"
+            loading={loading}
           />
           <ModernStatCard
             icon={<WorkspacePremium />}
@@ -135,6 +140,7 @@ export default function PaymentsHeader({ stats = {} }) {
             value={activePlans}
             color="#2196F3"
             bgColor="rgba(33, 150, 243, 0.08)"
+            loading={loading}
           />
           <ModernStatCard
             icon={<LocalOffer />}
@@ -142,6 +148,7 @@ export default function PaymentsHeader({ stats = {} }) {
             value={totalCoupons}
             color="#9C27B0"
             bgColor="rgba(156, 39, 176, 0.08)"
+            loading={loading}
           />
           <ModernStatCard
             icon={<TrendingUp />}
@@ -149,6 +156,7 @@ export default function PaymentsHeader({ stats = {} }) {
             value={`${monthlyGrowth >= 0 ? "+" : ""}${monthlyGrowth}%`}
             color="#4CAF50"
             bgColor="rgba(76, 175, 80, 0.08)"
+            loading={loading}
           />
         </Stack>
       </Stack>
@@ -156,7 +164,14 @@ export default function PaymentsHeader({ stats = {} }) {
   );
 }
 
-const ModernStatCard = ({ icon, label, value, color, bgColor }) => (
+const ModernStatCard = ({
+  icon,
+  label,
+  value,
+  color,
+  bgColor,
+  loading = false,
+}) => (
   <Stack
     direction="row"
     alignItems="center"
@@ -199,17 +214,21 @@ const ModernStatCard = ({ icon, label, value, color, bgColor }) => (
       >
         {label}
       </Typography>
-      <Typography
-        sx={{
-          fontSize: "26px",
-          fontWeight: 800,
-          color: color,
-          fontFamily: "Lato",
-          lineHeight: 1,
-        }}
-      >
-        {value}
-      </Typography>
+      {loading ? (
+        <Skeleton width="80%" height={40} />
+      ) : (
+        <Typography
+          sx={{
+            fontSize: "26px",
+            fontWeight: 800,
+            color: color,
+            fontFamily: "Lato",
+            lineHeight: 1,
+          }}
+        >
+          {value}
+        </Typography>
+      )}
     </Stack>
   </Stack>
 );

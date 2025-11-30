@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Button,
   CircularProgress,
@@ -32,49 +32,59 @@ export default function Form() {
     }
   }, []);
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    if (!email || !password) {
-      showSnackbar("Please fill in all fields", "error", "", "3000");
-      return;
-    }
+  const onSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (!email || !password) {
+        showSnackbar("Please fill in all fields", "error", "", "3000");
+        return;
+      }
 
-    setIsLoading(true);
+      setIsLoading(true);
 
-    if (rememberMe) {
-      localStorage.setItem("adminEmail", email);
-    } else {
-      localStorage.removeItem("adminEmail");
-    }
+      if (rememberMe) {
+        localStorage.setItem("adminEmail", email);
+      } else {
+        localStorage.removeItem("adminEmail");
+      }
 
-    await fetch(`/api/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
+      const controller = new AbortController();
+      const signal = controller.signal;
+
+      try {
+        const res = await fetch(`/api/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+          signal,
+        });
+        const data = await res.json();
+
         if (data.success) {
           showSnackbar(data.message, "success", "", "3000");
           router.push("/dashboard");
-          setIsLoading(false);
         } else {
           showSnackbar(data.message, "error", "", "3000");
-          setIsLoading(false);
         }
-      })
-      .catch(() => {
-        showSnackbar(
-          "Something went wrong. Please try again.",
-          "error",
-          "",
-          "3000"
-        );
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          showSnackbar(
+            "Something went wrong. Please try again.",
+            "error",
+            "",
+            "3000"
+          );
+        }
+      } finally {
         setIsLoading(false);
-      });
-  };
+      }
+
+      return () => controller.abort();
+    },
+    [email, password, rememberMe, showSnackbar, router]
+  );
 
   return (
     <form onSubmit={onSubmit}>

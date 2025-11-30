@@ -9,6 +9,12 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   Paper,
+  Autocomplete,
+  Chip,
+  Avatar,
+  ListItemText,
+  ListItemAvatar,
+  MenuItem,
 } from "@mui/material";
 import {
   Close,
@@ -17,6 +23,8 @@ import {
   AttachMoney,
   People,
   Event,
+  CheckBoxOutlineBlank,
+  CheckBox,
 } from "@mui/icons-material";
 import { useState } from "react";
 import DialogBox from "@/src/components/DialogBox/DialogBox";
@@ -40,6 +48,8 @@ const CouponDialog = ({
   isEditMode,
   isLoading,
   updateCoupon,
+  courses,
+  goals,
 }) => {
   return (
     <DialogBox
@@ -110,10 +120,22 @@ const CouponDialog = ({
               boxShadow: "0 6px 20px rgba(0, 0, 0, 0.25)",
               transform: "translateY(-1px)",
             },
+            "&.Mui-disabled": {
+              background: "#E0E0E0",
+              color: "#9E9E9E",
+              boxShadow: "none",
+            },
             transition: "all 0.2s ease",
           }}
           disableElevation
-          disabled={isLoading || !coupon.title}
+          disabled={
+            isLoading ||
+            !coupon.title ||
+            !coupon.code ||
+            !coupon.discountValue ||
+            !coupon.startDate ||
+            !coupon.endDate
+          }
         >
           {isEditMode ? "Update Coupon" : "Create Coupon"}
         </Button>
@@ -123,7 +145,7 @@ const CouponDialog = ({
         <Grid container spacing={3}>
           {/* Left Column - Form */}
           <Grid item xs={12} lg={7}>
-            <Stack gap={3}>
+            <Stack gap={2.5}>
               {/* Basic Information */}
               <SectionCard
                 title="Basic Information"
@@ -178,6 +200,8 @@ const CouponDialog = ({
                           setCoupon((prev) => ({
                             ...prev,
                             couponClass: value,
+                            applicableCourses: [],
+                            applicableGoals: [],
                           }));
                         }
                       }}
@@ -209,6 +233,159 @@ const CouponDialog = ({
                       ))}
                     </ToggleButtonGroup>
                   </Grid>
+
+                  {/* Specific Selection */}
+                  {coupon.couponClass === "COURSES" && (
+                    <Grid item xs={12}>
+                      <Label required helpText="Select applicable courses">
+                        Select Courses
+                      </Label>
+                      <Box
+                        sx={{
+                          border: "1px solid var(--border-color)",
+                          borderRadius: "5px",
+                          maxHeight: "300px",
+                          overflow: "auto",
+                          "&:hover": {
+                            borderColor: "var(--primary-color)",
+                          },
+                        }}
+                      >
+                        {(courses || []).map((course) => {
+                          const isSelected = coupon.applicableCourses?.includes(
+                            course.courseID
+                          );
+                          return (
+                            <Box
+                              key={course.courseID}
+                              onClick={() => {
+                                setCoupon((prev) => {
+                                  const currentCourses =
+                                    prev.applicableCourses || [];
+                                  const newCourses = isSelected
+                                    ? currentCourses.filter(
+                                        (id) => id !== course.courseID
+                                      )
+                                    : [...currentCourses, course.courseID];
+                                  return {
+                                    ...prev,
+                                    applicableCourses: newCourses,
+                                  };
+                                });
+                              }}
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1.5,
+                                p: 1.5,
+                                cursor: "pointer",
+                                borderBottom: "1px solid var(--border-color)",
+                                transition: "background-color 0.2s",
+                                "&:last-child": {
+                                  borderBottom: "none",
+                                },
+                                "&:hover": {
+                                  backgroundColor: "rgba(0,0,0,0.02)",
+                                },
+                                backgroundColor: isSelected
+                                  ? "rgba(25, 118, 210, 0.04)"
+                                  : "transparent",
+                              }}
+                            >
+                              {isSelected ? (
+                                <CheckBox
+                                  color="primary"
+                                  sx={{ fontSize: "20px" }}
+                                />
+                              ) : (
+                                <CheckBoxOutlineBlank
+                                  color="action"
+                                  sx={{ fontSize: "20px" }}
+                                />
+                              )}
+                              <Avatar
+                                src={course.thumbnail}
+                                variant="rounded"
+                                sx={{ width: 40, height: 40 }}
+                              >
+                                {course.title?.charAt(0)}
+                              </Avatar>
+                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography
+                                  sx={{
+                                    fontSize: "14px",
+                                    fontWeight: 500,
+                                    color: "var(--text1)",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {course.title}
+                                </Typography>
+                                <Typography
+                                  sx={{
+                                    fontSize: "12px",
+                                    color: "var(--text3)",
+                                  }}
+                                >
+                                  {course.price ? `₹${course.price}` : "Free"}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          );
+                        })}
+                        {(!courses || courses.length === 0) && (
+                          <Box sx={{ p: 3, textAlign: "center" }}>
+                            <Typography
+                              sx={{ fontSize: "14px", color: "var(--text3)" }}
+                            >
+                              No courses available
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                      {coupon.applicableCourses?.length > 0 && (
+                        <Box sx={{ mt: 1 }}>
+                          <Typography
+                            sx={{
+                              fontSize: "12px",
+                              color: "var(--text3)",
+                              mb: 0.5,
+                            }}
+                          >
+                            Selected: {coupon.applicableCourses.length} course
+                            {coupon.applicableCourses.length !== 1 ? "s" : ""}
+                          </Typography>
+                          <Stack direction="row" gap={0.5} flexWrap="wrap">
+                            {coupon.applicableCourses.map((courseId) => {
+                              const course = courses?.find(
+                                (c) => c.courseID === courseId
+                              );
+                              return course ? (
+                                <Chip
+                                  key={courseId}
+                                  label={course.title}
+                                  size="small"
+                                  variant="outlined"
+                                  onDelete={() => {
+                                    setCoupon((prev) => ({
+                                      ...prev,
+                                      applicableCourses:
+                                        prev.applicableCourses.filter(
+                                          (id) => id !== courseId
+                                        ),
+                                    }));
+                                  }}
+                                  sx={{ fontSize: "12px" }}
+                                />
+                              ) : null;
+                            })}
+                          </Stack>
+                        </Box>
+                      )}
+                    </Grid>
+                  )}
                 </Grid>
               </SectionCard>
 
@@ -261,7 +438,7 @@ const CouponDialog = ({
                       ))}
                     </ToggleButtonGroup>
                   </Grid>
-                  <Grid item xs={6} sm={4}>
+                  <Grid item xs={12} sm={4}>
                     <Label
                       required
                       helpText={
@@ -299,7 +476,7 @@ const CouponDialog = ({
                       }}
                     />
                   </Grid>
-                  <Grid item xs={6} sm={4}>
+                  <Grid item xs={12} sm={4}>
                     <Label required helpText="Minimum cart value required">
                       Min Order (₹)
                     </Label>
@@ -315,166 +492,126 @@ const CouponDialog = ({
                       }
                     />
                   </Grid>
-                  <Grid item xs={6} sm={4}>
-                    <Label required helpText="Maximum discount cap">
-                      Max Discount (₹)
+                  {coupon.discountType === "PERCENTAGE" && (
+                    <Grid item xs={12} sm={4}>
+                      <Label required helpText="Maximum discount cap">
+                        Max Discount (₹)
+                      </Label>
+                      <StyledTextField
+                        placeholder="200"
+                        value={coupon.maxDiscountPrice || ""}
+                        type="number"
+                        onChange={(e) =>
+                          setCoupon((prev) => ({
+                            ...prev,
+                            maxDiscountPrice: e.target.value,
+                          }))
+                        }
+                      />
+                    </Grid>
+                  )}
+                </Grid>
+              </SectionCard>
+
+              {/* Usage & Validity */}
+              <SectionCard
+                title="Usage & Validity"
+                helpText="Control limits and active period"
+                icon={<People sx={{ fontSize: "20px" }} />}
+              >
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Label required helpText="Total times code can be used">
+                      Total Uses
                     </Label>
                     <StyledTextField
-                      placeholder="200"
-                      value={coupon.maxDiscountPrice || ""}
+                      placeholder="1000"
+                      value={coupon.totalRedemptions || ""}
                       type="number"
                       onChange={(e) =>
                         setCoupon((prev) => ({
                           ...prev,
-                          maxDiscountPrice: e.target.value,
+                          totalRedemptions: e.target.value,
                         }))
                       }
                     />
                   </Grid>
-                </Grid>
-
-                {/* Info Box */}
-                <Box
-                  sx={{
-                    mt: 2,
-                    p: 1.5,
-                    borderRadius: "8px",
-                    backgroundColor: "#E3F2FD",
-                    border: "1px solid #90CAF9",
-                  }}
-                >
-                  <Typography
-                    sx={{ fontSize: "11px", color: "#1976D2", lineHeight: 1.5 }}
-                  >
-                    💡 <strong>Example:</strong> If discount is 20% on ₹2000
-                    order with max discount ₹300, customer saves ₹300 (capped),
-                    not ₹400 (20% of ₹2000).
-                  </Typography>
-                </Box>
-              </SectionCard>
-
-              {/* Usage & Validity */}
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={6}>
-                  <SectionCard
-                    title="Usage Limits"
-                    helpText="Control redemption frequency"
-                    icon={<People sx={{ fontSize: "20px" }} />}
-                  >
-                    <Grid container spacing={2}>
-                      <Grid item xs={12}>
-                        <Label
-                          required
-                          helpText="Total times this code can be used"
-                        >
-                          Total Uses
-                        </Label>
-                        <StyledTextField
-                          placeholder="1000"
-                          value={coupon.totalRedemptions || ""}
-                          type="number"
-                          onChange={(e) =>
-                            setCoupon((prev) => ({
-                              ...prev,
-                              totalRedemptions: e.target.value,
-                            }))
-                          }
-                        />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <Label required helpText="Uses per customer">
-                          Per User Limit
-                        </Label>
-                        <StyledTextField
-                          placeholder="1"
-                          value={coupon.totalRedemptionsPerUser || ""}
-                          type="number"
-                          onChange={(e) =>
-                            setCoupon((prev) => ({
-                              ...prev,
-                              totalRedemptionsPerUser: e.target.value,
-                            }))
-                          }
-                        />
-                      </Grid>
-                    </Grid>
-                  </SectionCard>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <SectionCard
-                    title="Validity Period"
-                    helpText="When this offer is active"
-                    icon={<Event sx={{ fontSize: "20px" }} />}
-                  >
-                    <Label required>Validity Period</Label>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Label required helpText="Uses per customer">
+                      Per User
+                    </Label>
+                    <StyledTextField
+                      placeholder="1"
+                      value={coupon.totalRedemptionsPerUser || ""}
+                      type="number"
+                      onChange={(e) =>
+                        setCoupon((prev) => ({
+                          ...prev,
+                          totalRedemptionsPerUser: e.target.value,
+                        }))
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Label required>Start Date</Label>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
-                      <Grid container spacing={2}>
-                        <Grid item xs={6}>
-                          <DatePicker
-                            label="Start Date"
-                            value={dayjs(coupon.startDate)}
-                            onChange={(newValue) => {
-                              setCoupon((prev) => ({
-                                ...prev,
-                                startDate: newValue ? newValue.valueOf() : null,
-                              }));
-                            }}
-                            slotProps={{
-                              textField: {
-                                size: "small",
-                                fullWidth: true,
-                                sx: {
-                                  "& .MuiOutlinedInput-root": {
-                                    borderRadius: "8px",
-                                    backgroundColor: "var(--white)",
-                                  },
-                                },
-                              },
-                            }}
-                          />
-                        </Grid>
-                        <Grid item xs={6}>
-                          <DatePicker
-                            label="End Date"
-                            value={dayjs(coupon.endDate)}
-                            onChange={(newValue) => {
-                              setCoupon((prev) => ({
-                                ...prev,
-                                endDate: newValue ? newValue.valueOf() : null,
-                              }));
-                            }}
-                            slotProps={{
-                              textField: {
-                                size: "small",
-                                fullWidth: true,
-                                sx: {
-                                  "& .MuiOutlinedInput-root": {
-                                    borderRadius: "8px",
-                                    backgroundColor: "var(--white)",
-                                  },
-                                },
-                              },
-                            }}
-                          />
-                        </Grid>
-                      </Grid>
+                      <DatePicker
+                        value={dayjs(coupon.startDate)}
+                        onChange={(newValue) => {
+                          setCoupon((prev) => ({
+                            ...prev,
+                            startDate: newValue ? newValue.valueOf() : null,
+                          }));
+                        }}
+                        slotProps={{
+                          textField: {
+                            size: "small",
+                            fullWidth: true,
+                            placeholder: "Select date",
+                          },
+                        }}
+                      />
                     </LocalizationProvider>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Label required>End Date</Label>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <DatePicker
+                        value={dayjs(coupon.endDate)}
+                        onChange={(newValue) => {
+                          setCoupon((prev) => ({
+                            ...prev,
+                            endDate: newValue ? newValue.valueOf() : null,
+                          }));
+                        }}
+                        slotProps={{
+                          textField: {
+                            size: "small",
+                            fullWidth: true,
+                            placeholder: "Select date",
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </Grid>
+                  <Grid item xs={12}>
                     <Typography
-                      sx={{ fontSize: "10px", color: "var(--text3)", mt: 1 }}
+                      sx={{ fontSize: "11px", color: "var(--text3)" }}
                     >
                       Duration:{" "}
-                      {coupon.endDate && coupon.startDate
-                        ? dayjs(coupon.endDate).diff(
-                            dayjs(coupon.startDate),
-                            "day"
-                          )
-                        : 0}{" "}
-                      days
+                      <strong>
+                        {coupon.endDate && coupon.startDate
+                          ? dayjs(coupon.endDate).diff(
+                              dayjs(coupon.startDate),
+                              "day"
+                            )
+                          : 0}{" "}
+                        days
+                      </strong>
                     </Typography>
-                  </SectionCard>
+                  </Grid>
                 </Grid>
-              </Grid>
+              </SectionCard>
             </Stack>
           </Grid>
 
@@ -494,96 +631,6 @@ const CouponDialog = ({
                 </Typography>
                 <LivePreview coupon={coupon} />
               </Box>
-
-              {/* Quick Stats */}
-              <Paper
-                elevation={0}
-                sx={{
-                  padding: "16px",
-                  borderRadius: "12px",
-                  border: "1px solid var(--border-color)",
-                  backgroundColor: "var(--bg-color)",
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    mb: 1.5,
-                    color: "var(--text1)",
-                  }}
-                >
-                  📊 Coupon Stats
-                </Typography>
-                <Grid container spacing={1.5}>
-                  <Grid item xs={6}>
-                    <Box
-                      sx={{
-                        p: 1.5,
-                        borderRadius: "8px",
-                        backgroundColor: "var(--white)",
-                        border: "1px solid var(--border-color)",
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontSize: "10px",
-                          color: "var(--text3)",
-                          mb: 0.5,
-                        }}
-                      >
-                        Customer Saves
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: "16px",
-                          fontWeight: 700,
-                          color: "#4CAF50",
-                        }}
-                      >
-                        ₹
-                        {coupon.discountType === "PERCENTAGE" &&
-                        coupon.minOrderAmount
-                          ? Math.min(
-                              (coupon.minOrderAmount * coupon.discountValue) /
-                                100,
-                              coupon.maxDiscountPrice || 0
-                            ).toFixed(0)
-                          : coupon.discountValue || "0"}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Box
-                      sx={{
-                        p: 1.5,
-                        borderRadius: "8px",
-                        backgroundColor: "var(--white)",
-                        border: "1px solid var(--border-color)",
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontSize: "10px",
-                          color: "var(--text3)",
-                          mb: 0.5,
-                        }}
-                      >
-                        Total Potential Uses
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: "16px",
-                          fontWeight: 700,
-                          color: "#2196F3",
-                        }}
-                      >
-                        {coupon.totalRedemptions || "0"}x
-                      </Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
-              </Paper>
 
               {/* Tips */}
               <Paper

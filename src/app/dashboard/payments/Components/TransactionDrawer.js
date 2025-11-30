@@ -46,6 +46,7 @@ const TransactionDrawer = ({
   transaction,
   onPrint,
   onRefund,
+  onVerify,
   loading,
   enqueueSnackbar,
 }) => {
@@ -531,21 +532,43 @@ const TransactionDrawer = ({
                 </Grid>
               </Grid>
             ) : (
-              <Button
-                fullWidth
-                variant="contained"
-                onClick={onClose}
-                sx={{
-                  height: "44px",
-                  borderRadius: "8px",
-                  textTransform: "none",
-                  fontWeight: 600,
-                  bgcolor: "var(--primary-color)",
-                  boxShadow: "none",
-                }}
-              >
-                Close
-              </Button>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={onVerify}
+                    disabled={loading}
+                    sx={{
+                      height: "44px",
+                      borderRadius: "8px",
+                      textTransform: "none",
+                      fontWeight: 600,
+                      borderColor: "var(--border-color)",
+                      color: "var(--text1)",
+                    }}
+                  >
+                    {loading ? <CircularProgress size={20} /> : "Check Status"}
+                  </Button>
+                </Grid>
+                <Grid item xs={6}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={onClose}
+                    sx={{
+                      height: "44px",
+                      borderRadius: "8px",
+                      textTransform: "none",
+                      fontWeight: 600,
+                      bgcolor: "var(--primary-color)",
+                      boxShadow: "none",
+                    }}
+                  >
+                    Close
+                  </Button>
+                </Grid>
+              </Grid>
             )}
           </Stack>
         </>

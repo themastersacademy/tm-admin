@@ -183,6 +183,7 @@ export default function StudentProfile({ student = {} }) {
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <Field
+                id="full-name"
                 label="Full Name"
                 value={formData.name}
                 onChange={handleChange("name")}
@@ -191,6 +192,7 @@ export default function StudentProfile({ student = {} }) {
             </Grid>
             <Grid item xs={12} md={6}>
               <Field
+                id="email-address"
                 label="Email Address"
                 value={formData.email}
                 onChange={handleChange("email")}
@@ -200,6 +202,7 @@ export default function StudentProfile({ student = {} }) {
             </Grid>
             <Grid item xs={12} md={6}>
               <Field
+                id="phone-number"
                 label="Phone Number"
                 value={formData.phoneNumber}
                 onChange={handleChange("phoneNumber")}
@@ -208,6 +211,7 @@ export default function StudentProfile({ student = {} }) {
             </Grid>
             <Grid item xs={12} md={6}>
               <Field
+                id="gender"
                 label="Gender"
                 value={formData.gender}
                 onChange={handleChange("gender")}
@@ -216,6 +220,7 @@ export default function StudentProfile({ student = {} }) {
             </Grid>
             <Grid item xs={12} md={12}>
               <Field
+                id="address"
                 label="Address"
                 value={formData.address}
                 onChange={handleChange("address")}
@@ -235,6 +240,7 @@ export default function StudentProfile({ student = {} }) {
           <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
               <Field
+                id="school-college"
                 label="School / College"
                 value={formData.school}
                 onChange={handleChange("school")}
@@ -244,6 +250,7 @@ export default function StudentProfile({ student = {} }) {
             </Grid>
             <Grid item xs={12} md={4}>
               <Field
+                id="grade-year"
                 label="Grade / Year"
                 value={formData.grade}
                 onChange={handleChange("grade")}
@@ -253,6 +260,7 @@ export default function StudentProfile({ student = {} }) {
             </Grid>
             <Grid item xs={12} md={4}>
               <Field
+                id="target-exam"
                 label="Target Exam"
                 value={formData.targetExam}
                 onChange={handleChange("targetExam")}

@@ -167,7 +167,7 @@ const EnrolledCourseCard = ({ course, userId, onUpdate }) => {
     const newStatus = e.target.checked;
     setIsActive(newStatus);
     try {
-      await apiFetch(
+      const res = await apiFetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${userId}/update-enrollment-status`,
         {
           method: "POST",
@@ -177,8 +177,15 @@ const EnrolledCourseCard = ({ course, userId, onUpdate }) => {
           }),
         }
       );
-      enqueueSnackbar("Course status updated", { variant: "success" });
-      onUpdate();
+      if (res.success) {
+        enqueueSnackbar("Course status updated", { variant: "success" });
+        onUpdate();
+      } else {
+        setIsActive(!newStatus);
+        enqueueSnackbar(res.message || "Failed to update status", {
+          variant: "error",
+        });
+      }
     } catch (error) {
       setIsActive(!newStatus);
       enqueueSnackbar("Failed to update status", { variant: "error" });

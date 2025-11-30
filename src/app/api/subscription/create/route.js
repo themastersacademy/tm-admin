@@ -2,7 +2,7 @@ import { createSubscriptionPlan } from "@/src/util/subscription/subscriptionCont
 
 export async function POST(req) {
   const { priceWithTax, type, duration, discountInPercent } = await req.json();
-  if (!priceWithTax || !type || !duration || !discountInPercent) {
+  if (!priceWithTax || !type || !duration) {
     return Response.json({
       status: false,
       message: "All fields are required",
@@ -13,7 +13,7 @@ export async function POST(req) {
       priceWithTax,
       type,
       duration,
-      discountInPercent,
+      discountInPercent: discountInPercent || 0,
     });
     return Response.json(response);
   } catch (error) {

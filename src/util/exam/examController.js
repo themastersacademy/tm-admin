@@ -18,6 +18,7 @@ export async function createExam({
   groupID = null,
   goalID = null,
   batchList = [],
+  studentList = [],
 }) {
   // --- 1. Validate input ---
   //check if type is valid
@@ -31,8 +32,8 @@ export async function createExam({
   if (type === "group" && !groupID) {
     throw new Error("Group ID is required");
   }
-  if (type === "scheduled" && !batchList.length) {
-    throw new Error("Batch list is required");
+  if (type === "scheduled" && !batchList.length && !studentList.length) {
+    throw new Error("Batch list or Student list is required");
   }
   if (type === "scheduled") {
     validateBatchListLimit(batchList);
@@ -64,7 +65,7 @@ export async function createExam({
       updatedAt: now,
       ...((type === "mock" || type === "group") && { goalID }),
       ...(type === "group" && { groupID }),
-      ...(type === "scheduled" && { batchList }),
+      ...(type === "scheduled" && { batchList, studentList }),
       isLive: false,
       blobVersion: 0,
       blobBucketKey: null,
@@ -106,6 +107,25 @@ export async function createExam({
             "GSI1-pKey": "BATCH_EXAMS",
             "GSI1-sKey": `BATCH_EXAMS#${examID}`,
             batchID: batch,
+            examID,
+            createdAt: now,
+            updatedAt: now,
+          },
+          ConditionExpression:
+            "attribute_not_exists(pKey) AND attribute_not_exists(sKey)",
+        },
+      });
+    });
+    studentList.forEach((studentID) => {
+      transactItems.push({
+        Put: {
+          TableName: `${process.env.AWS_DB_NAME}master`,
+          Item: {
+            pKey: `STUDENT_EXAM#${studentID}`,
+            sKey: `STUDENT_EXAMS@${examID}`,
+            "GSI1-pKey": "STUDENT_EXAMS",
+            "GSI1-sKey": `STUDENT_EXAMS#${examID}`,
+            studentID,
             examID,
             createdAt: now,
             updatedAt: now,
@@ -448,6 +468,120 @@ export async function updateBatchListExamBasicInfo({ batchList, examID }) {
     await dynamoDB.send(new TransactWriteCommand({ TransactItems }));
     await dynamoDB.send(new UpdateCommand(updateExamParams));
     return { success: true, message: "Batch list updated successfully" };
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function updateStudentListExamBasicInfo({ studentList, examID }) {
+  // 1) Validate that this is a scheduled exam
+  const res = await getExamByID(examID);
+  if (!res.success) throw new Error("Exam not found");
+  if (res.data.type !== "scheduled") throw new Error("Exam is not scheduled");
+
+  const existing = res.data.studentList || [];
+  const now = Date.now();
+
+  // 2) Compute diffs
+  const oldSet = new Set(existing);
+  const newSet = new Set(studentList);
+
+  const toAdd = studentList.filter((s) => !oldSet.has(s));
+  const toRemove = existing.filter((s) => !newSet.has(s));
+  const toKeep = studentList.filter((s) => oldSet.has(s));
+
+  // 3) Build TransactWrite items
+  const TransactItems = [];
+
+  // ➕ Add new links
+  for (const studentID of toAdd) {
+    TransactItems.push({
+      Put: {
+        TableName: `${process.env.AWS_DB_NAME}master`,
+        Item: {
+          pKey: `STUDENT_EXAM#${studentID}`,
+          sKey: `STUDENT_EXAMS@${examID}`,
+          "GSI1-pKey": "STUDENT_EXAMS",
+          "GSI1-sKey": `STUDENT_EXAMS#${examID}`,
+          studentID,
+          examID,
+          createdAt: now,
+          updatedAt: now,
+        },
+      },
+    });
+  }
+
+  // ➖ Remove old links
+  for (const studentID of toRemove) {
+    TransactItems.push({
+      Delete: {
+        TableName: `${process.env.AWS_DB_NAME}master`,
+        Key: {
+          pKey: `STUDENT_EXAM#${studentID}`,
+          sKey: `STUDENT_EXAMS@${examID}`,
+        },
+      },
+    });
+  }
+
+  // If there's nothing to do, bail out
+  if (TransactItems.length === 0) {
+    return { success: true, message: "No student changes" };
+  }
+
+  // 🔄 Refresh timestamp on unchanged links
+  for (const studentID of toKeep) {
+    TransactItems.push({
+      Update: {
+        TableName: `${process.env.AWS_DB_NAME}master`,
+        Key: {
+          pKey: `STUDENT_EXAM#${studentID}`,
+          sKey: `STUDENT_EXAMS@${examID}`,
+        },
+        UpdateExpression: "SET updatedAt = :u",
+        ExpressionAttributeValues: {
+          ":u": now,
+        },
+      },
+    });
+  }
+
+  //Update studentList in exam
+  const updateExamParams = {
+    TableName: `${process.env.AWS_DB_NAME}master`,
+    Key: {
+      pKey: `EXAM#${examID}`,
+      sKey: `EXAMS@scheduled`,
+    },
+    UpdateExpression: "SET studentList = :studentList",
+    ExpressionAttributeValues: {
+      ":studentList": studentList,
+    },
+  };
+
+  try {
+    // DynamoDB TransactWrite has a limit of 100 items (or 25 depending on region/version, but usually 100 now).
+    // If we have more, we need to chunk.
+    // For now, assuming reasonable batch size. If large, we should chunk.
+    // Given the UI allows selecting one by one or small batches, it should be fine.
+    // If bulk upload is needed, that's a different feature.
+
+    if (TransactItems.length > 100) {
+      // Simple chunking strategy
+      const chunks = [];
+      for (let i = 0; i < TransactItems.length; i += 100) {
+        chunks.push(TransactItems.slice(i, i + 100));
+      }
+      for (const chunk of chunks) {
+        await dynamoDB.send(new TransactWriteCommand({ TransactItems: chunk }));
+      }
+    } else {
+      await dynamoDB.send(new TransactWriteCommand({ TransactItems }));
+    }
+
+    await dynamoDB.send(new UpdateCommand(updateExamParams));
+    return { success: true, message: "Student list updated successfully" };
   } catch (error) {
     throw error;
   }

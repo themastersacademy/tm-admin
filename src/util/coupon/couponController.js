@@ -23,6 +23,8 @@ export async function createCoupon({
   totalRedemptionsPerUser,
   startDate,
   endDate,
+  applicableCourses,
+  applicableGoals,
 }) {
   const couponId = randomUUID();
   const now = Date.now();
@@ -43,6 +45,8 @@ export async function createCoupon({
     totalRedemptionsPerUser,
     startDate,
     endDate,
+    applicableCourses: applicableCourses || [],
+    applicableGoals: applicableGoals || [],
     isActive: true,
     createdAt: now,
     updatedAt: now,
@@ -116,6 +120,8 @@ export async function updateCoupon({
   startDate,
   endDate,
   isActive,
+  applicableCourses,
+  applicableGoals,
 }) {
   const now = Date.now();
 
@@ -134,6 +140,8 @@ export async function updateCoupon({
       startDate,
       endDate,
       isActive,
+      applicableCourses,
+      applicableGoals,
     },
     now
   );
@@ -157,6 +165,8 @@ export async function updateCoupon({
         #startDate = :startDate, 
         #endDate = :endDate, 
         #isActive = :isActive, 
+        #applicableCourses = :applicableCourses,
+        #applicableGoals = :applicableGoals,
         #updatedAt = :updatedAt`,
     ExpressionAttributeNames: {
       "#title": "title",
@@ -171,6 +181,8 @@ export async function updateCoupon({
       "#startDate": "startDate",
       "#endDate": "endDate",
       "#isActive": "isActive",
+      "#applicableCourses": "applicableCourses",
+      "#applicableGoals": "applicableGoals",
       "#updatedAt": "updatedAt",
     },
     ExpressionAttributeValues: {
@@ -186,6 +198,8 @@ export async function updateCoupon({
       ":startDate": startDate,
       ":endDate": endDate,
       ":isActive": isActive,
+      ":applicableCourses": applicableCourses || [],
+      ":applicableGoals": applicableGoals || [],
       ":updatedAt": now,
     },
     ConditionExpression: "attribute_exists(pKey)",

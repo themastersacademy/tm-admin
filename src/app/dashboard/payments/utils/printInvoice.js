@@ -29,9 +29,10 @@ export const printInvoice = (selectedUser) => {
 
   // Get course/subscription name
   const courseName =
+    selectedUser.order?.notes?.itemName ||
     selectedUser.courseName ||
     selectedUser.subscriptionName ||
-    "Complete Course on General Aptitude for All Competitive Exams and Campus Placements";
+    "Course Enrollment";
 
   const invoiceHTML = `
       <!DOCTYPE html>

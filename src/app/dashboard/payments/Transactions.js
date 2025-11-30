@@ -1,5 +1,5 @@
 "use client";
-import { Box, Stack, Button } from "@mui/material";
+import { Box, Stack, Button, TextField, IconButton } from "@mui/material";
 import { useEffect, useState, useCallback } from "react";
 import { useSnackbar } from "notistack";
 import TransactionDrawer from "./Components/TransactionDrawer";
@@ -17,6 +17,8 @@ export default function Transactions() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -37,25 +39,51 @@ export default function Transactions() {
     setSelectedUser(null);
   };
 
-  const fetchTransactions = useCallback(async () => {
-    try {
-      const res = await fetch("/api/transactions/get-all");
-      const data = await res.json();
-      if (data.success) {
-        setTransactions(data.data);
-      } else {
-        console.error("Failed to fetch transactions:", data.message);
-        enqueueSnackbar(data.message, {
+  const fetchTransactions = useCallback(
+    async (signal) => {
+      setLoading(true);
+      try {
+        let url = "/api/transactions/get-all";
+        const params = new URLSearchParams();
+        if (startDate) {
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          params.append("startDate", start.getTime());
+        }
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          params.append("endDate", end.getTime());
+        }
+
+        if (params.toString()) url += `?${params.toString()}`;
+
+        const abortSignal = signal instanceof AbortSignal ? signal : null;
+        const res = await fetch(url, { signal: abortSignal });
+        const data = await res.json();
+        if (data.success) {
+          const sortedTransactions = data.data.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          setTransactions(sortedTransactions);
+        } else {
+          console.error("Failed to fetch transactions:", data.message);
+          enqueueSnackbar(data.message, {
+            variant: "error",
+          });
+        }
+      } catch (err) {
+        if (err.name === "AbortError") return;
+        console.error("Error fetching transactions:", err);
+        enqueueSnackbar("Error fetching transactions", {
           variant: "error",
         });
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error("Error fetching transactions:", err);
-      enqueueSnackbar("Error fetching transactions", {
-        variant: "error",
-      });
-    }
-  }, [enqueueSnackbar]);
+    },
+    [startDate, endDate]
+  ); // Removed enqueueSnackbar
 
   const refreshTransaction = async () => {
     if (!selectedUser) return;
@@ -91,6 +119,7 @@ export default function Transactions() {
     if (!selectedUser || !selectedUser.paymentDetails?.razorpayPaymentId) {
       enqueueSnackbar("No valid payment ID found for this transaction", {
         variant: "error",
+        autoHideDuration: 3000,
       });
       return;
     }
@@ -103,6 +132,7 @@ export default function Transactions() {
         body: JSON.stringify({
           paymentId: selectedUser.paymentDetails.razorpayPaymentId,
           amount: selectedUser.amount,
+          transactionId: selectedUser.id,
         }),
       });
       const result = await response.json();
@@ -125,12 +155,54 @@ export default function Transactions() {
     }
   };
 
+  const handleVerify = async () => {
+    if (!selectedUser) return;
+    setLoading(true);
+    try {
+      const response = await fetch("/api/transactions/verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          transactionId: selectedUser.id,
+        }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        enqueueSnackbar(result.message, {
+          variant: "success",
+        });
+        if (result.data) {
+          setSelectedUser(result.data);
+          // Update the transaction in the list as well
+          setTransactions((prev) =>
+            prev.map((t) => (t.id === result.data.id ? result.data : t))
+          );
+        }
+      } else {
+        enqueueSnackbar(`Verification failed: ${result.message}`, {
+          variant: "error",
+        });
+      }
+    } catch (err) {
+      console.error("Verification error:", err);
+      enqueueSnackbar(`Failed to verify transaction: ${err.message}`, {
+        variant: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePrint = () => {
     printInvoice(selectedUser);
   };
 
   useEffect(() => {
-    fetchTransactions();
+    const controller = new AbortController();
+    fetchTransactions(controller.signal);
+    return () => controller.abort();
   }, [fetchTransactions]);
 
   return (
@@ -139,24 +211,59 @@ export default function Transactions() {
         title="Transactions"
         action={
           <>
-            <SearchBox />
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={fetchTransactions}
+            <Stack direction="row" gap={2}>
+              <TextField
+                id="start-date"
+                type="date"
+                size="small"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                sx={{ width: 150 }}
+              />
+              <TextField
+                id="end-date"
+                type="date"
+                size="small"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                sx={{ width: 150 }}
+              />
+            </Stack>
+            <SearchBox id="search-box" />
+            <IconButton
+              onClick={() => fetchTransactions()}
+              disabled={loading}
               sx={{
+                width: "40px",
                 height: "40px",
-                textTransform: "none",
-                borderColor: "var(--border-color)",
+                border: "1px solid var(--border-color)",
+                borderRadius: "8px",
                 color: "var(--text2)",
                 "&:hover": {
                   borderColor: "var(--primary-color)",
                   backgroundColor: "var(--bg-color)",
+                  color: "var(--primary-color)",
+                },
+                "&.Mui-disabled": {
+                  borderColor: "var(--border-color)",
+                  color: "var(--text3)",
                 },
               }}
             >
-              Refresh
-            </Button>
+              <RefreshIcon
+                sx={{
+                  animation: loading ? "spin 1s linear infinite" : "none",
+                  "@keyframes spin": {
+                    "0%": {
+                      transform: "rotate(0deg)",
+                    },
+                    "100%": {
+                      transform: "rotate(360deg)",
+                    },
+                  },
+                }}
+              />
+            </IconButton>
           </>
         }
       />
@@ -175,6 +282,7 @@ export default function Transactions() {
           transaction={selectedUser}
           onPrint={handlePrint}
           onRefund={handleRefund}
+          onVerify={handleVerify}
           loading={loading}
           enqueueSnackbar={enqueueSnackbar}
         />

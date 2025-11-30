@@ -25,6 +25,7 @@ export default function CreateInstituteDialog({
   onClose,
   onSubmit,
   isLoading,
+  initialData,
 }) {
   const [title, setTitle] = useState("");
   const [email, setEmail] = useState("");
@@ -33,11 +34,16 @@ export default function CreateInstituteDialog({
   // Reset form when dialog opens/closes
   useEffect(() => {
     if (open) {
-      setTitle("");
-      setEmail("");
+      if (initialData) {
+        setTitle(initialData.title || "");
+        setEmail(initialData.email || "");
+      } else {
+        setTitle("");
+        setEmail("");
+      }
       setErrors({});
     }
-  }, [open]);
+  }, [open, initialData]);
 
   const validate = () => {
     let tempErrors = {};
@@ -54,6 +60,8 @@ export default function CreateInstituteDialog({
       onSubmit({ title, email });
     }
   };
+
+  const isEdit = !!initialData;
 
   return (
     <Dialog
@@ -118,10 +126,12 @@ export default function CreateInstituteDialog({
                 mb: "4px",
               }}
             >
-              Create New Institute
+              {isEdit ? "Edit Institute" : "Create New Institute"}
             </Typography>
             <Typography sx={{ fontSize: "14px", color: "var(--text3)" }}>
-              Set up a new institute workspace
+              {isEdit
+                ? "Update institute details"
+                : "Set up a new institute workspace"}
             </Typography>
           </Stack>
         </Stack>
@@ -254,7 +264,9 @@ export default function CreateInstituteDialog({
                 <CircularProgress size={24} sx={{ color: "var(--text2)" }} />
               ) : (
                 <Stack direction="row" alignItems="center" gap="8px">
-                  <span>Create Institute</span>
+                  <span>
+                    {isEdit ? "Update Institute" : "Create Institute"}
+                  </span>
                   <CheckCircleOutline sx={{ fontSize: "20px" }} />
                 </Stack>
               )}

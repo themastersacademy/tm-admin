@@ -15,23 +15,36 @@ export default function Goals() {
   const [goal, setGoal] = useState({});
   const [goalLoading, setGoalLoading] = useState(true);
   //Callback function to fetch goal data
-  const fetchGoal = useCallback(() => {
-    setGoalLoading(true);
-    apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/goals/${id}`).then(
-      (json) => {
+  const fetchGoal = useCallback(
+    async (signal) => {
+      setGoalLoading(true);
+      try {
+        const abortSignal = signal instanceof AbortSignal ? signal : null;
+        const json = await apiFetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/goals/${id}`,
+          { signal: abortSignal }
+        );
         if (json.success) {
           setGoal(json.data);
         } else {
           showSnackbar("No Goal Found", "error", "", "3000");
           router.push(`/404`);
         }
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("Error fetching goal:", error);
+        }
+      } finally {
         setGoalLoading(false);
       }
-    );
-  }, [id, showSnackbar, router]);
+    },
+    [id, showSnackbar, router]
+  );
 
   useEffect(() => {
-    fetchGoal();
+    const controller = new AbortController();
+    fetchGoal(controller.signal);
+    return () => controller.abort();
   }, [fetchGoal]);
 
   const tabs = [

@@ -26,6 +26,9 @@ export default function Coupons() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDialogDelete, setIsDialogDelete] = useState(false);
 
+  const [courses, setCourses] = useState([]);
+  const [goals, setGoals] = useState([]);
+
   const goalOptions = [
     { id: "ALL", title: "All" },
     { id: "COURSES", title: "Course" },
@@ -42,6 +45,8 @@ export default function Coupons() {
       discountType: "PERCENTAGE",
       startDate: new Date().getTime(),
       endDate: new Date(new Date().setDate(new Date().getDate() + 7)).getTime(),
+      applicableCourses: [],
+      applicableGoals: [],
     });
     setIsDialogOpen(true);
     setIsEditMode(false);
@@ -54,7 +59,11 @@ export default function Coupons() {
   };
 
   const handleEditOpen = (coupon) => {
-    setSelectedCoupon(coupon);
+    setSelectedCoupon({
+      ...coupon,
+      applicableCourses: coupon.applicableCourses || [],
+      applicableGoals: coupon.applicableGoals || [],
+    });
     setIsEditMode(true);
     setIsDialogOpen(true);
   };
@@ -81,6 +90,16 @@ export default function Coupons() {
       return "Please enter Usage Limit Per User";
     if (!coupon.startDate || !coupon.endDate)
       return "Please select a valid Date Range";
+    if (
+      coupon.couponClass === "COURSES" &&
+      (!coupon.applicableCourses || coupon.applicableCourses.length === 0)
+    )
+      return "Please select at least one course";
+    if (
+      coupon.couponClass === "GOALS" &&
+      (!coupon.applicableGoals || coupon.applicableGoals.length === 0)
+    )
+      return "Please select at least one goal";
     return null;
   };
 
@@ -184,9 +203,28 @@ export default function Coupons() {
     }
   }, [showSnackbar]);
 
+  const fetchCoursesAndGoals = useCallback(async () => {
+    try {
+      const [coursesRes, goalsRes] = await Promise.all([
+        apiFetch("/api/course/get-all"),
+        apiFetch("/api/goals/get-all-goals"),
+      ]);
+
+      if (coursesRes.success) {
+        setCourses(coursesRes.data);
+      }
+      if (goalsRes.success) {
+        setGoals(goalsRes.data.goals || []);
+      }
+    } catch (error) {
+      console.error("Error fetching courses/goals:", error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchCoupons();
-  }, [fetchCoupons]);
+    fetchCoursesAndGoals();
+  }, [fetchCoupons, fetchCoursesAndGoals]);
 
   return (
     <Stack gap="0px" padding="24px">
@@ -230,6 +268,8 @@ export default function Coupons() {
         isEditMode={isEditMode}
         isLoading={isLoading}
         updateCoupon={updateCoupon}
+        courses={courses}
+        goals={goals}
       />
 
       {isLoading ? (

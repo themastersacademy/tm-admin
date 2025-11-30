@@ -1,17 +1,35 @@
 "use client";
-import ExamInfoCard from "@/src/components/CreateExam/Components/ExamInfoCard";
+import dynamic from "next/dynamic";
 import CustomTabs from "@/src/components/CustomTabs/CustomTabs";
-import Header from "@/src/components/Header/Header";
 import ExamDetailHeader from "./Components/ExamDetailHeader";
-import { Skeleton, Stack } from "@mui/material";
-import mocks from "@/public/Icons/series.svg";
-import ExamQuestions from "@/src/components/CreateExam/Components/ExamQuestions";
-import ExamSettings from "@/src/components/CreateExam/Components/ExamSettings";
-import ExamStudents from "@/src/components/CreateExam/Components/ExamStudents";
-import { useEffect, useState, useCallback } from "react";
+import { Skeleton, Stack, CircularProgress } from "@mui/material";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { apiFetch } from "@/src/lib/apiFetch";
 import { useParams } from "next/navigation";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
+
+const ExamQuestions = dynamic(
+  () => import("@/src/components/CreateExam/Components/ExamQuestions"),
+  { loading: () => <TabLoading /> }
+);
+const ExamSettings = dynamic(
+  () => import("@/src/components/CreateExam/Components/ExamSettings"),
+  { loading: () => <TabLoading /> }
+);
+const ExamStudents = dynamic(
+  () => import("@/src/components/CreateExam/Components/ExamStudents"),
+  { loading: () => <TabLoading /> }
+);
+
+const TabLoading = () => (
+  <Stack
+    alignItems="center"
+    justifyContent="center"
+    sx={{ minHeight: "400px", width: "100%" }}
+  >
+    <CircularProgress />
+  </Stack>
+);
 
 export default function TestID() {
   const [testList, setTestList] = useState({});
@@ -22,84 +40,91 @@ export default function TestID() {
   const params = useParams();
   const { showSnackbar } = useSnackbar();
 
-  const fetchScheduledTest = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const data = await apiFetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/${params.examID}`
-      );
-      if (data.success) {
-        setTestList(data.data);
-      } else {
-        showSnackbar(data.message, "error", "", "3000");
+  const fetchScheduledTest = useCallback(
+    async (signal) => {
+      setIsLoading(true);
+      try {
+        const abortSignal = signal instanceof AbortSignal ? signal : null;
+        const data = await apiFetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/${params.examID}`,
+          { signal: abortSignal }
+        );
+        if (data.success) {
+          setTestList(data.data);
+        } else {
+          showSnackbar(data.message, "error", "", "3000");
+        }
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("Failed to fetch exam:", error);
+          showSnackbar("Failed to load exam data", "error", "", "3000");
+        }
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to fetch exam:", error);
-      showSnackbar("Failed to load exam data", "error", "", "3000");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [params.examID, showSnackbar]);
+    },
+    [params.examID, showSnackbar]
+  );
 
   useEffect(() => {
-    fetchScheduledTest();
+    const controller = new AbortController();
+    fetchScheduledTest(controller.signal);
+    return () => controller.abort();
   }, [fetchScheduledTest]);
 
-  const tabs = [
-    {
-      label: "Questions",
-      content: (
-        <ExamQuestions
-          type="scheduled"
-          isLive={testList.isLive}
-          sections={sections}
-          setSections={setSections}
-          questionList={questionList}
-          setQuestionList={setQuestionList}
-        />
-      ),
-    },
-    {
-      label: "Settings",
-      content: (
-        <ExamSettings
-          exam={testList}
-          setExam={setTestList}
-          isLive={testList.isLive}
-          type="scheduled"
-        />
-      ),
-    },
-    {
-      label: "Students",
-      content: (
-        <ExamStudents
-          examAttempts={examAttempts}
-          setExamAttempts={setExamAttempts}
-        />
-      ),
-    },
-  ];
+  const tabs = useMemo(
+    () => [
+      {
+        label: "Questions",
+        content: (
+          <ExamQuestions
+            type="scheduled"
+            isLive={testList.isLive}
+            sections={sections}
+            setSections={setSections}
+            questionList={questionList}
+            setQuestionList={setQuestionList}
+          />
+        ),
+      },
+      {
+        label: "Settings",
+        content: (
+          <ExamSettings
+            exam={testList}
+            setExam={setTestList}
+            isLive={testList.isLive}
+            type="scheduled"
+          />
+        ),
+      },
+      {
+        label: "Students",
+        content: (
+          <ExamStudents
+            examAttempts={examAttempts}
+            setExamAttempts={setExamAttempts}
+          />
+        ),
+      },
+    ],
+    [
+      testList,
+      sections,
+      questionList,
+      examAttempts,
+      setSections,
+      setQuestionList,
+      setTestList,
+      setExamAttempts,
+    ]
+  );
 
   const totalQuestions =
     testList?.questionSection?.reduce(
       (total, section) => total + (section.questions?.length || 0),
       0
     ) || 0;
-
-  const getFormattedDate = () => {
-    if (isLoading) return <Skeleton variant="text" width={100} />;
-    if (!testList.startTimeStamp) return "No Date Available";
-
-    return new Date(testList.startTimeStamp).toLocaleString("en-IN", {
-      timeZone: "Asia/Kolkata",
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   return (
     <Stack gap="20px" padding="20px">

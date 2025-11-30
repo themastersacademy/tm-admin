@@ -1,10 +1,9 @@
 "use client";
 import GoalCard from "@/src/components/GoalCard/GoalCard";
 import { Add } from "@mui/icons-material";
-import { Button, Stack, Typography, Chip } from "@mui/material";
-import { useState, useEffect, useMemo } from "react";
+import { Button, Stack } from "@mui/material";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Header from "@/src/components/Header/Header";
 import GoalDialogBox from "./goals/[id]/components/GoalDialogBox/GoalDialogBox";
 import { apiFetch } from "@/src/lib/apiFetch";
 import PrimaryCardSkeleton from "@/src/components/PrimaryCardSkeleton/PrimaryCardSkeleton";
@@ -20,23 +19,34 @@ export default function Home() {
   const [goalList, setGoalList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchGoals = useCallback(async (signal) => {
     setIsLoading(true);
-    apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/goals/get-all-goals`)
-      .then((data) => {
-        setIsLoading(false);
-        if (data.success) {
-          setGoalList(data.data.goals);
-          console.log(data.data.goals);
-        } else {
-          setGoalList([]);
-        }
-      })
-      .catch((err) => {
-        setIsLoading(false);
-        console.error(err);
-      });
+    try {
+      const abortSignal = signal instanceof AbortSignal ? signal : null;
+      const data = await apiFetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/goals/get-all-goals`,
+        { signal: abortSignal }
+      );
+      if (data.success) {
+        setGoalList(data.data.goals);
+      } else {
+        setGoalList([]);
+      }
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        console.error("Error fetching goals:", error);
+        setGoalList([]);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchGoals(controller.signal);
+    return () => controller.abort();
+  }, [fetchGoals]);
 
   // Calculate statistics
   const statistics = useMemo(() => {

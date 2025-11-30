@@ -1,15 +1,35 @@
 "use client";
+import dynamic from "next/dynamic";
 import CustomTabs from "@/src/components/CustomTabs/CustomTabs";
-import { Stack } from "@mui/material";
-import StudentProfile from "./StudentProfile";
-import StudentExam from "./StudentExam";
-import StudentSubscription from "./StudentSubscrition";
-import StudentCourse from "./StudentCourse";
+import { Stack, CircularProgress, Box } from "@mui/material";
 import StudentProfileHeader from "./Components/StudentProfileHeader";
 import StudentDashboard from "./Components/StudentDashboard";
 import { useParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "@/src/lib/apiFetch";
+
+const StudentProfile = dynamic(() => import("./StudentProfile"), {
+  loading: () => <TabLoading />,
+});
+const StudentExam = dynamic(() => import("./StudentExam"), {
+  loading: () => <TabLoading />,
+});
+const StudentSubscription = dynamic(() => import("./StudentSubscrition"), {
+  loading: () => <TabLoading />,
+});
+const StudentCourse = dynamic(() => import("./StudentCourse"), {
+  loading: () => <TabLoading />,
+});
+
+const TabLoading = () => (
+  <Stack
+    alignItems="center"
+    justifyContent="center"
+    sx={{ minHeight: "400px", width: "100%" }}
+  >
+    <CircularProgress />
+  </Stack>
+);
 
 export default function StudentprofileID() {
   const [student, setStudent] = useState({});
@@ -17,72 +37,79 @@ export default function StudentprofileID() {
   const [isLoading, setIsLoading] = useState(true);
   const params = useParams();
 
-  const getStudentProfile = async () => {
-    setIsLoading(true);
-    await apiFetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${params.id}`
-    ).then((data) => {
-      setStudent(data.data);
-      fetchDashboardStats();
-      setIsLoading(false);
-    });
-  };
-
-  const fetchDashboardStats = async () => {
-    try {
-      // Fetch exam attempts
-      const examsResponse = await apiFetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${params.id}/all-exam-attempts`
-      );
-      const exams = examsResponse.data || [];
-
-      // Fetch subscriptions
-      const subsResponse = await apiFetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${params.id}/get-subscription`
-      );
-      const subscriptions = subsResponse.data || [];
-      const activeSub = subscriptions.find((s) => s.status === "active");
-
-      // Calculate stats
-      const totalExams = exams.length;
-      const avgScore =
-        exams.length > 0
-          ? Math.round(
-              exams.reduce((acc, exam) => {
-                const percentage = (exam.obtainedMarks / exam.totalMarks) * 100;
-                return acc + percentage;
-              }, 0) / exams.length
-            )
-          : 0;
-
-      setDashboardStats({
-        totalExams,
-        avgScore,
-        subscription: activeSub
-          ? activeSub.plan.type === "MONTHLY"
-            ? "Premium"
-            : "Premium+"
-          : "None",
-        totalCourses: 0, // Will be updated when courses data is available
-      });
-    } catch (error) {
-      console.error("Error fetching dashboard stats:", error);
-    }
-  };
-
   useEffect(() => {
-    getStudentProfile();
-  }, []);
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [userResponse, examsResponse, subsResponse] = await Promise.all([
+          apiFetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${params.id}`
+          ),
+          apiFetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${params.id}/all-exam-attempts`
+          ),
+          apiFetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${params.id}/get-subscription`
+          ),
+        ]);
 
-  const tabs = [
-    { label: "Profile", content: <StudentProfile student={student} /> },
-    { label: "Exams", content: <StudentExam student={student} /> },
-    {
-      label: "Subscriptions",
-      content: <StudentSubscription student={student} />,
-    },
-    { label: "Courses", content: <StudentCourse student={student} /> },
-  ];
+        // Process User Data
+        if (userResponse.success) {
+          setStudent(userResponse.data);
+        }
+
+        // Process Stats
+        const exams = examsResponse.data || [];
+        const subscriptions = subsResponse.data || [];
+        const activeSub = subscriptions.find((s) => s.status === "active");
+
+        const totalExams = exams.length;
+        const avgScore =
+          exams.length > 0
+            ? Math.round(
+                exams.reduce((acc, exam) => {
+                  const percentage =
+                    (exam.obtainedMarks / exam.totalMarks) * 100;
+                  return acc + percentage;
+                }, 0) / exams.length
+              )
+            : 0;
+
+        setDashboardStats({
+          totalExams,
+          avgScore,
+          subscription: activeSub
+            ? activeSub.plan.type === "MONTHLY"
+              ? "Premium"
+              : "Premium+"
+            : "None",
+          totalCourses: 0, // Will be updated when courses data is available
+        });
+      } catch (error) {
+        console.error("Error fetching student data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (params.id) {
+      fetchData();
+    }
+  }, [params.id]);
+
+  const tabs = useMemo(
+    () => [
+      { label: "Profile", content: <StudentProfile student={student} /> },
+      { label: "Exams", content: <StudentExam student={student} /> },
+      {
+        label: "Subscriptions",
+        content: <StudentSubscription student={student} />,
+      },
+      { label: "Courses", content: <StudentCourse student={student} /> },
+    ],
+    [student]
+  );
+
   return (
     <Stack padding="20px" gap="20px">
       {/* Modern Profile Header */}

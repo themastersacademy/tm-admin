@@ -4,6 +4,7 @@ import {
   ScanCommand,
   GetCommand,
   QueryCommand,
+  UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 
@@ -37,9 +38,13 @@ export async function createInstitute({ title, email }) {
 export async function getAllInstitutes() {
   const params = {
     TableName: `${process.env.AWS_DB_NAME}master`,
-    FilterExpression: "sKey = :sKey",
+    IndexName: "masterTableIndex",
+    KeyConditionExpression: "#gsi1pk = :pKey",
+    ExpressionAttributeNames: {
+      "#gsi1pk": "GSI1-pKey",
+    },
     ExpressionAttributeValues: {
-      ":sKey": "INSTITUTES",
+      ":pKey": "INSTITUTES",
     },
   };
 
@@ -58,7 +63,7 @@ export async function getAllInstitutes() {
 
   try {
     const [instituteResult, batchResult] = await Promise.all([
-      dynamoDB.send(new ScanCommand(params)),
+      dynamoDB.send(new QueryCommand(params)),
       dynamoDB.send(new QueryCommand(batchParams)),
     ]);
 
@@ -116,5 +121,81 @@ export async function getInstitute({ instituteID }) {
     };
   } catch (error) {
     throw new Error(error);
+  }
+}
+
+export async function updateInstitute({ instituteID, title }) {
+  const now = Date.now();
+  try {
+    // 1. Update Institute
+    const updateParams = {
+      TableName: MASTER_TABLE,
+      Key: {
+        pKey: `INSTITUTE#${instituteID}`,
+        sKey: "INSTITUTES",
+      },
+      UpdateExpression: "SET title = :title, updatedAt = :updatedAt",
+      ExpressionAttributeValues: {
+        ":title": title,
+        ":updatedAt": now,
+      },
+      ReturnValues: "ALL_NEW",
+    };
+
+    const result = await dynamoDB.send(new UpdateCommand(updateParams));
+
+    // 2. Fetch all batches for this institute
+    const batchParams = {
+      TableName: MASTER_TABLE,
+      IndexName: MASTER_TABLE_INDEX,
+      KeyConditionExpression: "#gsi1pk = :pKey AND #gsi1sk = :sKey",
+      ExpressionAttributeNames: {
+        "#gsi1pk": "GSI1-pKey",
+        "#gsi1sk": "GSI1-sKey",
+      },
+      ExpressionAttributeValues: {
+        ":pKey": "BATCHES",
+        ":sKey": `BATCH@${instituteID}`,
+      },
+    };
+
+    const batchResult = await dynamoDB.send(new QueryCommand(batchParams));
+    const batches = batchResult.Items || [];
+
+    // 3. Update instituteMeta in all batches
+    if (batches.length > 0) {
+      const updatePromises = batches.map((batch) => {
+        return dynamoDB.send(
+          new UpdateCommand({
+            TableName: MASTER_TABLE,
+            Key: {
+              pKey: batch.pKey,
+              sKey: batch.sKey,
+            },
+            UpdateExpression:
+              "SET instituteMeta.title = :title, updatedAt = :updatedAt",
+            ExpressionAttributeValues: {
+              ":title": title,
+              ":updatedAt": now,
+            },
+          })
+        );
+      });
+      await Promise.all(updatePromises);
+    }
+
+    return {
+      success: true,
+      message: "Institute updated successfully",
+      data: {
+        ...result.Attributes,
+        id: result.Attributes.pKey.split("#")[1],
+        pKey: undefined,
+        sKey: undefined,
+      },
+    };
+  } catch (error) {
+    console.error("Error updating institute:", error);
+    throw new Error("Failed to update institute");
   }
 }

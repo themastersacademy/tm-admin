@@ -118,6 +118,17 @@ export async function updateSubscriptionPlan(
 ) {
   validateSubscriptionPlan(priceWithTax, type, duration, discountInPercent);
 
+  const allPlans = await getAllSubscriptionPlan();
+  if (allPlans.data.length > 0) {
+    const existingPlan = allPlans.data.find(
+      (plan) =>
+        plan.type === type && plan.duration === duration && plan.id !== id
+    );
+    if (existingPlan) {
+      throw new Error("Subscription plan with this duration already exists");
+    }
+  }
+
   const params = {
     TableName: `${process.env.AWS_DB_NAME}master`,
     Key: {

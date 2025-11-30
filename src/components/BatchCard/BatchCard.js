@@ -6,6 +6,8 @@ import {
   People,
   School,
   ArrowForward,
+  Edit,
+  Delete,
 } from "@mui/icons-material";
 import {
   Avatar,
@@ -23,7 +25,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function BatchCard({ batch, instituteID }) {
+export default function BatchCard({ batch, instituteID, onEdit, onDelete }) {
   const router = useRouter();
   const {
     id,
@@ -60,7 +62,6 @@ export default function BatchCard({ batch, instituteID }) {
   return (
     <Card
       elevation={0}
-      onClick={() => router.push(`/dashboard/institute/${instituteID}/${id}`)}
       sx={{
         width: "350px",
         border: "1px solid var(--border-color)",
@@ -75,191 +76,269 @@ export default function BatchCard({ batch, instituteID }) {
         },
       }}
     >
-      <Box sx={{ height: "100%", padding: "24px" }}>
-        <Stack gap="20px">
-          {/* Header */}
-          <Stack
-            flexDirection="row"
-            justifyContent="space-between"
-            alignItems="flex-start"
-          >
-            <Avatar
-              variant="rounded"
-              sx={{
-                background: "linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)",
-                color: "#1976D2",
-                width: 52,
-                height: 52,
-                borderRadius: "12px",
-                border: "1px solid rgba(33, 150, 243, 0.1)",
-              }}
-            >
-              <School sx={{ fontSize: "26px" }} />
-            </Avatar>
-            <Chip
-              icon={
-                isLocked ? (
-                  <Lock fontSize="small" />
-                ) : (
-                  <LockOpen fontSize="small" />
-                )
-              }
-              label={status || "LOCKED"}
-              size="small"
-              sx={{
-                backgroundColor: isLocked ? "#FFEBEE" : "#E8F5E9",
-                color: isLocked ? "#C62828" : "#2E7D32",
-                fontWeight: 700,
-                fontSize: "11px",
-                height: "26px",
-                borderRadius: "6px",
-                border: "1px solid",
-                borderColor: isLocked
-                  ? "rgba(198, 40, 40, 0.1)"
-                  : "rgba(46, 125, 50, 0.1)",
-                "& .MuiChip-icon": {
-                  color: "inherit",
-                  fontSize: "16px",
-                },
-              }}
-            />
-          </Stack>
-
-          {/* Title and Code */}
-          <Box>
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 800,
-                fontSize: "18px",
-                color: "var(--text1)",
-                mb: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                fontFamily: "Lato",
-              }}
-            >
-              {title}
-            </Typography>
-            <Stack flexDirection="row" alignItems="center" gap="8px">
-              <Chip
-                label={`Code: ${batchCode}`}
-                size="small"
-                variant="outlined"
-                sx={{
-                  borderRadius: "6px",
-                  height: "24px",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  backgroundColor: "var(--bg-color)",
-                  borderColor: "var(--border-color)",
-                  color: "var(--text2)",
-                  fontFamily: "monospace",
-                }}
-              />
-              <Tooltip title={copied ? "Copied!" : "Copy Code"} arrow>
-                <IconButton
-                  size="small"
-                  onClick={handleCopyCode}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  sx={{
-                    padding: "4px",
-                    color: copied ? "var(--success-color)" : "var(--text3)",
-                    transition: "all 0.2s",
-                    "&:hover": {
-                      color: "var(--primary-color)",
-                      backgroundColor: "var(--primary-color-acc-1)",
-                    },
-                  }}
-                >
-                  <ContentCopy sx={{ fontSize: 14 }} />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-          </Box>
-
-          <Divider
-            sx={{ borderStyle: "dashed", borderColor: "var(--border-color)" }}
-          />
-
-          {/* Progress */}
-          <Box>
+      <Box sx={{ position: "relative", height: "100%" }}>
+        <CardActionArea
+          onClick={() =>
+            router.push(`/dashboard/institute/${instituteID}/${id}`)
+          }
+          sx={{
+            height: "100%",
+            padding: "24px",
+            borderRadius: "16px",
+            "&:hover .MuiCardActionArea-focusHighlight": {
+              opacity: 0,
+            },
+          }}
+        >
+          <Stack gap="20px">
+            {/* Header */}
             <Stack
               flexDirection="row"
               justifyContent="space-between"
-              alignItems="center"
-              mb={1}
+              alignItems="flex-start"
             >
-              <Stack flexDirection="row" alignItems="center" gap="6px">
-                <People sx={{ fontSize: 16, color: "var(--text3)" }} />
+              <Avatar
+                variant="rounded"
+                sx={{
+                  background:
+                    "linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)",
+                  color: "#1976D2",
+                  width: 52,
+                  height: 52,
+                  borderRadius: "12px",
+                  border: "1px solid rgba(33, 150, 243, 0.1)",
+                }}
+              >
+                <School sx={{ fontSize: "26px" }} />
+              </Avatar>
+              <Stack direction="row" gap={1}>
+                {/* Spacer for absolute buttons */}
+                <Box width={64} />
+                <Chip
+                  icon={
+                    isLocked ? (
+                      <Lock fontSize="small" />
+                    ) : (
+                      <LockOpen fontSize="small" />
+                    )
+                  }
+                  label={status || "LOCKED"}
+                  size="small"
+                  sx={{
+                    backgroundColor: isLocked ? "#FFEBEE" : "#E8F5E9",
+                    color: isLocked ? "#C62828" : "#2E7D32",
+                    fontWeight: 700,
+                    fontSize: "11px",
+                    height: "26px",
+                    borderRadius: "6px",
+                    border: "1px solid",
+                    borderColor: isLocked
+                      ? "rgba(198, 40, 40, 0.1)"
+                      : "rgba(46, 125, 50, 0.1)",
+                    "& .MuiChip-icon": {
+                      color: "inherit",
+                      fontSize: "16px",
+                    },
+                  }}
+                />
+              </Stack>
+            </Stack>
+
+            {/* Title and Code */}
+            <Box>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 800,
+                  fontSize: "18px",
+                  color: "var(--text1)",
+                  mb: 1,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  fontFamily: "Lato",
+                }}
+              >
+                {title}
+              </Typography>
+              <Stack flexDirection="row" alignItems="center" gap="8px">
+                <Chip
+                  label={`Code: ${batchCode}`}
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    borderRadius: "6px",
+                    height: "24px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    backgroundColor: "var(--bg-color)",
+                    borderColor: "var(--border-color)",
+                    color: "var(--text2)",
+                    fontFamily: "monospace",
+                  }}
+                />
+                <Tooltip title={copied ? "Copied!" : "Copy Code"} arrow>
+                  <IconButton
+                    component="div"
+                    size="small"
+                    onClick={handleCopyCode}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    sx={{
+                      padding: "4px",
+                      color: copied ? "var(--success-color)" : "var(--text3)",
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        color: "var(--primary-color)",
+                        backgroundColor: "var(--primary-color-acc-1)",
+                      },
+                    }}
+                  >
+                    <ContentCopy sx={{ fontSize: 14 }} />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
+            </Box>
+
+            <Divider
+              sx={{
+                borderStyle: "dashed",
+                borderColor: "var(--border-color)",
+              }}
+            />
+
+            {/* Progress */}
+            <Box>
+              <Stack
+                flexDirection="row"
+                justifyContent="space-between"
+                alignItems="center"
+                mb={1}
+              >
+                <Stack flexDirection="row" alignItems="center" gap="6px">
+                  <People sx={{ fontSize: 16, color: "var(--text3)" }} />
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontSize: "12px",
+                      color: "var(--text3)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Enrollment
+                  </Typography>
+                </Stack>
                 <Typography
                   variant="body2"
                   sx={{
+                    fontWeight: 700,
                     fontSize: "12px",
-                    color: "var(--text3)",
-                    fontWeight: 600,
+                    color: "var(--text1)",
                   }}
                 >
-                  Enrollment
+                  {enrolledStudentCount}{" "}
+                  <span style={{ color: "var(--text3)", fontWeight: 400 }}>
+                    / {capacity}
+                  </span>
                 </Typography>
               </Stack>
-              <Typography
-                variant="body2"
+              <LinearProgress
+                variant="determinate"
+                value={progress}
                 sx={{
-                  fontWeight: 700,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: "var(--bg-color)",
+                  "& .MuiLinearProgress-bar": {
+                    backgroundColor:
+                      progress >= 100
+                        ? "var(--error-color)"
+                        : "var(--primary-color)",
+                    borderRadius: 4,
+                    background:
+                      progress >= 100
+                        ? undefined
+                        : "linear-gradient(90deg, #2196F3 0%, #1976D2 100%)",
+                  },
+                }}
+              />
+            </Box>
+
+            {/* Dates */}
+            <Stack
+              flexDirection="row"
+              alignItems="center"
+              gap="10px"
+              sx={{
+                backgroundColor: "var(--bg-color)",
+                padding: "8px 12px",
+                borderRadius: "8px",
+                border: "1px solid var(--border-color)",
+              }}
+            >
+              <DateRange sx={{ fontSize: 16, color: "var(--text3)" }} />
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "var(--text2)",
                   fontSize: "12px",
-                  color: "var(--text1)",
+                  fontWeight: 600,
                 }}
               >
-                {enrolledStudentCount}{" "}
-                <span style={{ color: "var(--text3)", fontWeight: 400 }}>
-                  / {capacity}
-                </span>
+                {formatDate(startDate)} - {formatDate(endDate)}
               </Typography>
             </Stack>
-            <LinearProgress
-              variant="determinate"
-              value={progress}
-              sx={{
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: "var(--bg-color)",
-                "& .MuiLinearProgress-bar": {
-                  backgroundColor:
-                    progress >= 100
-                      ? "var(--error-color)"
-                      : "var(--primary-color)",
-                  borderRadius: 4,
-                  background:
-                    progress >= 100
-                      ? undefined
-                      : "linear-gradient(90deg, #2196F3 0%, #1976D2 100%)",
-                },
-              }}
-            />
-          </Box>
+          </Stack>
+        </CardActionArea>
 
-          {/* Dates */}
-          <Stack
-            flexDirection="row"
-            alignItems="center"
-            gap="10px"
+        {/* Action Buttons - Positioned Absolutely */}
+        <Stack
+          direction="row"
+          gap={1}
+          sx={{
+            position: "absolute",
+            top: "24px",
+            right: "100px", // Adjusted based on Chip position
+            zIndex: 2,
+          }}
+        >
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(batch);
+            }}
             sx={{
-              backgroundColor: "var(--bg-color)",
-              padding: "8px 12px",
-              borderRadius: "8px",
               border: "1px solid var(--border-color)",
+              borderRadius: "8px",
+              padding: "4px",
+              backgroundColor: "var(--white)",
+              "&:hover": {
+                backgroundColor: "var(--bg-color)",
+              },
             }}
           >
-            <DateRange sx={{ fontSize: 16, color: "var(--text3)" }} />
-            <Typography
-              variant="caption"
-              sx={{ color: "var(--text2)", fontSize: "12px", fontWeight: 600 }}
-            >
-              {formatDate(startDate)} - {formatDate(endDate)}
-            </Typography>
-          </Stack>
+            <Edit sx={{ fontSize: "16px", color: "var(--text2)" }} />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(batch);
+            }}
+            sx={{
+              border: "1px solid var(--border-color)",
+              borderRadius: "8px",
+              padding: "4px",
+              backgroundColor: "var(--white)",
+              "&:hover": {
+                color: "var(--error-color)",
+                borderColor: "var(--error-color)",
+                backgroundColor: "rgba(211, 47, 47, 0.04)",
+              },
+            }}
+          >
+            <Delete sx={{ fontSize: "16px", color: "inherit" }} />
+          </IconButton>
         </Stack>
       </Box>
     </Card>

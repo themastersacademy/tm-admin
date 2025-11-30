@@ -1,9 +1,10 @@
 import { Search } from "@mui/icons-material";
 import { IconButton, InputAdornment, TextField } from "@mui/material";
 
-export default function SearchBox({ value, onChange }) {
+export default function SearchBox({ value, onChange, id }) {
   return (
     <TextField
+      id={id}
       value={value}
       onChange={onChange}
       sx={{

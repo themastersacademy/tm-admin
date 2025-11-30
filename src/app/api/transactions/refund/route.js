@@ -3,16 +3,21 @@ import { NextResponse } from "next/server";
 
 export async function POST(request) {
   try {
-    const { paymentId, amount } = await request.json();
+    const { paymentId, amount, transactionId } = await request.json();
 
-    if (!paymentId || !amount || typeof amount !== "number") {
+    // Allow refund if either paymentId OR transactionId is present, along with amount
+    if (
+      (!paymentId && !transactionId) ||
+      !amount ||
+      typeof amount !== "number"
+    ) {
       return NextResponse.json(
         { success: false, message: "Missing or invalid parameters" },
         { status: 400 }
       );
     }
 
-    const result = await refundTransaction(paymentId, amount);
+    const result = await refundTransaction(paymentId, amount, transactionId);
 
     return NextResponse.json(result, { status: 200 });
   } catch (err) {

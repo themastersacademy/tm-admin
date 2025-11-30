@@ -17,9 +17,15 @@ const StyledTextField = styled(TextField)(() => ({
       borderColor: "var(--primary-color)",
     },
   },
+  "& .MuiInputBase-input": {
+    padding: "8px 14px !important",
+  },
   "& .MuiInputBase-input::placeholder": {
     color: "var(--text3)",
     opacity: 1,
+  },
+  "& .MuiAutocomplete-input": {
+    padding: "0 !important",
   },
 }));
 

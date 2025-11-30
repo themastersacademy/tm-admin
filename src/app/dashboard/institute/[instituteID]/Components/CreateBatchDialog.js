@@ -24,6 +24,7 @@ export default function CreateBatchDialog({
   onClose,
   onSubmit,
   isLoading,
+  initialData,
 }) {
   const [title, setTitle] = useState("");
   const [errors, setErrors] = useState({});
@@ -31,10 +32,14 @@ export default function CreateBatchDialog({
   // Reset form when dialog opens/closes
   useEffect(() => {
     if (open) {
-      setTitle("");
+      if (initialData) {
+        setTitle(initialData.title || "");
+      } else {
+        setTitle("");
+      }
       setErrors({});
     }
-  }, [open]);
+  }, [open, initialData]);
 
   const validate = () => {
     let tempErrors = {};
@@ -49,6 +54,8 @@ export default function CreateBatchDialog({
       onSubmit({ title });
     }
   };
+
+  const isEdit = !!initialData;
 
   return (
     <Dialog
@@ -113,10 +120,12 @@ export default function CreateBatchDialog({
                 mb: "4px",
               }}
             >
-              Create New Batch
+              {isEdit ? "Edit Batch" : "Create New Batch"}
             </Typography>
             <Typography sx={{ fontSize: "14px", color: "var(--text3)" }}>
-              Add a new batch to this institute
+              {isEdit
+                ? "Update batch details"
+                : "Add a new batch to this institute"}
             </Typography>
           </Stack>
         </Stack>
@@ -218,7 +227,7 @@ export default function CreateBatchDialog({
                 <CircularProgress size={24} sx={{ color: "var(--text2)" }} />
               ) : (
                 <Stack direction="row" alignItems="center" gap="8px">
-                  <span>Create Batch</span>
+                  <span>{isEdit ? "Update Batch" : "Create Batch"}</span>
                   <CheckCircleOutline sx={{ fontSize: "20px" }} />
                 </Stack>
               )}

@@ -26,6 +26,7 @@ import { apiFetch } from "@/src/lib/apiFetch";
 import { useParams } from "next/navigation";
 import DatePicker from "@/src/app/dashboard/goals/[id]/testseries/[examID]/Components/DatePicker";
 import SelectBatch from "./SelectBatch";
+import SelectStudent from "./SelectStudent";
 
 // Reusable Section Card Component
 const SettingSection = ({ title, description, icon, children, isLive }) => (
@@ -226,6 +227,43 @@ export default function ExamSettings({ exam, setExam, type, isLive }) {
       }
     } catch (error) {
       console.error("Update batch list error:", error);
+      showSnackbar("Network error. Please try again.", "error", "", "3000");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Update student list with error handling
+  const updateStudentList = async (studentList) => {
+    setIsSaving(true);
+    try {
+      const data = await apiFetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/student-list-update`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ examID, studentList }),
+        }
+      );
+
+      if (data.success) {
+        setExam((prev) => ({ ...prev, studentList }));
+        showSnackbar(
+          "Student list updated successfully",
+          "success",
+          "",
+          "2000"
+        );
+      } else {
+        showSnackbar(
+          data.message || "Failed to update student list",
+          "error",
+          "",
+          "3000"
+        );
+      }
+    } catch (error) {
+      console.error("Update student list error:", error);
       showSnackbar("Network error. Please try again.", "error", "", "3000");
     } finally {
       setIsSaving(false);
@@ -478,52 +516,97 @@ export default function ExamSettings({ exam, setExam, type, isLive }) {
           </Stack>
         </SettingSection>
 
-        {/* Batch Assignment Section */}
+        {/* Participants Section */}
         {type === "scheduled" && (
           <SettingSection
-            title="Batch Assignment"
-            description="Select which batches can access this exam"
+            title="Participants"
+            description="Select which batches or students can access this exam"
             icon={<GroupIcon />}
             isLive={isLive}
           >
-            <SettingField
-              label="Select Batches"
-              helper="Students from selected batches will be able to take this exam"
-            >
-              <SelectBatch
-                exam={exam}
-                setExam={setExam}
-                updateBatchList={updateBatchList}
-                isLive={isLive}
-              />
-            </SettingField>
-            {exam.batchList && exam.batchList.length > 0 && (
-              <Stack
-                flexDirection="row"
-                alignItems="center"
-                gap="8px"
-                sx={{
-                  padding: "8px 12px",
-                  backgroundColor: "var(--primary-color-acc-2)",
-                  borderRadius: "6px",
-                  width: "fit-content",
-                }}
+            <Stack gap="24px">
+              <SettingField
+                label="Select Batches"
+                helper="Students from selected batches will be able to take this exam"
               >
-                <GroupIcon
-                  sx={{ fontSize: "18px", color: "var(--primary-color)" }}
+                <SelectBatch
+                  exam={exam}
+                  setExam={setExam}
+                  updateBatchList={updateBatchList}
+                  isLive={isLive}
                 />
-                <Typography
-                  sx={{
-                    fontSize: "13px",
-                    color: "var(--primary-color)",
-                    fontWeight: 600,
-                  }}
-                >
-                  {exam.batchList.length} batch
-                  {exam.batchList.length !== 1 ? "es" : ""} selected
-                </Typography>
-              </Stack>
-            )}
+                {exam.batchList && exam.batchList.length > 0 && (
+                  <Stack
+                    flexDirection="row"
+                    alignItems="center"
+                    gap="8px"
+                    sx={{
+                      padding: "8px 12px",
+                      backgroundColor: "var(--primary-color-acc-2)",
+                      borderRadius: "6px",
+                      width: "fit-content",
+                      marginTop: "8px",
+                    }}
+                  >
+                    <GroupIcon
+                      sx={{ fontSize: "18px", color: "var(--primary-color)" }}
+                    />
+                    <Typography
+                      sx={{
+                        fontSize: "13px",
+                        color: "var(--primary-color)",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {exam.batchList.length} batch
+                      {exam.batchList.length !== 1 ? "es" : ""} selected
+                    </Typography>
+                  </Stack>
+                )}
+              </SettingField>
+
+              <Divider />
+
+              <SettingField
+                label="Select Individual Students"
+                helper="Search and select specific students to assign this exam to"
+              >
+                <SelectStudent
+                  exam={exam}
+                  setExam={setExam}
+                  updateStudentList={updateStudentList}
+                  isLive={isLive}
+                />
+                {exam.studentList && exam.studentList.length > 0 && (
+                  <Stack
+                    flexDirection="row"
+                    alignItems="center"
+                    gap="8px"
+                    sx={{
+                      padding: "8px 12px",
+                      backgroundColor: "var(--primary-color-acc-2)",
+                      borderRadius: "6px",
+                      width: "fit-content",
+                      marginTop: "8px",
+                    }}
+                  >
+                    <GroupIcon
+                      sx={{ fontSize: "18px", color: "var(--primary-color)" }}
+                    />
+                    <Typography
+                      sx={{
+                        fontSize: "13px",
+                        color: "var(--primary-color)",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {exam.studentList.length} student
+                      {exam.studentList.length !== 1 ? "s" : ""} selected
+                    </Typography>
+                  </Stack>
+                )}
+              </SettingField>
+            </Stack>
           </SettingSection>
         )}
 

@@ -56,7 +56,7 @@ export async function POST(request) {
     }
 
     const params = {
-      TableName: `TMA-DEV-admin`,
+      TableName: `${process.env.AWS_DB_NAME}admin`,
       FilterExpression: "email = :email",
       ExpressionAttributeValues: { ":email": email },
     };

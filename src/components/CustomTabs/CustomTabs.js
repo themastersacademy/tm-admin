@@ -114,7 +114,7 @@ export default function CustomTabs({
   const handleChange = (event, newValue) => {
     setValue(newValue);
     if (onChange) {
-      onchange(event, newValue);
+      onChange(event, newValue);
     }
   };
   const router = useRouter();

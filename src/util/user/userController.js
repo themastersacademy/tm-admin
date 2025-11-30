@@ -6,6 +6,7 @@ import {
   DeleteCommand,
   ScanCommand,
   GetCommand,
+  BatchGetCommand,
 } from "@aws-sdk/lib-dynamodb";
 import getCourse from "../courses/getCourse.js";
 import { getSubscriptionPlanByID } from "../subscription/subscriptionController.js";
@@ -38,8 +39,7 @@ export async function getAllUsers({
     ExpressionAttributeValues: {
       ":pKey": "USER#",
     },
-    // Limit: 10,
-  };
+  }; // Fixed syntax error
 
   if (search) {
     params.FilterExpression +=
@@ -135,6 +135,71 @@ export async function getUserByID(id) {
     }
   } catch (error) {
     console.error("Error fetching user:", error);
+    throw new Error("Internal server error");
+  }
+}
+
+export async function getUsersByIds(ids) {
+  if (!ids || ids.length === 0) {
+    return {
+      success: true,
+      data: [],
+    };
+  }
+
+  const uniqueIds = [...new Set(ids)];
+  const keys = uniqueIds.map((id) => ({
+    pKey: `USER#${id}`,
+    sKey: `USER#${id}`,
+  }));
+
+  // Chunk keys into batches of 100 (DynamoDB limit)
+  const chunks = [];
+  for (let i = 0; i < keys.length; i += 100) {
+    chunks.push(keys.slice(i, i + 100));
+  }
+
+  let allUsers = [];
+
+  try {
+    for (const chunk of chunks) {
+      const params = {
+        RequestItems: {
+          [`${process.env.AWS_DB_NAME}users`]: {
+            Keys: chunk,
+          },
+        },
+      };
+
+      const response = await dynamoDB.send(new BatchGetCommand(params));
+
+      if (
+        response.Responses &&
+        response.Responses[`${process.env.AWS_DB_NAME}users`]
+      ) {
+        allUsers = allUsers.concat(
+          response.Responses[`${process.env.AWS_DB_NAME}users`]
+        );
+      }
+    }
+
+    const formattedUsers = allUsers.map((item) => ({
+      ...item,
+      id: item.pKey.split("#")[1],
+      otp: undefined,
+      sKey: undefined,
+      pKey: undefined,
+      "GSI1-sKey": undefined,
+      "GSI1-pKey": undefined,
+      password: undefined,
+    }));
+
+    return {
+      success: true,
+      data: formattedUsers,
+    };
+  } catch (error) {
+    console.error("Error fetching users by IDs:", error);
     throw new Error("Internal server error");
   }
 }
@@ -308,7 +373,10 @@ export async function getCourseEnrollByUserID(userID) {
     const response = await dynamoDB.send(new QueryCommand(params));
     return {
       success: true,
-      data: response.Items,
+      data: response.Items.map((item) => ({
+        ...item,
+        id: item.pKey.split("#")[1],
+      })),
     };
   } catch (error) {
     console.error("Error fetching course enrollments:", error);

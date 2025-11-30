@@ -1,10 +1,7 @@
 "use client";
+import dynamic from "next/dynamic";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
 import DeleteDialogBox from "@/src/components/DeleteDialogBox/DeleteDialogBox";
-import UploadFileDialog from "../Components/UploadFileDialog";
-import UploadVideoDialog from "../Components/UploadVideoDialog";
-import FilePreviewDialog from "../Components/FilePreviewDialog";
-import StreamVideoDialog from "../Components/StreamVideoDialog";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
 import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
 import { apiFetch } from "@/src/lib/apiFetch";
@@ -23,10 +20,23 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import CourseBankHeader from "../Components/CourseBankHeader";
 import ResourceCard from "../Components/ResourceCard";
 import axios from "axios";
+
+const UploadFileDialog = dynamic(() =>
+  import("../Components/UploadFileDialog")
+);
+const UploadVideoDialog = dynamic(() =>
+  import("../Components/UploadVideoDialog")
+);
+const FilePreviewDialog = dynamic(() =>
+  import("../Components/FilePreviewDialog")
+);
+const StreamVideoDialog = dynamic(() =>
+  import("../Components/StreamVideoDialog")
+);
 
 export default function CourseBankId() {
   const { bankID } = useParams();
@@ -98,40 +108,50 @@ export default function CourseBankId() {
     setPreviewUrl(null);
   };
 
-  useEffect(() => {
-    fetchCourse();
-  }, []);
-
-  const fetchCourse = async () => {
-    setIsLoading(true);
-    try {
-      const data = await apiFetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/bank/get-bank/${bankID}`
-      );
-      if (data.success) {
-        setBank(data.data);
-        setResourceList(data.data.resources);
-        // Apply current filter
-        if (activeTab === "all") {
-          setFilteredResources(data.data.resources);
-        } else if (activeTab === "streaming") {
-          setFilteredResources(
-            data.data.resources.filter((r) => r.type === "VIDEO")
-          );
-        } else if (activeTab === "drive") {
-          setFilteredResources(
-            data.data.resources.filter((r) => r.type === "FILE")
-          );
+  const fetchCourse = useCallback(
+    async (signal) => {
+      setIsLoading(true);
+      try {
+        const abortSignal = signal instanceof AbortSignal ? signal : null;
+        const data = await apiFetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/bank/get-bank/${bankID}`,
+          { signal: abortSignal }
+        );
+        if (data.success) {
+          setBank(data.data);
+          setResourceList(data.data.resources);
+          // Apply current filter
+          if (activeTab === "all") {
+            setFilteredResources(data.data.resources);
+          } else if (activeTab === "streaming") {
+            setFilteredResources(
+              data.data.resources.filter((r) => r.type === "VIDEO")
+            );
+          } else if (activeTab === "drive") {
+            setFilteredResources(
+              data.data.resources.filter((r) => r.type === "FILE")
+            );
+          }
+        } else {
+          showSnackbar("No Bank Found", "error", "", "3000");
+          router.push(`/404`);
         }
-      } else {
-        showSnackbar("No Bank Found", "error", "", "3000");
-        router.push(`/404`);
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("Error fetching course data:", error);
+        }
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error fetching course data:", error);
-    }
-  };
+    },
+    [bankID, activeTab, showSnackbar, router]
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchCourse(controller.signal);
+    return () => controller.abort();
+  }, [fetchCourse]);
 
   const handlePreview = async (resource) => {
     try {

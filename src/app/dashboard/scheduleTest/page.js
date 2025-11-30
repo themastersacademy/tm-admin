@@ -1,19 +1,8 @@
 "use client";
-import Header from "@/src/components/Header/Header";
 import SearchBox from "@/src/components/SearchBox/SearchBox";
-import {
-  Add,
-  Close,
-  East,
-  ExpandMore,
-  Quiz,
-  CheckCircle,
-  Schedule,
-  Cancel,
-} from "@mui/icons-material";
+import { Schedule, CheckCircle } from "@mui/icons-material";
 import {
   Stack,
-  Button,
   MenuItem,
   Chip,
   Menu,
@@ -25,10 +14,8 @@ import Active from "./Components/Active";
 import ScheduleTestHeader from "./Components/ScheduleTestHeader";
 import { useEffect, useState, useCallback } from "react";
 import CreateExamDialog from "@/src/components/CreateExamDialog/CreateExamDialog";
-import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
 import { apiFetch } from "@/src/lib/apiFetch";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
-import SecondaryCard from "@/src/components/SecondaryCard/SecondaryCard";
 
 export default function ScheduleTest() {
   const { showSnackbar } = useSnackbar();
@@ -45,23 +32,95 @@ export default function ScheduleTest() {
   const [rowsPerPage, setRowsPerPage] = useState(12);
   const [isCreating, setIsCreating] = useState(false);
 
-  const fetchScheduledTest = useCallback(() => {
-    setIsLoading(true);
-    apiFetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/get-all-scheduled-exam`
-    ).then((data) => {
+  // Student selection state
+  const [studentSearchQuery, setStudentSearchQuery] = useState("");
+  const [studentList, setStudentList] = useState([]);
+  const [selectedStudentIds, setSelectedStudentIds] = useState([]);
+  const [isSearchingStudents, setIsSearchingStudents] = useState(false);
+
+  const searchStudents = useCallback(async () => {
+    setIsSearchingStudents(true);
+    try {
+      const data = await apiFetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/get-all-users?search=${studentSearchQuery}&limit=20`
+      );
       if (data.success) {
-        setTestList(data.data);
-      } else {
-        showSnackbar(data.message, "error", "", "3000");
+        setStudentList(data.data);
       }
-      setIsLoading(false);
-    });
-  }, [showSnackbar]);
+    } catch (error) {
+      console.error("Error searching students:", error);
+    } finally {
+      setIsSearchingStudents(false);
+    }
+  }, [studentSearchQuery]);
+
+  // Debounced search for students
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (studentSearchQuery) {
+        searchStudents();
+      } else {
+        setStudentList([]);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [studentSearchQuery, searchStudents]);
+
+  const fetchScheduledTest = useCallback(
+    async (signal) => {
+      setIsLoading(true);
+      try {
+        const abortSignal = signal instanceof AbortSignal ? signal : null;
+        const data = await apiFetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/get-all-scheduled-exam`,
+          { signal: abortSignal }
+        );
+        if (data.success) {
+          setTestList(data.data);
+        } else {
+          showSnackbar(data.message, "error", "", "3000");
+        }
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("Error fetching scheduled tests:", error);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [showSnackbar]
+  );
+
+  const getBatchList = useCallback(
+    async (signal) => {
+      try {
+        const abortSignal = signal instanceof AbortSignal ? signal : null;
+        const data = await apiFetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/get-all-batch`,
+          { signal: abortSignal }
+        );
+        if (data.success) {
+          setBatchList(data.data);
+        } else {
+          showSnackbar("No Batch Found", "error", "", "3000");
+        }
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("Error fetching batches:", error);
+        }
+      }
+    },
+    [showSnackbar]
+  );
 
   useEffect(() => {
-    fetchScheduledTest();
-  }, [fetchScheduledTest]);
+    const controller = new AbortController();
+    fetchScheduledTest(controller.signal);
+    getBatchList(controller.signal);
+
+    return () => controller.abort();
+  }, [fetchScheduledTest, getBatchList]);
 
   const batchOptions = batchList.map((batch) => ({
     label: `${batch.title} (${batch.instituteMeta.title})`,
@@ -74,23 +133,10 @@ export default function ScheduleTest() {
 
   const handleDialogClose = () => {
     setIsDialogOpen(false);
+    setStudentSearchQuery("");
+    setStudentList([]);
+    setSelectedStudentIds([]);
   };
-
-  const getBatchList = () => {
-    apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/get-all-batch`).then(
-      (data) => {
-        if (data.success) {
-          setBatchList(data.data);
-        } else {
-          showSnackbar("No Batch Found", "error", "", "3000");
-        }
-      }
-    );
-  };
-
-  useEffect(() => {
-    getBatchList();
-  }, []);
 
   const handleBatchChange = (event) => {
     const selectedIds = event.target.value;
@@ -98,34 +144,47 @@ export default function ScheduleTest() {
   };
 
   const handleCreateExam = async ({ title }) => {
-    if (title === "" || selectedBatchIds.length === 0) {
-      showSnackbar("Please Fill all data", "error", "", "3000");
+    if (
+      title === "" ||
+      (selectedBatchIds.length === 0 && selectedStudentIds.length === 0)
+    ) {
+      showSnackbar(
+        "Please select at least one batch or student",
+        "error",
+        "",
+        "3000"
+      );
       return;
     }
     setIsCreating(true);
     try {
-      await apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: title,
-          type: "scheduled",
-          batchList: selectedBatchIds,
-        }),
-      }).then((data) => {
-        if (data.success) {
-          showSnackbar("Exam created successfully", "success", "", "3000");
-          setTitle("");
-          setSelectedBatchIds([]);
-          handleDialogClose();
-          fetchScheduledTest();
-        } else {
-          showSnackbar("Something went wrong", "error", "", "3000");
+      const data = await apiFetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/create`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: title,
+            type: "scheduled",
+            batchList: selectedBatchIds,
+            studentList: selectedStudentIds,
+          }),
         }
-        setIsCreating(false);
-      });
+      );
+      if (data.success) {
+        showSnackbar("Exam created successfully", "success", "", "3000");
+        setTitle("");
+        setSelectedBatchIds([]);
+        setSelectedStudentIds([]);
+        handleDialogClose();
+        fetchScheduledTest();
+      } else {
+        showSnackbar("Something went wrong", "error", "", "3000");
+      }
     } catch (error) {
       console.error("Error creating exam:", error);
+      showSnackbar("Failed to create exam", "error", "", "3000");
+    } finally {
       setIsCreating(false);
     }
   };
@@ -313,9 +372,9 @@ export default function ScheduleTest() {
         isOpen={isDialogOpen}
         onClose={handleDialogClose}
         title="Create Exam"
-        subtitle="Schedule an exam for specific batches."
+        subtitle="Schedule an exam for specific batches or students."
         icon={<Schedule />}
-        infoText="Scheduled exams will be visible to students in the selected batches."
+        infoText="Scheduled exams will be visible to students in the selected batches or individual students."
         isLoading={isCreating}
         onCreate={() => handleCreateExam({ title })}
       >
@@ -333,7 +392,7 @@ export default function ScheduleTest() {
             </Typography>
             <Stack
               sx={{
-                maxHeight: "200px",
+                maxHeight: "150px",
                 overflowY: "auto",
                 border: "1px solid var(--border-color)",
                 borderRadius: "8px",
@@ -460,6 +519,140 @@ export default function ScheduleTest() {
                     />
                   );
                 })}
+              </Stack>
+            )}
+          </Stack>
+
+          {/* Student Selection */}
+          <Stack gap="8px">
+            <Typography
+              sx={{
+                fontSize: "14px",
+                fontWeight: "600",
+                color: "var(--text1)",
+                fontFamily: "Lato",
+              }}
+            >
+              Select Students (Optional)
+            </Typography>
+            <TextField
+              placeholder="Search students by name or email..."
+              value={studentSearchQuery}
+              onChange={(e) => setStudentSearchQuery(e.target.value)}
+              size="small"
+              fullWidth
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "8px",
+                  backgroundColor: "#fff",
+                },
+              }}
+            />
+            {studentList.length > 0 && (
+              <Stack
+                sx={{
+                  maxHeight: "150px",
+                  overflowY: "auto",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: "8px",
+                  padding: "8px",
+                  backgroundColor: "#fafafa",
+                }}
+              >
+                {studentList.map((student) => (
+                  <Stack
+                    key={student.id}
+                    flexDirection="row"
+                    alignItems="center"
+                    gap="12px"
+                    sx={{
+                      padding: "10px 12px",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        backgroundColor: "#e3f2fd",
+                      },
+                    }}
+                    onClick={() => {
+                      const isSelected = selectedStudentIds.includes(
+                        student.id
+                      );
+                      if (isSelected) {
+                        setSelectedStudentIds((prev) =>
+                          prev.filter((id) => id !== student.id)
+                        );
+                      } else {
+                        setSelectedStudentIds((prev) => [...prev, student.id]);
+                      }
+                    }}
+                  >
+                    <Stack
+                      sx={{
+                        width: "20px",
+                        height: "20px",
+                        borderRadius: "4px",
+                        border: selectedStudentIds.includes(student.id)
+                          ? "2px solid var(--primary-color)"
+                          : "2px solid #ccc",
+                        backgroundColor: selectedStudentIds.includes(student.id)
+                          ? "var(--primary-color)"
+                          : "transparent",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      {selectedStudentIds.includes(student.id) && (
+                        <CheckCircle sx={{ fontSize: "14px", color: "#fff" }} />
+                      )}
+                    </Stack>
+                    <Stack>
+                      <Typography
+                        sx={{
+                          fontSize: "14px",
+                          fontFamily: "Lato",
+                          color: "var(--text1)",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {student.name}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "12px",
+                          fontFamily: "Lato",
+                          color: "var(--text3)",
+                        }}
+                      >
+                        {student.email}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                ))}
+              </Stack>
+            )}
+
+            {selectedStudentIds.length > 0 && (
+              <Stack
+                flexDirection="row"
+                flexWrap="wrap"
+                gap="8px"
+                marginTop="8px"
+              >
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  width="100%"
+                >
+                  Selected Students: {selectedStudentIds.length}
+                </Typography>
+                {/* We don't have full student details for all selected IDs if they are not in current search results, 
+                    so we might only show count or need a way to fetch details. 
+                    For now, showing count is safer or just showing chips for those in list. 
+                    Let's just show count to keep it simple or chips if we can. 
+                */}
               </Stack>
             )}
           </Stack>

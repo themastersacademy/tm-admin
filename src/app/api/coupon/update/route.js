@@ -15,6 +15,8 @@ export async function POST(request) {
     startDate,
     endDate,
     isActive,
+    applicableCourses,
+    applicableGoals,
   } = await request.json();
 
   // Use strict undefined checks to allow valid falsy values (like false)
@@ -25,7 +27,6 @@ export async function POST(request) {
     couponClass === undefined ||
     discountType === undefined ||
     discountValue === undefined ||
-    maxDiscountPrice === undefined ||
     minOrderAmount === undefined ||
     totalRedemptions === undefined ||
     totalRedemptionsPerUser === undefined ||
@@ -51,6 +52,8 @@ export async function POST(request) {
       startDate,
       endDate,
       isActive,
+      applicableCourses,
+      applicableGoals,
     });
     return Response.json(coupon);
   } catch (error) {

@@ -1,14 +1,18 @@
 "use client";
-import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
+import { useState, useEffect, useCallback } from "react";
 import { Stack } from "@mui/material";
 import InstituteHeader from "./Components/InstituteHeader";
 import InstituteCard from "@/src/components/InstituteCard/InstituteCard";
 import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
-import CreateInstituteDialog from "./Components/CreateInstituteDialog";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/src/lib/apiFetch";
 import { useSnackbar } from "../../context/SnackbarContext";
+
+const CreateInstituteDialog = dynamic(() =>
+  import("./Components/CreateInstituteDialog")
+);
 
 export default function Institute() {
   const router = useRouter();
@@ -16,42 +20,85 @@ export default function Institute() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [instituteList, setInstituteList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingInstitute, setEditingInstitute] = useState(null);
 
-  const createInstitute = ({ title, email }) => {
-    apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/institute/create`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ title, email }),
-    }).then((data) => {
-      if (data.success) {
-        showSnackbar(data.message, "success", "", "3000");
-        fetchInstitute();
-        setIsDialogOpen(false);
-      } else {
-        showSnackbar(data.message, "error", "", "3000");
-      }
-    });
-  };
-
-  const fetchInstitute = async () => {
+  const fetchInstitute = useCallback(async (signal) => {
     setIsLoading(true);
-    await apiFetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/institute/get-all`
-    ).then((data) => {
+    try {
+      const abortSignal = signal instanceof AbortSignal ? signal : null;
+      const data = await apiFetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/institute/get-all`,
+        { signal: abortSignal }
+      );
       if (data.success) {
         setInstituteList(data.data);
       } else {
         console.log(data.message);
       }
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        console.error("Error fetching institutes:", error);
+      }
+    } finally {
       setIsLoading(false);
-    });
+    }
+  }, []);
+
+  const handleCreateOrUpdateInstitute = useCallback(
+    async ({ title, email }) => {
+      const controller = new AbortController();
+      const isEdit = !!editingInstitute;
+      const url = isEdit
+        ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/institute/update`
+        : `${process.env.NEXT_PUBLIC_BASE_URL}/api/institute/create`;
+
+      const body = isEdit
+        ? { instituteID: editingInstitute.id, title, email }
+        : { title, email };
+
+      try {
+        const data = await apiFetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
+
+        if (data.success) {
+          showSnackbar(data.message, "success", "", "3000");
+          fetchInstitute();
+          setIsDialogOpen(false);
+          setEditingInstitute(null);
+        } else {
+          showSnackbar(data.message, "error", "", "3000");
+        }
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          showSnackbar("An error occurred", "error", "", "3000");
+        }
+      }
+      return () => controller.abort();
+    },
+    [fetchInstitute, showSnackbar, editingInstitute]
+  );
+
+  const handleEditInstitute = (institute) => {
+    setEditingInstitute(institute);
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setEditingInstitute(null);
   };
 
   useEffect(() => {
-    fetchInstitute();
-  }, []);
+    const controller = new AbortController();
+    fetchInstitute(controller.signal);
+    return () => controller.abort();
+  }, [fetchInstitute]);
 
   const activeBatches = instituteList.reduce(
     (acc, curr) => acc + (curr.batchCount || 0),
@@ -63,7 +110,10 @@ export default function Institute() {
       <InstituteHeader
         instituteCount={instituteList.length}
         activeBatches={activeBatches}
-        onCreateClick={() => setIsDialogOpen(true)}
+        onCreateClick={() => {
+          setEditingInstitute(null);
+          setIsDialogOpen(true);
+        }}
         isLoading={isLoading}
       />
       <Stack
@@ -79,7 +129,11 @@ export default function Institute() {
           {!isLoading ? (
             instituteList.length > 0 ? (
               instituteList.map((item, index) => (
-                <InstituteCard key={index} institute={item} />
+                <InstituteCard
+                  key={index}
+                  institute={item}
+                  onEdit={handleEditInstitute}
+                />
               ))
             ) : (
               <Stack width="100%" height="70vh">
@@ -95,9 +149,10 @@ export default function Institute() {
       </Stack>
       <CreateInstituteDialog
         open={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        onSubmit={createInstitute}
+        onClose={handleCloseDialog}
+        onSubmit={handleCreateOrUpdateInstitute}
         isLoading={isLoading}
+        initialData={editingInstitute}
       />
     </Stack>
   );

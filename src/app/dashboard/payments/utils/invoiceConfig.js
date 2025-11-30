@@ -14,13 +14,7 @@ export const invoiceConfig = {
     "team@themastersacademy.in",
     "Website: www.themastersacademy.in",
   ],
-  refundPolicy: [
-    "• Refunds are processed only within 7 days of purchase, subject to terms and conditions.",
-    "• No refund will be issued after course access has been utilized beyond the trial period.",
-    "• Refund requests must be submitted via email to team@themastersacademy.in with valid reasons.",
-    "• Processing time for approved refunds: 7-10 business days.",
-    "• For detailed refund policy, please visit our website or contact support.",
-  ],
+  refundPolicy: ["• No refund will be issued after the payment is completed."],
   termsAndConditions: [
     "• Access to course materials will be provided within 24 hours of payment confirmation.",
     "• All course content is proprietary and protected by copyright laws.",

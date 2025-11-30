@@ -5,6 +5,7 @@ import {
   GetCommand,
   TransactWriteCommand,
   UpdateCommand,
+  DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { getInstitute } from "./instituteControllers.js";
 import { getUserByID } from "../user/userController.js";
@@ -543,5 +544,114 @@ export async function updateBatchCapacity(batchID, newCapacity) {
     }
     console.error("Error updating batch capacity:", err);
     throw new Error("Could not update batch capacity");
+  }
+}
+
+/**
+ * Update a batch's title and propagate changes to enrolled students.
+ */
+export async function updateBatch({ batchID, title }) {
+  const now = Date.now();
+  try {
+    // 1. Update Batch
+    const updateParams = {
+      TableName: MASTER_TABLE,
+      Key: {
+        pKey: `BATCH#${batchID}`,
+        sKey: "BATCHES",
+      },
+      UpdateExpression: "SET title = :title, updatedAt = :updatedAt",
+      ExpressionAttributeValues: {
+        ":title": title,
+        ":updatedAt": now,
+      },
+      ReturnValues: "ALL_NEW",
+    };
+
+    const result = await dynamoDB.send(new UpdateCommand(updateParams));
+
+    // 2. Fetch all students enrolled in this batch
+    const studentsResult = await getStudentsForBatch(batchID);
+    const students = studentsResult.data || [];
+
+    // 3. Update batchMeta in all STUDENT_BATCH records
+    if (students.length > 0) {
+      const updatePromises = students.map((student) => {
+        return dynamoDB.send(
+          new UpdateCommand({
+            TableName: MASTER_TABLE,
+            Key: {
+              pKey: `STUDENT_BATCH#${student.userID}`,
+              sKey: `STUDENT_BATCH@${batchID}`,
+            },
+            UpdateExpression: "SET batchMeta.title = :title",
+            ExpressionAttributeValues: {
+              ":title": title,
+            },
+          })
+        );
+      });
+      await Promise.all(updatePromises);
+    }
+
+    return {
+      success: true,
+      message: "Batch updated successfully",
+      data: {
+        ...result.Attributes,
+        id: result.Attributes.pKey.split("#")[1],
+        pKey: undefined,
+        sKey: undefined,
+      },
+    };
+  } catch (err) {
+    console.error("Error updating batch:", err);
+    throw new Error("Failed to update batch");
+  }
+}
+
+/**
+ * Delete a batch and all its student associations.
+ */
+export async function deleteBatch({ batchID }) {
+  try {
+    // 1. Fetch all students enrolled in this batch
+    const studentsResult = await getStudentsForBatch(batchID);
+    const students = studentsResult.data || [];
+
+    // 2. Prepare delete operations for STUDENT_BATCH records
+    const deletePromises = students.map((student) => {
+      return dynamoDB.send(
+        new DeleteCommand({
+          TableName: MASTER_TABLE,
+          Key: {
+            pKey: `STUDENT_BATCH#${student.userID}`,
+            sKey: `STUDENT_BATCH@${batchID}`,
+          },
+        })
+      );
+    });
+
+    // 3. Execute all deletes
+    await Promise.all(deletePromises);
+
+    // 4. Delete the Batch record
+    await dynamoDB.send(
+      new DeleteCommand({
+        TableName: MASTER_TABLE,
+        Key: {
+          pKey: `BATCH#${batchID}`,
+          sKey: "BATCHES",
+        },
+      })
+    );
+
+    return {
+      success: true,
+      message: "Batch deleted successfully",
+    };
+  } catch (err) {
+    console.error("Error deleting batch:", err);
+    throw new Error("Failed to delete batch");
   }
 }

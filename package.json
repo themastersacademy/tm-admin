@@ -43,6 +43,7 @@
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-image-crop": "^11.0.10",
+    "recharts": "^3.5.1",
     "rehype-sanitize": "^6.0.0",
     "swr": "^2.3.6",
     "xlsx": "^0.18.5"

@@ -1,10 +1,31 @@
 "use client";
-import { Box, Stack, styled, Tab, Tabs } from "@mui/material";
+import { Box, Stack, styled, Tab, Tabs, CircularProgress } from "@mui/material";
 import PropTypes from "prop-types";
-import Syllabus from "@/src/app/dashboard/goals/[id]/components/Syllabus";
-import Exam from "@/src/app/dashboard/goals/[id]/components/Exam";
-import Info from "@/src/app/dashboard/goals/[id]/components/Info";
 import { useRouter, useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
+
+const TabLoading = () => (
+  <Stack
+    alignItems="center"
+    justifyContent="center"
+    sx={{ minHeight: "200px", width: "100%" }}
+  >
+    <CircularProgress />
+  </Stack>
+);
+
+const Syllabus = dynamic(
+  () => import("@/src/app/dashboard/goals/[id]/components/Syllabus"),
+  { loading: () => <TabLoading /> }
+);
+const Exam = dynamic(
+  () => import("@/src/app/dashboard/goals/[id]/components/Exam"),
+  { loading: () => <TabLoading /> }
+);
+const Info = dynamic(
+  () => import("@/src/app/dashboard/goals/[id]/components/Info"),
+  { loading: () => <TabLoading /> }
+);
 
 const StyledTabs = styled(Tabs)({
   backgroundColor: "var(--white)",

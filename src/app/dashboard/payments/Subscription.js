@@ -13,9 +13,9 @@ import PageHeader from "./Components/PageHeader";
 export default function Subscription() {
   const [subscription, setSubscription] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState("MONTHLY");
   const [priceWithTax, setPriceWithTax] = useState("");
-  const [duration, setDuration] = useState("");
+  const [duration, setDuration] = useState("1");
   const [discountInPercent, setDiscountInPercent] = useState("");
   const { showSnackbar } = useSnackbar();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -26,9 +26,9 @@ export default function Subscription() {
   const dialogOpen = () => {
     setIsDialogOpen(true);
     setIsEditMode(false);
-    setTitle("");
+    setTitle("MONTHLY");
     setPriceWithTax("");
-    setDuration("");
+    setDuration("1");
     setDiscountInPercent("");
   };
 
@@ -152,7 +152,7 @@ export default function Subscription() {
         type: title,
         duration,
         priceWithTax: priceWithTax,
-        discountInPercent: discountInPercent,
+        discountInPercent: discountInPercent || "0",
       }),
     }).then((data) => {
       if (data.status) {
@@ -205,8 +205,7 @@ export default function Subscription() {
       type: title,
       duration,
       priceWithTax,
-      discountInPercent,
-      discountInPercent,
+      discountInPercent: discountInPercent || "0",
     };
     try {
       const data = await apiFetch(

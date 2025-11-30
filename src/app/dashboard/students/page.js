@@ -1,23 +1,13 @@
 "use client";
-import CustomPagination from "@/src/components/CustomPagination/CustomPagination";
 import FilterSideNav from "@/src/components/FilterSideNav/FilterSideNav";
-import Header from "@/src/components/Header/Header";
 import StudentsHeader from "./Components/StudentsHeader";
-import {
-  Add,
-  FilterAlt,
-  Group,
-  VerifiedUser,
-  CheckCircle,
-} from "@mui/icons-material";
-import { Button, Stack, Typography, TablePagination } from "@mui/material";
+import { Stack, TablePagination } from "@mui/material";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { apiFetch } from "@/src/lib/apiFetch";
 import StudentCard from "./Components/StudentCard";
 import UserCardSkeleton from "@/src/components/UserCardSkeleton/UserCardSkeleton";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
-import SecondaryCard from "@/src/components/SecondaryCard/SecondaryCard";
 
 export default function Students() {
   const router = useRouter();
@@ -82,46 +72,60 @@ export default function Students() {
     setIsOpen(open);
   };
 
-  const fetchStudentList = async () => {
-    setIsLoading(true);
-    const url = new URL(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/get-all-users`
-    );
-    if (searchQuery) {
-      url.searchParams.append("search", searchQuery);
-    }
-    if (filters.status) url.searchParams.append("status", filters.status);
-    if (filters.gender) url.searchParams.append("gender", filters.gender);
-    if (filters.emailVerified)
-      url.searchParams.append("emailVerified", filters.emailVerified);
-
-    url.searchParams.append("page", currentPage + 1); // Backend expects 1-indexed
-    url.searchParams.append("limit", rowsPerPage);
-
-    await apiFetch(url.toString()).then((data) => {
-      if (data.success) {
-        setStudentList(data.data);
-        if (data.pagination) {
-          setTotalPages(data.pagination.totalPages);
-          setTotalItems(data.pagination.totalItems);
-          setStats({
-            total: data.pagination.totalItems,
-            verified: data.pagination.totalVerified,
-            active: data.pagination.totalActive,
-          });
-        }
+  const fetchStudentList = useCallback(
+    async (signal) => {
+      setIsLoading(true);
+      const url = new URL(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/get-all-users`
+      );
+      if (searchQuery) {
+        url.searchParams.append("search", searchQuery);
       }
-      setIsLoading(false);
-    });
-  };
+      if (filters.status) url.searchParams.append("status", filters.status);
+      if (filters.gender) url.searchParams.append("gender", filters.gender);
+      if (filters.emailVerified)
+        url.searchParams.append("emailVerified", filters.emailVerified);
+
+      url.searchParams.append("page", currentPage + 1); // Backend expects 1-indexed
+      url.searchParams.append("limit", rowsPerPage);
+
+      try {
+        const abortSignal = signal instanceof AbortSignal ? signal : null;
+        const data = await apiFetch(url.toString(), { signal: abortSignal });
+        if (data.success) {
+          setStudentList(data.data);
+          if (data.pagination) {
+            setTotalPages(data.pagination.totalPages);
+            setTotalItems(data.pagination.totalItems);
+            setStats({
+              total: data.pagination.totalItems,
+              verified: data.pagination.totalVerified,
+              active: data.pagination.totalActive,
+            });
+          }
+        }
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("Error fetching students:", error);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [currentPage, rowsPerPage, searchQuery, filters]
+  );
 
   useEffect(() => {
+    const controller = new AbortController();
     const delayDebounceFn = setTimeout(() => {
-      fetchStudentList();
+      fetchStudentList(controller.signal);
     }, 500);
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [currentPage, rowsPerPage, searchQuery, filters]);
+    return () => {
+      clearTimeout(delayDebounceFn);
+      controller.abort();
+    };
+  }, [fetchStudentList]);
 
   const handleChangePage = (event, newPage) => {
     setCurrentPage(newPage);

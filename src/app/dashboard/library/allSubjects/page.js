@@ -10,8 +10,12 @@ import { useEffect, useState, useCallback, useContext, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { enqueueSnackbar } from "notistack";
 import SubjectCard from "./Components/SubjectCard";
-import SubjectDialog from "./Components/SubjectDialog";
-import DeleteSubjectDialog from "./Components/DeleteSubjectDialog";
+import dynamic from "next/dynamic";
+
+const SubjectDialog = dynamic(() => import("./Components/SubjectDialog"));
+const DeleteSubjectDialog = dynamic(() =>
+  import("./Components/DeleteSubjectDialog")
+);
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -78,9 +82,11 @@ export default function AllSubjects() {
   const handleDelete = useCallback(async () => {
     if (!selectedSubject) return;
     setIsDeleteLoading(true);
+    const controller = new AbortController();
     try {
       const data = await apiFetch(
-        `${BASE_URL}/api/subjects/delete/${selectedSubject}`
+        `${BASE_URL}/api/subjects/delete/${selectedSubject}`,
+        { signal: controller.signal }
       );
       if (data.success) {
         await fetchSubject(true);
@@ -92,10 +98,13 @@ export default function AllSubjects() {
         setIsDeleteLoading(false);
       }
     } catch (error) {
-      setDeleteError(true);
-      setDeleteWarning("An error occurred");
-      setIsDeleteLoading(false);
+      if (error.name !== "AbortError") {
+        setDeleteError(true);
+        setDeleteWarning("An error occurred");
+        setIsDeleteLoading(false);
+      }
     }
+    return () => controller.abort();
   }, [selectedSubject, fetchSubject, deleteDialogState]);
 
   // When a card's delete option is clicked
@@ -114,6 +123,7 @@ export default function AllSubjects() {
       return;
     }
     setIsSubmitLoading(true);
+    const controller = new AbortController();
     try {
       let data;
       if (editSubject) {
@@ -121,12 +131,14 @@ export default function AllSubjects() {
         data = await apiFetch(`${BASE_URL}/api/subjects/update-title`, {
           method: "POST",
           body: JSON.stringify({ title, subjectID: selectedSubject }),
+          signal: controller.signal,
         });
       } else {
         // Create subject
         data = await apiFetch(`${BASE_URL}/api/subjects/create-subject`, {
           method: "POST",
           body: JSON.stringify({ title }),
+          signal: controller.signal,
         });
       }
 
@@ -139,10 +151,13 @@ export default function AllSubjects() {
         enqueueSnackbar(data.message, { variant: "error" });
       }
     } catch (error) {
-      enqueueSnackbar("An error occurred", { variant: "error" });
+      if (error.name !== "AbortError") {
+        enqueueSnackbar("An error occurred", { variant: "error" });
+      }
     } finally {
       setIsSubmitLoading(false);
     }
+    return () => controller.abort();
   }, [title, editSubject, selectedSubject, dialogClose, fetchSubject]);
 
   // Filter and Sort subjects

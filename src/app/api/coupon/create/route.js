@@ -13,6 +13,8 @@ export async function POST(request) {
     totalRedemptionsPerUser,
     startDate,
     endDate,
+    applicableCourses,
+    applicableGoals,
   } = await request.json();
   if (
     !title ||
@@ -20,7 +22,6 @@ export async function POST(request) {
     !couponClass ||
     !discountType ||
     !discountValue ||
-    !maxDiscountPrice ||
     !minOrderAmount ||
     !totalRedemptions ||
     !totalRedemptionsPerUser ||
@@ -42,6 +43,8 @@ export async function POST(request) {
       totalRedemptionsPerUser,
       startDate,
       endDate,
+      applicableCourses,
+      applicableGoals,
     });
     return Response.json(coupon);
   } catch (error) {

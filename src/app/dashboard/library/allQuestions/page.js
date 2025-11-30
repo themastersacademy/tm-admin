@@ -27,15 +27,26 @@ import {
   TablePagination,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback, useRef, useContext } from "react";
+import dynamic from "next/dynamic";
+import {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  useContext,
+  useMemo,
+} from "react";
 import SubjectContext from "@/src/app/context/SubjectContext";
 import PreviewStepper from "./addQuestion/Components/PreviewStepper";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
 import DialogBox from "@/src/components/DialogBox/DialogBox";
 import MDPreview from "@/src/components/MarkdownPreview/MarkdownPreview";
 import SearchQuestions from "./Components/SearchQuestion";
-import BulkImport from "./addQuestion/Components/BulkImport";
-import CreateQuestionDialog from "./Components/CreateQuestionDialog";
+
+const BulkImport = dynamic(() => import("./addQuestion/Components/BulkImport"));
+const CreateQuestionDialog = dynamic(() =>
+  import("./Components/CreateQuestionDialog")
+);
 
 export default function AllQuestions() {
   const router = useRouter();
@@ -69,42 +80,45 @@ export default function AllQuestions() {
     subjectID: "",
   });
 
-  const filtersConfig = [
-    {
-      name: "difficulty",
-      label: "Difficulty",
-      type: "chip",
-      options: [
-        { label: "All", value: "" },
-        { label: "Easy", value: 1, color: "#10B981" },
-        { label: "Medium", value: 2, color: "#F59E0B" },
-        { label: "Hard", value: 3, color: "#EF4444" },
-      ],
-    },
-    {
-      name: "type",
-      label: "Type",
-      type: "chip",
-      options: [
-        { label: "All", value: "" },
-        { label: "MCQ", value: "MCQ" },
-        { label: "MSQ", value: "MSQ" },
-        { label: "FIB", value: "FIB" },
-      ],
-    },
-    {
-      name: "subjectID",
-      label: "Subject",
-      type: "select",
-      options: [
-        { label: "All", value: "" },
-        ...subjectList.map((subject) => ({
-          label: subject.title,
-          value: subject.subjectID,
-        })),
-      ],
-    },
-  ];
+  const filtersConfig = useMemo(
+    () => [
+      {
+        name: "difficulty",
+        label: "Difficulty",
+        type: "chip",
+        options: [
+          { label: "All", value: "" },
+          { label: "Easy", value: 1, color: "#10B981" },
+          { label: "Medium", value: 2, color: "#F59E0B" },
+          { label: "Hard", value: 3, color: "#EF4444" },
+        ],
+      },
+      {
+        name: "type",
+        label: "Type",
+        type: "chip",
+        options: [
+          { label: "All", value: "" },
+          { label: "MCQ", value: "MCQ" },
+          { label: "MSQ", value: "MSQ" },
+          { label: "FIB", value: "FIB" },
+        ],
+      },
+      {
+        name: "subjectID",
+        label: "Subject",
+        type: "select",
+        options: [
+          { label: "All", value: "" },
+          ...subjectList.map((subject) => ({
+            label: subject.title,
+            value: subject.subjectID,
+          })),
+        ],
+      },
+    ],
+    [subjectList]
+  );
 
   const dialogDeleteOpen = (id, subjectID) => {
     setSelectedQuestion({ id, subjectID });
@@ -133,82 +147,96 @@ export default function AllQuestions() {
 
   const toggleDrawer = (open) => () => setIsOpen(open);
 
-  const fetchStats = useCallback(async () => {
-    try {
-      const parts = [];
-      Object.entries(filters).forEach(([key, val]) => {
-        if (val !== "" && val != null)
-          parts.push(`${key}=${encodeURIComponent(val)}`);
-      });
-      if (searchQuery) {
-        parts.push(`search=${encodeURIComponent(searchQuery)}`);
-      }
-      const query = parts.length ? `?${parts.join("&")}` : "";
-
-      const res = await apiFetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/stats${query}`
-      );
-      if (res.success) {
-        setStats(res.data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch stats:", error);
-    }
-  }, [filters, searchQuery]);
-
-  const fetchQuestions = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      if (searchQuery) {
-        // Use Global Search API
-        const url = `${
-          process.env.NEXT_PUBLIC_BASE_URL
-        }/api/questions/search?q=${encodeURIComponent(searchQuery)}`;
-        const data = await apiFetch(url);
-        if (data.success) {
-          setQuestionList(data.data);
-          setHasNextPage(false); // Search returns all results, no pagination for now
-        } else {
-          setQuestionList([]);
-        }
-      } else {
-        // Use Standard Filter API
-        const currentKey = lastKeys.current[page];
-
-        // build query string
+  const fetchStats = useCallback(
+    async (signal) => {
+      try {
+        const abortSignal = signal instanceof AbortSignal ? signal : null;
         const parts = [];
         Object.entries(filters).forEach(([key, val]) => {
           if (val !== "" && val != null)
             parts.push(`${key}=${encodeURIComponent(val)}`);
         });
-
-        parts.push(`limit=${rowsPerPage}`);
-        if (currentKey) {
-          parts.push(`lastKey=${currentKey}`);
+        if (searchQuery) {
+          parts.push(`search=${encodeURIComponent(searchQuery)}`);
         }
-
         const query = parts.length ? `?${parts.join("&")}` : "";
-        const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/get${query}`;
-        const data = await apiFetch(url);
 
-        if (data.success) {
-          setQuestionList(data.data);
-          if (data.lastKey) {
-            lastKeys.current[page + 1] = data.lastKey;
-            setHasNextPage(true);
-          } else {
-            setHasNextPage(false);
-          }
-        } else {
-          setQuestionList([]);
+        const res = await apiFetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/stats${query}`,
+          { signal: abortSignal }
+        );
+        if (res.success) {
+          setStats(res.data);
+        }
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("Failed to fetch stats:", error);
         }
       }
-    } catch (error) {
-      console.error("Error fetching questions:", error);
-      setQuestionList([]);
-    }
-    setIsLoading(false);
-  }, [filters, searchQuery, page, rowsPerPage]);
+    },
+    [filters, searchQuery]
+  );
+
+  const fetchQuestions = useCallback(
+    async (signal) => {
+      setIsLoading(true);
+      try {
+        const abortSignal = signal instanceof AbortSignal ? signal : null;
+        if (searchQuery) {
+          // Use Global Search API
+          const url = `${
+            process.env.NEXT_PUBLIC_BASE_URL
+          }/api/questions/search?q=${encodeURIComponent(searchQuery)}`;
+          const data = await apiFetch(url, { signal: abortSignal });
+          if (data.success) {
+            setQuestionList(data.data);
+            setHasNextPage(false); // Search returns all results, no pagination for now
+          } else {
+            setQuestionList([]);
+          }
+        } else {
+          // Use Standard Filter API
+          const currentKey = lastKeys.current[page];
+
+          // build query string
+          const parts = [];
+          Object.entries(filters).forEach(([key, val]) => {
+            if (val !== "" && val != null)
+              parts.push(`${key}=${encodeURIComponent(val)}`);
+          });
+
+          parts.push(`limit=${rowsPerPage}`);
+          if (currentKey) {
+            parts.push(`lastKey=${currentKey}`);
+          }
+
+          const query = parts.length ? `?${parts.join("&")}` : "";
+          const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/get${query}`;
+          const data = await apiFetch(url, { signal: abortSignal });
+
+          if (data.success) {
+            setQuestionList(data.data);
+            if (data.lastKey) {
+              lastKeys.current[page + 1] = data.lastKey;
+              setHasNextPage(true);
+            } else {
+              setHasNextPage(false);
+            }
+          } else {
+            setQuestionList([]);
+          }
+        }
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("Error fetching questions:", error);
+          setQuestionList([]);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [filters, searchQuery, page, rowsPerPage]
+  );
 
   // Reset pagination when filters or search change
   useEffect(() => {
@@ -217,11 +245,15 @@ export default function AllQuestions() {
   }, [filters, searchQuery]);
 
   useEffect(() => {
-    fetchQuestions();
+    const controller = new AbortController();
+    fetchQuestions(controller.signal);
+    return () => controller.abort();
   }, [fetchQuestions]);
 
   useEffect(() => {
-    fetchStats();
+    const controller = new AbortController();
+    fetchStats(controller.signal);
+    return () => controller.abort();
   }, [fetchStats]);
 
   const handleSearch = (q) => setSearchQuery(q);
