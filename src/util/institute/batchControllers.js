@@ -441,6 +441,44 @@ export async function getStudentsForBatch(batchID) {
 }
 
 /**
+ * Fetch all students for multiple batches.
+ */
+export async function getStudentsByBatchIds(batchIds) {
+  if (!batchIds || batchIds.length === 0) {
+    return {
+      success: true,
+      data: [],
+    };
+  }
+
+  try {
+    const promises = batchIds.map((batchID) => getStudentsForBatch(batchID));
+    const results = await Promise.all(promises);
+
+    // Flatten the results
+    const allStudents = results.reduce((acc, result) => {
+      if (result.success && result.data) {
+        return acc.concat(result.data);
+      }
+      return acc;
+    }, []);
+
+    // Remove duplicates if a student is in multiple selected batches
+    const uniqueStudents = Array.from(
+      new Map(allStudents.map((item) => [item.userID, item])).values()
+    );
+
+    return {
+      success: true,
+      data: uniqueStudents,
+    };
+  } catch (err) {
+    console.error("Error fetching students for batches:", err);
+    throw new Error("Error fetching students for batches");
+  }
+}
+
+/**
  * Sets a batch’s status to either "LOCKED" or "UNLOCKED".
  *
  * If `shouldLock = true`: it will only succeed if the batch exists AND status = "UNLOCKED".

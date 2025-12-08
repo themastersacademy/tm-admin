@@ -9,9 +9,9 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 
-const SubjectContext = createContext();
+import { apiFetch } from "@/src/lib/apiFetch";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+const SubjectContext = createContext();
 
 export const SubjectProvider = ({ children }) => {
   const [subjectList, setSubjectList] = useState([]);
@@ -31,23 +31,17 @@ export const SubjectProvider = ({ children }) => {
     fetchPromiseRef.current = (async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(
-          `${BASE_URL}/api/subjects/get-all-subjects`,
-          {
-            credentials: "include",
-          }
+        const data = await apiFetch(
+          `${
+            process.env.NEXT_PUBLIC_BASE_URL || ""
+          }/api/subjects/get-all-subjects`
         );
 
-        if (response.status === 401) {
-          console.warn("Session expired, redirecting to login...");
-          setHasSessionExpired(true);
-          return;
+        if (data.success) {
+          setSubjectList(data.data.subjects);
+        } else {
+          setSubjectList([]);
         }
-
-        const data = await response.json();
-        const fetchedSubjects = data.success ? data.data.subjects : [];
-
-        setSubjectList(fetchedSubjects);
       } catch (error) {
         console.error("Fetch error:", error);
         setSubjectList([]);

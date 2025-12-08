@@ -26,6 +26,12 @@ export default function ExamQuestions({
   const menuOptions = useMemo(() => ["Remove"], []);
   const { showSnackbar } = useSnackbar();
   const [isLoading, setIsLoading] = useState(true);
+  const [expandedSection, setExpandedSection] = useState(null); // null means all closed
+
+  // Handle accordion toggle - only one open at a time
+  const handleToggleSection = (sectionIndex) => {
+    setExpandedSection((prev) => (prev === sectionIndex ? null : sectionIndex));
+  };
 
   // Use refs to track if data has been fetched
   const hasFetchedExamData = useRef(false);
@@ -96,8 +102,7 @@ export default function ExamQuestions({
             // Create new section
             const newSection = {
               sectionIndex: sections.length,
-              sectionTitle:
-                params.sectionTitle || `Section ${sections.length + 1}`,
+              sectionTitle: params.sectionTitle || "",
               questions: [],
               ...params,
             };
@@ -290,6 +295,8 @@ export default function ExamQuestions({
                   type={type}
                   isLive={isLive}
                   allSections={sections}
+                  expandedSection={expandedSection}
+                  onToggleSection={handleToggleSection}
                 />
               ))}
             </Stack>

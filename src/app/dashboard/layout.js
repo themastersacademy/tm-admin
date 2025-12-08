@@ -17,9 +17,15 @@ export default function Layout({ children }) {
   }, []);
 
   return (
-    <Stack flexDirection="row" bgcolor="var(--sec-color-acc-2)">
+    <Stack
+      flexDirection="row"
+      bgcolor="var(--sec-color-acc-2)"
+      suppressHydrationWarning
+    >
       <SideNav />
-      <Stack width="100%">{children}</Stack>
+      <Stack width="100%" suppressHydrationWarning>
+        {children}
+      </Stack>
     </Stack>
   );
 }

@@ -15,9 +15,9 @@ import {
 } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import CourseBankHeader from "./Components/CourseBankHeader";
-import BankFolderCard from "./Components/BankFolderCard";
-import CreateBankDialog from "./Components/CreateBankDialog";
+import CourseBankHeader from "./components/CourseBankHeader";
+import BankFolderCard from "./components/BankFolderCard";
+import CreateBankDialog from "./components/CreateBankDialog";
 
 export default function Coursebank() {
   const router = useRouter();

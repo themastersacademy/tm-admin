@@ -31,6 +31,8 @@ export default function SelectStudent({
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [selectedStudents, setSelectedStudents] = useState([]);
+  const [batchStudents, setBatchStudents] = useState([]);
+  const [fetchingBatchStudents, setFetchingBatchStudents] = useState(false);
 
   // Fetch initial selected students details if we have IDs but no details
   useEffect(() => {
@@ -61,7 +63,37 @@ export default function SelectStudent({
       }
     };
     fetchSelectedStudents();
-  }, [exam.studentList]);
+  }, [exam.studentList, selectedStudents.length]);
+
+  // Fetch students from selected batches
+  useEffect(() => {
+    const fetchBatchStudents = async () => {
+      if (exam.batchList && exam.batchList.length > 0) {
+        setFetchingBatchStudents(true);
+        try {
+          const data = await apiFetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/get-students-by-batch`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ batchIds: exam.batchList }),
+            }
+          );
+          if (data.success) {
+            setBatchStudents(data.data);
+          }
+        } catch (error) {
+          console.error("Error fetching batch students:", error);
+        } finally {
+          setFetchingBatchStudents(false);
+        }
+      } else {
+        setBatchStudents([]);
+      }
+    };
+
+    fetchBatchStudents();
+  }, [exam.batchList]);
 
   const fetchStudents = useCallback(async (query) => {
     if (!query) {
@@ -94,11 +126,25 @@ export default function SelectStudent({
   }, [inputValue, fetchStudents]);
 
   const handleChange = (event, newValue) => {
+    // Filter out students who are already in the batch list
+    const validSelection = newValue.filter(
+      (student) => !batchStudents.some((bs) => bs.id === student.id)
+    );
+
+    if (validSelection.length !== newValue.length) {
+      showSnackbar(
+        "Some students are already included via batches.",
+        "warning",
+        "",
+        "3000"
+      );
+    }
+
     // newValue is an array of selected objects
-    const studentIds = newValue.map((student) => student.id);
+    const studentIds = validSelection.map((student) => student.id);
 
     // Update local state
-    setSelectedStudents(newValue);
+    setSelectedStudents(validSelection);
 
     // Update parent state
     setExam((prev) => ({
@@ -112,19 +158,52 @@ export default function SelectStudent({
     }
   };
 
-  // We need to sync selectedStudents with exam.studentList
-  // This is tricky if we don't have the full student objects for the IDs in exam.studentList
-  // For now, let's assume the parent passes the full student objects if possible,
-  // OR we only support adding new ones and we display the count of existing ones.
-
-  // Actually, let's look at how `SelectBatch` works. It fetches ALL batches.
-  // We can't fetch ALL students.
-
-  // Alternative: Just use a search box to ADD students. And list existing students below with a delete button.
-  // This avoids the Autocomplete "controlled" issue with missing objects.
+  // Filter options to disable or hide students already in batches
+  const getFilteredOptions = (options) => {
+    return options.map((option) => {
+      const isInBatch = batchStudents.some((bs) => bs.id === option.id);
+      return { ...option, disabled: isInBatch };
+    });
+  };
 
   return (
     <Stack gap="10px">
+      {/* Display Batch Students Summary */}
+      {exam.batchList && exam.batchList.length > 0 && (
+        <Box
+          sx={{
+            padding: "12px",
+            backgroundColor: "var(--primary-color-acc-2)",
+            borderRadius: "8px",
+            border: "1px solid var(--primary-color)",
+          }}
+        >
+          <Stack flexDirection="row" alignItems="center" gap="10px">
+            {fetchingBatchStudents ? (
+              <CircularProgress
+                size={20}
+                sx={{ color: "var(--primary-color)" }}
+              />
+            ) : (
+              <CheckCircle
+                sx={{ color: "var(--primary-color)", fontSize: "20px" }}
+              />
+            )}
+            <Typography
+              sx={{
+                fontSize: "14px",
+                fontWeight: 600,
+                color: "var(--primary-color)",
+              }}
+            >
+              {fetchingBatchStudents
+                ? "Loading students from batches..."
+                : `${batchStudents.length} students included from selected batches`}
+            </Typography>
+          </Stack>
+        </Box>
+      )}
+
       <Autocomplete
         multiple
         id="student-select"
@@ -133,22 +212,19 @@ export default function SelectStudent({
         onClose={() => setOpen(false)}
         isOptionEqualToValue={(option, value) => option.id === value.id}
         getOptionLabel={(option) => option.name || option.email || ""}
-        options={options}
+        options={getFilteredOptions(options)}
+        getOptionDisabled={(option) => option.disabled}
         loading={loading}
         onInputChange={(event, newInputValue) => {
           setInputValue(newInputValue);
         }}
         onChange={handleChange}
         value={selectedStudents}
-        // We are controlling value with selectedStudents.
-        // But if exam.studentList has IDs not in selectedStudents, they won't show.
-        // This is a limitation. We might need a different UI.
-
         disabled={isLive}
         renderInput={(params) => (
           <TextField
             {...params}
-            label="Search and Select Students"
+            label="Search and Select Additional Students"
             placeholder="Type name or email..."
             InputProps={{
               ...params.InputProps,
@@ -163,49 +239,47 @@ export default function SelectStudent({
             }}
           />
         )}
-        renderOption={(props, option) => (
-          <li {...props}>
-            <Stack direction="row" gap="10px" alignItems="center">
-              <Avatar
-                src={option.image}
-                alt={option.name}
-                sx={{ width: 24, height: 24 }}
-              />
-              <Stack>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  {option.name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {option.email}
-                </Typography>
+        renderOption={(props, option) => {
+          const { key, ...otherProps } = props;
+          return (
+            <li key={key} {...otherProps}>
+              <Stack
+                direction="row"
+                gap="10px"
+                alignItems="center"
+                sx={{ opacity: option.disabled ? 0.5 : 1 }}
+              >
+                <Avatar
+                  src={option.image}
+                  alt={option.name}
+                  sx={{ width: 24, height: 24 }}
+                />
+                <Stack>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    {option.name} {option.disabled && "(Already in Batch)"}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {option.email}
+                  </Typography>
+                </Stack>
               </Stack>
-            </Stack>
-          </li>
-        )}
+            </li>
+          );
+        }}
         renderTags={(tagValue, getTagProps) =>
-          tagValue.map((option, index) => (
-            <Chip
-              key={option.id}
-              label={option.name}
-              {...getTagProps({ index })}
-              avatar={<Avatar src={option.image} />}
-            />
-          ))
+          tagValue.map((option, index) => {
+            const { key, ...tagProps } = getTagProps({ index });
+            return (
+              <Chip
+                key={option.id}
+                label={option.name}
+                {...tagProps}
+                avatar={<Avatar src={option.image} />}
+              />
+            );
+          })
         }
       />
-
-      {/* Fallback display for IDs that we don't have objects for? 
-          Or maybe we just fetch the students for the exam in the parent component 
-          and pass them here? 
-          
-          In ExamSettings.js, `exam` object comes from `testList`.
-          Does `testList` contain `studentList` as IDs or objects?
-          In `examController.js`, `getExamById` usually returns the item.
-          If `studentList` is a Set/List of strings, we only have IDs.
-          
-          To make this work properly, we should probably fetch the student details 
-          for the IDs present in `exam.studentList` when the component mounts.
-      */}
     </Stack>
   );
 }

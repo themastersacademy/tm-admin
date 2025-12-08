@@ -21,21 +21,21 @@ import {
 } from "@mui/material";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
-import CourseBankHeader from "../Components/CourseBankHeader";
-import ResourceCard from "../Components/ResourceCard";
+import CourseBankHeader from "../components/CourseBankHeader";
+import ResourceCard from "../components/ResourceCard";
 import axios from "axios";
 
 const UploadFileDialog = dynamic(() =>
-  import("../Components/UploadFileDialog")
+  import("../components/UploadFileDialog")
 );
 const UploadVideoDialog = dynamic(() =>
-  import("../Components/UploadVideoDialog")
+  import("../components/UploadVideoDialog")
 );
 const FilePreviewDialog = dynamic(() =>
-  import("../Components/FilePreviewDialog")
+  import("../components/FilePreviewDialog")
 );
 const StreamVideoDialog = dynamic(() =>
-  import("../Components/StreamVideoDialog")
+  import("../components/StreamVideoDialog")
 );
 
 export default function CourseBankId() {

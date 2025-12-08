@@ -134,29 +134,34 @@ export default function FilterQuestions({
   };
 
   return (
-    <Stack gap="20px">
-      {/* Filter Controls Section */}
+    <Stack gap="16px">
+      {/* Compact Filter Controls Section */}
       <Stack
         sx={{
           background:
-            "linear-gradient(135deg, rgba(255, 152, 0, 0.08) 0%, rgba(245, 124, 0, 0.02) 100%)",
-          borderRadius: "12px",
-          border: "1px solid rgba(255, 152, 0, 0.15)",
-          padding: "20px",
+            "linear-gradient(135deg, rgba(255, 152, 0, 0.06) 0%, rgba(245, 124, 0, 0.02) 100%)",
+          borderRadius: "10px",
+          border: "1px solid rgba(255, 152, 0, 0.12)",
+          padding: "12px 16px",
         }}
       >
-        <Stack gap="16px">
-          {/* Filter Dropdowns Row */}
-          <Stack flexDirection="row" gap="12px" flexWrap="wrap">
-            {selectFields.map(({ name, label, options }) => {
-              let value = "";
-              if (name === "languageSelect") value = filters.subjectID;
-              else if (name === "qTypeSelect") value = filters.type;
-              else if (name === "difficultySelect") value = filters.difficulty;
-              else if (name === "eachSelect") value = filters.eachSelect;
-              return (
+        {/* Single Row with All Controls */}
+        <Stack
+          flexDirection="row"
+          gap="10px"
+          alignItems="center"
+          flexWrap="wrap"
+        >
+          {/* Compact Filter Dropdowns */}
+          {selectFields.map(({ name, label, options }) => {
+            let value = "";
+            if (name === "languageSelect") value = filters.subjectID;
+            else if (name === "qTypeSelect") value = filters.type;
+            else if (name === "difficultySelect") value = filters.difficulty;
+            else if (name === "eachSelect") value = filters.eachSelect;
+            return (
+              <Stack key={name} sx={{ minWidth: "140px", flex: "0 1 auto" }}>
                 <StyledSelect
-                  key={name}
                   title={label}
                   options={options}
                   value={value}
@@ -178,62 +183,93 @@ export default function FilterQuestions({
                       }));
                     }
                   }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      height: "36px",
+                      fontSize: "13px",
+                    },
+                  }}
                 />
-              );
-            })}
+              </Stack>
+            );
+          })}
 
-            {/* Random Count or Selected Display */}
-            {filters.isRandom ? (
-              <StyledTextField
-                type="number"
-                placeholder="Number of questions"
-                value={filters.randomCount}
-                onChange={(e) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    randomCount: e.target.value,
-                  }))
-                }
-              />
-            ) : (
-              <Stack
-                flexDirection="row"
-                gap="10px"
-                alignItems="center"
+          {/* Search Box */}
+          <Stack sx={{ minWidth: "200px", flex: "1 1 auto" }}>
+            <SearchBox
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, search: e.target.value }))
+              }
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: "36px",
+                },
+              }}
+            />
+          </Stack>
+
+          {/* Random Count or Selected Display */}
+          {filters.isRandom ? (
+            <StyledTextField
+              type="number"
+              placeholder="Count"
+              value={filters.randomCount}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  randomCount: e.target.value,
+                }))
+              }
+              sx={{
+                width: "100px",
+                "& .MuiOutlinedInput-root": {
+                  height: "36px",
+                  fontSize: "13px",
+                },
+              }}
+            />
+          ) : (
+            <Stack
+              flexDirection="row"
+              gap="8px"
+              alignItems="center"
+              sx={{
+                border: "1px solid rgba(255, 152, 0, 0.25)",
+                backgroundColor: "rgba(255, 152, 0, 0.08)",
+                minWidth: "100px",
+                borderRadius: "6px",
+                padding: "0px 12px",
+                height: "36px",
+              }}
+            >
+              <Typography
                 sx={{
-                  border: "1px solid rgba(255, 152, 0, 0.25)",
-                  backgroundColor: "rgba(255, 152, 0, 0.08)",
-                  minWidth: "180px",
-                  borderRadius: "8px",
-                  padding: "0px 16px",
-                  height: "40px",
+                  fontWeight: 600,
+                  color: "#FF9800",
+                  fontSize: "12px",
                 }}
               >
-                <Typography
-                  sx={{
-                    fontWeight: 700,
-                    color: "#FF9800",
-                    fontSize: "13px",
-                  }}
-                >
-                  Selected
-                </Typography>
-                <Stack
-                  sx={{
-                    backgroundColor: "#FF9800",
-                    color: "#fff",
-                    borderRadius: "12px",
-                    padding: "2px 10px",
-                    fontSize: "12px",
-                    fontWeight: 700,
-                  }}
-                >
-                  {selectedQuestions.length}
-                </Stack>
+                Selected:
+              </Typography>
+              <Stack
+                sx={{
+                  backgroundColor: "#FF9800",
+                  color: "#fff",
+                  borderRadius: "10px",
+                  padding: "2px 8px",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  minWidth: "24px",
+                  textAlign: "center",
+                }}
+              >
+                {selectedQuestions.length}
               </Stack>
-            )}
+            </Stack>
+          )}
 
-            {/* Apply Button */}
+          {/* Action Buttons */}
+          <Stack flexDirection="row" gap="8px" ml="auto">
             <Button
               variant="contained"
               onClick={handleApplyFilters}
@@ -241,33 +277,24 @@ export default function FilterQuestions({
                 background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
                 color: "#FFFFFF",
                 textTransform: "none",
-                borderRadius: "8px",
-                padding: "10px 24px",
-                fontWeight: 700,
-                fontSize: "14px",
-                boxShadow: "0 4px 12px rgba(255, 152, 0, 0.25)",
-                minWidth: "120px",
+                borderRadius: "6px",
+                padding: "8px 20px",
+                fontWeight: 600,
+                fontSize: "13px",
+                height: "36px",
+                boxShadow: "0 2px 8px rgba(255, 152, 0, 0.2)",
+                minWidth: "100px",
                 "&:hover": {
                   background:
                     "linear-gradient(135deg, #F57C00 0%, #E65100 100%)",
-                  boxShadow: "0 6px 16px rgba(255, 152, 0, 0.35)",
-                  transform: "translateY(-1px)",
+                  boxShadow: "0 4px 12px rgba(255, 152, 0, 0.3)",
                 },
-                transition: "all 0.3s ease",
+                transition: "all 0.2s ease",
               }}
               disableElevation
             >
-              Apply Filters
+              Apply
             </Button>
-          </Stack>
-
-          {/* Search and Add Row */}
-          <Stack flexDirection="row" gap="12px" alignItems="center">
-            <SearchBox
-              onChange={(e) =>
-                setFilters((prev) => ({ ...prev, search: e.target.value }))
-              }
-            />
             <Button
               variant="contained"
               onClick={handleAddQuestions}
@@ -280,15 +307,16 @@ export default function FilterQuestions({
                 color:
                   selectedQuestions.length === 0 ? "var(--text3)" : "#FFFFFF",
                 textTransform: "none",
-                borderRadius: "8px",
-                padding: "10px 32px",
-                fontWeight: 700,
-                fontSize: "14px",
+                borderRadius: "6px",
+                padding: "8px 20px",
+                fontWeight: 600,
+                fontSize: "13px",
+                height: "36px",
                 boxShadow:
                   selectedQuestions.length === 0
                     ? "none"
-                    : "0 4px 12px rgba(76, 175, 80, 0.25)",
-                minWidth: "140px",
+                    : "0 2px 8px rgba(76, 175, 80, 0.2)",
+                minWidth: "120px",
                 "&:hover": {
                   background:
                     selectedQuestions.length === 0
@@ -297,13 +325,9 @@ export default function FilterQuestions({
                   boxShadow:
                     selectedQuestions.length === 0
                       ? "none"
-                      : "0 6px 16px rgba(76, 175, 80, 0.35)",
-                  transform:
-                    selectedQuestions.length === 0
-                      ? "none"
-                      : "translateY(-1px)",
+                      : "0 4px 12px rgba(76, 175, 80, 0.3)",
                 },
-                transition: "all 0.3s ease",
+                transition: "all 0.2s ease",
                 "&.Mui-disabled": {
                   background: "var(--border-color)",
                   color: "var(--text3)",

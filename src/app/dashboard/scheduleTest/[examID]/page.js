@@ -104,6 +104,7 @@ export default function TestID() {
           <ExamStudents
             examAttempts={examAttempts}
             setExamAttempts={setExamAttempts}
+            exam={testList}
           />
         ),
       },

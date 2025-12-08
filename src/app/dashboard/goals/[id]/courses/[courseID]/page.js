@@ -12,9 +12,9 @@ import {
 } from "@mui/material";
 import { NavigateNext, Circle } from "@mui/icons-material";
 import CustomTabs from "@/src/components/CustomTabs/CustomTabs";
-import Basic from "../Components/Basic";
-import Videos from "../Components/Videos";
-import Subscription from "../Components/Subscription";
+import Basic from "../components/Basic";
+import Videos from "../components/Videos";
+import Subscription from "../components/Subscription";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/src/lib/apiFetch";
 import { useParams, useRouter } from "next/navigation";

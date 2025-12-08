@@ -29,7 +29,12 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function ScheduledExamCard({ exam, onClick }) {
+export default function ScheduledExamCard({
+  exam,
+  onClick,
+  viewPath,
+  editPath,
+}) {
   const router = useRouter();
   const [showBatchDialog, setShowBatchDialog] = useState(false);
   const {
@@ -128,6 +133,8 @@ export default function ScheduledExamCard({ exam, onClick }) {
         onClick={() => {
           if (onClick) {
             onClick();
+          } else if (viewPath) {
+            router.push(viewPath);
           } else {
             router.push(`/dashboard/scheduleTest/${id}`);
           }
@@ -260,6 +267,37 @@ export default function ScheduledExamCard({ exam, onClick }) {
                 </Typography>
               </Stack>
 
+              {/* End Time */}
+              {endTimeStamp && (
+                <Stack
+                  flexDirection="row"
+                  alignItems="center"
+                  gap="8px"
+                  justifyContent="space-between"
+                >
+                  <Stack flexDirection="row" alignItems="center" gap="8px">
+                    <Schedule sx={{ fontSize: 18, color: "var(--text3)" }} />
+                    <Typography
+                      variant="body2"
+                      color="var(--text3)"
+                      fontSize="12px"
+                    >
+                      End Time
+                    </Typography>
+                  </Stack>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: "12px",
+                      color: "var(--text2)",
+                    }}
+                  >
+                    {formatDateTime(endTimeStamp)}
+                  </Typography>
+                </Stack>
+              )}
+
               {/* Duration & Marks */}
               <Stack
                 flexDirection="row"
@@ -364,7 +402,13 @@ export default function ScheduledExamCard({ exam, onClick }) {
               <Tooltip title="View Details" arrow>
                 <IconButton
                   size="small"
-                  onClick={() => router.push(`/dashboard/scheduleTest/${id}`)}
+                  onClick={() => {
+                    if (viewPath) {
+                      router.push(viewPath);
+                    } else {
+                      router.push(`/dashboard/scheduleTest/${id}`);
+                    }
+                  }}
                   sx={{
                     flex: 1,
                     borderRadius: "8px",
@@ -382,7 +426,13 @@ export default function ScheduledExamCard({ exam, onClick }) {
               <Tooltip title="Edit Exam" arrow>
                 <IconButton
                   size="small"
-                  onClick={() => router.push(`/dashboard/scheduleTest/${id}`)}
+                  onClick={() => {
+                    if (editPath) {
+                      router.push(editPath);
+                    } else {
+                      router.push(`/dashboard/scheduleTest/${id}`);
+                    }
+                  }}
                   sx={{
                     flex: 1,
                     borderRadius: "8px",

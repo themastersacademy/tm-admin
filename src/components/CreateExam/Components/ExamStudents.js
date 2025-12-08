@@ -40,11 +40,15 @@ export default function ExamStudents({
   examAttempts,
   setExamAttempts,
   showStudentList = true,
+  exam,
 }) {
   const { examID } = useParams();
   const [isLoading, setIsLoading] = useState(
     examAttempts.length === 0 ? true : false
   );
+  const [allStudents, setAllStudents] = useState([]);
+  const [batchStudents, setBatchStudents] = useState([]);
+  const [individualStudents, setIndividualStudents] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [filters, setFilters] = useState({
     status: "All",
@@ -61,15 +65,18 @@ export default function ExamStudents({
     {
       name: "status",
       label: "Status",
+      type: "chip",
       options: [
         { label: "All", value: "All" },
         { label: "Completed", value: "COMPLETED" },
         { label: "In Progress", value: "IN_PROGRESS" },
+        { label: "Not Attended", value: "NOT_ATTENDED" },
       ],
     },
     {
       name: "sortBy",
       label: "Sort By",
+      type: "select",
       options: [
         { label: "Newest First", value: "Newest" },
         { label: "Oldest First", value: "Oldest" },
@@ -85,8 +92,123 @@ export default function ExamStudents({
     setIsOpen(!isOpen);
   };
 
+  // Fetch batch students
+  useEffect(() => {
+    const fetchBatchStudents = async () => {
+      if (exam?.batchList && exam.batchList.length > 0) {
+        try {
+          const data = await apiFetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/get-students-by-batch`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ batchIds: exam.batchList }),
+            }
+          );
+          if (data.success) {
+            setBatchStudents(data.data);
+          }
+        } catch (error) {
+          console.error("Error fetching batch students:", error);
+        }
+      }
+    };
+    fetchBatchStudents();
+  }, [exam?.batchList]);
+
+  // Fetch individual students
+  useEffect(() => {
+    const fetchIndividualStudents = async () => {
+      if (exam?.studentList && exam.studentList.length > 0) {
+        try {
+          const data = await apiFetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/get-by-ids`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ids: exam.studentList }),
+            }
+          );
+          if (data.success) {
+            setIndividualStudents(data.data);
+          }
+        } catch (error) {
+          console.error("Error fetching individual students:", error);
+        }
+      }
+    };
+    fetchIndividualStudents();
+  }, [exam?.studentList]);
+
+  // Merge attempts, batch students, and individual students
+  useEffect(() => {
+    if (!examAttempts) return;
+
+    // Use Email as the unique identifier
+    const attemptsMap = new Map();
+
+    examAttempts.forEach((attempt) => {
+      const email = attempt.userMeta?.email;
+      if (email) {
+        attemptsMap.set(email.toLowerCase(), attempt);
+      }
+    });
+
+    const mergedList = [...examAttempts];
+
+    // Helper to add student if not present
+    const addIfNotPresent = (student, isBatch = false) => {
+      const email = isBatch ? student.studentMeta?.email : student.email;
+
+      if (!email) return;
+
+      const normalizedEmail = email.toLowerCase();
+
+      if (!attemptsMap.has(normalizedEmail)) {
+        // Check if already added to mergedList
+        const alreadyAdded = mergedList.some((item) => {
+          const itemEmail = item.userMeta?.email;
+          return itemEmail && itemEmail.toLowerCase() === normalizedEmail;
+        });
+
+        if (!alreadyAdded) {
+          // Get ID for the new entry
+          const userID = isBatch ? student.id : student.id;
+
+          mergedList.push({
+            userID: userID, // Keep the ID for reference
+            userMeta: {
+              name: isBatch
+                ? student.studentMeta?.name
+                : student.name || "Unknown",
+              email: email,
+              image: isBatch ? student.studentMeta?.image : student.image,
+            },
+            batchMeta: isBatch
+              ? {
+                  title: student.batchMeta?.title || "",
+                  instituteMeta: student.batchMeta?.instituteMeta,
+                }
+              : null,
+            status: "NOT_ATTENDED",
+            obtainedMarks: 0,
+            totalMarks: 0,
+            startTimeStamp: null,
+            title: exam?.title || "",
+            type: "scheduled",
+          });
+        }
+      }
+    };
+
+    batchStudents.forEach((student) => addIfNotPresent(student, true));
+    individualStudents.forEach((student) => addIfNotPresent(student, false));
+
+    setAllStudents(mergedList);
+  }, [examAttempts, batchStudents, individualStudents, exam]);
+
   // Apply search and filter
-  const filteredAttempts = examAttempts
+  const filteredAttempts = allStudents
     .filter((item) => {
       // Search filter
       const matchesSearch =
@@ -105,8 +227,13 @@ export default function ExamStudents({
     .sort((a, b) => {
       switch (filters.sortBy) {
         case "Newest":
+          // Handle null timestamps for NOT_ATTENDED
+          if (!a.startTimeStamp) return 1;
+          if (!b.startTimeStamp) return -1;
           return new Date(b.startTimeStamp) - new Date(a.startTimeStamp);
         case "Oldest":
+          if (!a.startTimeStamp) return 1;
+          if (!b.startTimeStamp) return -1;
           return new Date(a.startTimeStamp) - new Date(b.startTimeStamp);
         case "MarksHighLow":
           return (b.obtainedMarks || 0) - (a.obtainedMarks || 0);
@@ -852,15 +979,27 @@ export default function ExamStudents({
                       email={item.userMeta?.email}
                       image={item.userMeta?.image}
                       status={item.status}
-                      time={new Date(item.startTimeStamp).toLocaleDateString()}
+                      time={
+                        item.startTimeStamp
+                          ? new Date(item.startTimeStamp).toLocaleDateString()
+                          : "-"
+                      }
                       college={item.batchMeta?.instituteMeta?.title}
                       year={item.batchMeta?.title}
                       examName={item?.title}
-                      marks={`${item?.obtainedMarks}/${item?.totalMarks}`}
-                      percent={`${(
-                        (item.obtainedMarks / item.totalMarks) *
-                        100
-                      ).toFixed(0)}%`}
+                      marks={
+                        item.status === "NOT_ATTENDED"
+                          ? "-"
+                          : `${item?.obtainedMarks}/${item?.totalMarks}`
+                      }
+                      percent={
+                        item.status === "NOT_ATTENDED"
+                          ? "-"
+                          : `${(
+                              (item.obtainedMarks / item.totalMarks) *
+                              100
+                            ).toFixed(0)}%`
+                      }
                       onClick={() => handleStudentClick(item)}
                     />
                   )

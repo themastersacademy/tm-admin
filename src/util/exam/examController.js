@@ -824,8 +824,9 @@ export async function getQuestionListBySection({ examID, type, sectionIndex }) {
         (item) => {
           return {
             ...item,
-            id: item.pKey.split("#")[1],
-            subjectID: item.sKey.split("@")[1],
+            questionID: item.sKey.split("#")[1],
+            subjectID: item.pKey.split("#")[1],
+            id: item.pKey.split("#")[1], // Retain for compatibility, but it is SubjectID
             pKey: undefined,
             sKey: undefined,
           };
