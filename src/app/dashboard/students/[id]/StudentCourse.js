@@ -46,7 +46,7 @@ export default function StudentCourse() {
     setIsLoading(true);
     try {
       const data = await apiFetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${id}/get-course-enrollment`
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${id}/get-course-enrollment/`
       );
       if (data.success) {
         const enrichedCourses = data.data.map((enrolledCourse) => {
@@ -405,7 +405,7 @@ const AddCourseDialog = ({ isOpen, onClose, userId, onSuccess }) => {
 
   useEffect(() => {
     if (isOpen) {
-      apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/course/get-all`)
+      apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/course/get-all/`)
         .then((res) => {
           if (res.success) {
             setCourses(res.data);

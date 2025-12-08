@@ -20,7 +20,7 @@ export function CourseProvider({ children }) {
     isLoading,
     mutate,
   } = useSWR(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/course/get-all`,
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/course/get-all/`,
     getFetcher,
     {
       revalidateOnFocus: false,

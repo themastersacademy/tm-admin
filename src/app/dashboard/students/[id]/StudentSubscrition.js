@@ -47,7 +47,7 @@ export default function StudentSubscription() {
     setIsLoading(true);
     try {
       const response = await apiFetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${id}/get-subscription`
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${id}/get-subscription/`
       );
       if (response.success) {
         setSubscriptions(response.data || []);
@@ -433,7 +433,7 @@ const AddSubscriptionDialog = ({ isOpen, onClose, userId, onSuccess }) => {
 
   useEffect(() => {
     if (isOpen) {
-      apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/subscription/get-all`)
+      apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/subscription/get-all/`)
         .then((res) => {
           if (res.status) {
             setPlans(res.data);

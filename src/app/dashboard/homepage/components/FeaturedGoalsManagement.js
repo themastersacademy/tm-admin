@@ -33,8 +33,8 @@ export default function FeaturedGoalsManagement() {
     setIsLoading(true);
     try {
       const [goalsData, featuredData] = await Promise.all([
-        apiFetch("/api/goals/get-all-goals"),
-        apiFetch("/api/homepage/featured-goals"),
+        apiFetch("/api/goals/get-all-goals/"),
+        apiFetch("/api/homepage/featured-goals/"),
       ]);
 
       if (goalsData.success) {

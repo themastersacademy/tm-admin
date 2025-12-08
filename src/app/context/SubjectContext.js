@@ -34,7 +34,7 @@ export const SubjectProvider = ({ children }) => {
         const data = await apiFetch(
           `${
             process.env.NEXT_PUBLIC_BASE_URL || ""
-          }/api/subjects/get-all-subjects`
+          }/api/subjects/get-all-subjects/`
         );
 
         if (data.success) {

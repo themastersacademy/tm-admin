@@ -101,7 +101,7 @@ export default function GoalDialogBox({
           showSnackbar(data.message, "success", "", "3000");
           // Refresh goal list
           apiFetch(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/api/goals/get-all-goals`
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/goals/get-all-goals/`
           ).then((response) => {
             if (response.success) {
               setGoalList(response.data.goals);
