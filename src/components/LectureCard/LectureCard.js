@@ -18,7 +18,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import LinkDialog from "@/src/app/dashboard/goals/[id]/courses/Components/LinkDialog";
+import LinkDialog from "@/src/app/dashboard/goals/[id]/courses/components/LinkDialog";
 import StyledTextField from "../StyledTextField/StyledTextField";
 import StyledSwitch from "../StyledSwitch/StyledSwitch";
 import DeleteDialogBox from "../DeleteDialogBox/DeleteDialogBox";
