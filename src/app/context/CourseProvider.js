@@ -14,13 +14,15 @@ const getFetcher = (url) =>
 const CourseContext = createContext();
 
 export function CourseProvider({ children }) {
+  // Stable cache buster for SWR to prevent 308 redirect loops
+  const timestampRef = React.useRef(Date.now());
   const {
     data: courseRes,
     error: courseErr,
     isLoading,
     mutate,
   } = useSWR(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/course/get-all/`,
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/course/get-all?_t=${timestampRef.current}`,
     getFetcher,
     {
       revalidateOnFocus: false,

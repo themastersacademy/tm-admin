@@ -190,7 +190,7 @@ export default function Coupons() {
   const fetchCoupons = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await apiFetch("/api/coupon/get-all/");
+      const response = await apiFetch("/api/coupon/get-all");
       if (response.success) {
         setCoupons(response.data);
       } else {
@@ -206,8 +206,8 @@ export default function Coupons() {
   const fetchCoursesAndGoals = useCallback(async () => {
     try {
       const [coursesRes, goalsRes] = await Promise.all([
-        apiFetch("/api/course/get-all/"),
-        apiFetch("/api/goals/get-all-goals/"),
+        apiFetch("/api/course/get-all"),
+        apiFetch("/api/goals/get-all-goals"),
       ]);
 
       if (coursesRes.success) {

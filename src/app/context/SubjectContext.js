@@ -34,10 +34,10 @@ export const SubjectProvider = ({ children }) => {
         const data = await apiFetch(
           `${
             process.env.NEXT_PUBLIC_BASE_URL || ""
-          }/api/subjects/get-all-subjects/`
+          }/api/subjects/get-all-subjects?_t=${Date.now()}`
         );
 
-        if (data.success) {
+        if (data?.success) {
           setSubjectList(data.data.subjects);
         } else {
           setSubjectList([]);

@@ -59,11 +59,11 @@ export default function Payments() {
       try {
         const [subsData, couponsData, transData] = await Promise.all([
           apiFetch(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/api/subscription/get-all/`
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/subscription/get-all`
           ),
-          apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/coupon/get-all/`),
+          apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/coupon/get-all`),
           apiFetch(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/api/transactions/get-all/`
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/transactions/get-all`
           ),
         ]);
 

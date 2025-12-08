@@ -43,7 +43,7 @@ export default function Coursebank() {
 
   const fetchCourse = () => {
     setIsLoading(true);
-    apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/bank/get-all-bank/`).then(
+    apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/bank/get-all-bank`).then(
       (data) => {
         if (data.success) {
           setCourseList(data.data.banks);
