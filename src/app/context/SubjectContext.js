@@ -21,8 +21,15 @@ export const SubjectProvider = ({ children }) => {
 
   // Request deduplication: prevent duplicate concurrent API calls
   const fetchPromiseRef = useRef(null);
+  const pathname =
+    typeof window !== "undefined" ? window.location.pathname : "";
 
   const fetchSubject = useCallback(async (forceRefresh = false) => {
+    // Skip fetching if on login page to prevent 401 loops
+    if (pathname === "/login") {
+      return;
+    }
+
     // If already fetching and not forcing refresh, return existing promise
     if (fetchPromiseRef.current && !forceRefresh) {
       return fetchPromiseRef.current;

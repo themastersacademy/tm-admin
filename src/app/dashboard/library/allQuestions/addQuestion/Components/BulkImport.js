@@ -16,7 +16,7 @@ import {
   TextField,
   InputAdornment,
 } from "@mui/material";
-import * as XLSX from "xlsx";
+import { readExcel, writeExcel } from "@/src/lib/excel";
 import { useEffect, useRef, useState } from "react";
 import { sanitizeQuestions } from "@/src/lib/sanitizeQuestion";
 import QuestionCard from "@/src/components/QuestionCard/QuestionCard";
@@ -82,10 +82,7 @@ export default function BulkImport({ subjectTitle, isOpen, close, onSuccess }) {
         solution: "Explanation here",
       },
     ];
-    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Template");
-    XLSX.writeFile(wb, "Question_Import_Template.xlsx");
+    writeExcel(data, "Question_Import_Template.xlsx", "Template", headers);
   };
 
   const handleFileChange = async (e) => {
@@ -95,9 +92,7 @@ export default function BulkImport({ subjectTitle, isOpen, close, onSuccess }) {
     setFile(uploadedFile);
 
     const data = await uploadedFile.arrayBuffer();
-    const workbook = XLSX.read(data);
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+    const jsonData = await readExcel(data);
     const { questions: sanitizedQuestions, errors } = sanitizeQuestions(
       jsonData,
       selectedSubject

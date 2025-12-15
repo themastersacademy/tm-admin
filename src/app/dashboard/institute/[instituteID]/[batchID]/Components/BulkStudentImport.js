@@ -8,7 +8,7 @@ import {
   Typography,
   Box,
 } from "@mui/material";
-import * as XLSX from "xlsx";
+import { readExcel, writeExcel } from "@/src/lib/excel";
 import { useRef, useState } from "react";
 import {
   Close,
@@ -40,18 +40,12 @@ export default function BulkStudentImport({ isOpen, close, onSuccess }) {
         RollNo: "12345",
       },
     ];
-    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Template");
-    XLSX.writeFile(wb, "Student_Import_Template.xlsx");
+    writeExcel(data, "Student_Import_Template.xlsx", "Template", headers);
   };
 
   const handleDownloadErrors = () => {
     if (!error.length) return;
-    const ws = XLSX.utils.json_to_sheet(error);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Errors");
-    XLSX.writeFile(wb, "Import_Errors.xlsx");
+    writeExcel(error, "Import_Errors.xlsx", "Errors");
   };
 
   const handleFileChange = async (e) => {
@@ -61,9 +55,7 @@ export default function BulkStudentImport({ isOpen, close, onSuccess }) {
     setFile(uploadedFile);
 
     const data = await uploadedFile.arrayBuffer();
-    const workbook = XLSX.read(data);
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+    const jsonData = await readExcel(data);
 
     // Basic validation
     const validStudents = [];

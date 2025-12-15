@@ -27,7 +27,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { exportExamToPDF } from "@/src/utils/exportExamPDF";
-import * as XLSX from "xlsx";
+import { writeExcel } from "@/src/lib/excel";
 import StudentProgressCard from "./StudentProgressCard";
 import SearchBox from "../../SearchBox/SearchBox";
 import FilterSideNav from "../../FilterSideNav/FilterSideNav";
@@ -276,15 +276,7 @@ export default function ExamStudents({
 
     if (dataToExport.length === 0) return;
 
-    // Create a new workbook and a worksheet
-    const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-
-    // Append the worksheet to the workbook
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Results");
-
-    // Trigger the download
-    XLSX.writeFile(workbook, `${dataToExport[0]["Exam Name"]}.xlsx`);
+    writeExcel(dataToExport, `${dataToExport[0]["Exam Name"]}.xlsx`, "Results");
   };
 
   const toggleDrawer = (open) => (event) => {
