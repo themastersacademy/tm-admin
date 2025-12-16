@@ -20,6 +20,10 @@ export default async function getAllResources({ bankID }) {
     const bankResponse = await dynamoDB.send(new GetCommand(bankParams));
     console.log("bankResponse", bankResponse);
 
+    if (!bankResponse.Item) {
+      return { success: false, message: "Bank not found" };
+    }
+
     const response = await dynamoDB.send(new ScanCommand(params));
     return {
       success: true,

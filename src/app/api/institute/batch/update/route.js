@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(request) {
   try {
-    const { batchID, title } = await request.json();
+    const { batchID, title, tags } = await request.json();
 
     if (!batchID || !title) {
       return NextResponse.json(
@@ -12,7 +12,7 @@ export async function POST(request) {
       );
     }
 
-    const result = await updateBatch({ batchID, title });
+    const result = await updateBatch({ batchID, title, tags });
 
     return NextResponse.json(result, { status: 200 });
   } catch (err) {

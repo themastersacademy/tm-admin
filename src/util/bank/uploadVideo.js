@@ -35,6 +35,27 @@ export async function createVideo({ title, bankID }) {
       },
     };
     await dynamoDB.send(new PutCommand(resourceParams));
+
+    // 🔹 Update parent Bank item with new resource
+    await dynamoDB.send(
+      new UpdateCommand({
+        TableName: `${process.env.AWS_DB_NAME}content`,
+        Key: { pKey: `BANK#${bankID}`, sKey: `BANKS` },
+        UpdateExpression:
+          "SET resources = list_append(if_not_exists(resources, :empty_list), :new_resource)",
+        ExpressionAttributeValues: {
+          ":empty_list": [],
+          ":new_resource": [
+            {
+              resourceID: resourceParams.Item.pKey.split("#")[1],
+              type: "VIDEO",
+              name: title,
+              createdAt: new Date().toISOString(),
+            },
+          ],
+        },
+      })
+    );
     const { signature, expirationTime } = createSignature({ videoID });
     return {
       success: true,

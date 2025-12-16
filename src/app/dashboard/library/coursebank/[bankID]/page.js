@@ -117,6 +117,10 @@ export default function CourseBankId() {
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/bank/get-bank/${bankID}`,
           { signal: abortSignal }
         );
+
+        // If request was aborted supported by isAborted flag or signal
+        if (signal?.aborted || data.isAborted) return;
+
         if (data.success) {
           setBank(data.data);
           setResourceList(data.data.resources);
@@ -141,7 +145,9 @@ export default function CourseBankId() {
           console.error("Error fetching course data:", error);
         }
       } finally {
-        setIsLoading(false);
+        if (!signal?.aborted) {
+          setIsLoading(false);
+        }
       }
     },
     [bankID, activeTab, showSnackbar, router]

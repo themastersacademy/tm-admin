@@ -34,12 +34,14 @@ export default function BatchPage() {
   const tabs = [
     {
       label: "Students",
-      content: <BatchStudents setStudentCount={setStudentCount} />,
+      content: (
+        <BatchStudents setStudentCount={setStudentCount} batch={batch} />
+      ),
     },
-    {
-      label: "Courses",
-      content: <BatchCourse setCourseCount={setCourseCount} />,
-    },
+    // {
+    //   label: "Courses",
+    //   content: <BatchCourse setCourseCount={setCourseCount} />,
+    // },
     {
       label: "Scheduled Exams",
       content: <ScheduledExams />,

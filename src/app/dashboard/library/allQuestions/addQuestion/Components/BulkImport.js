@@ -65,34 +65,71 @@ export default function BulkImport({ subjectTitle, isOpen, close, onSuccess }) {
 
   const handleDownloadTemplate = () => {
     const headers = [
-      "title",
-      "type",
-      "difficultyLevel",
-      "options",
-      "answerKey",
-      "solution",
+      "Question",
+      "Type",
+      "Level",
+      "Option 1",
+      "Option 2",
+      "Option 3",
+      "Option 4",
+      "Correct answers",
+      "Solution",
+      "Blank 1",
     ];
     const data = [
       {
-        title: "Sample Question?",
-        type: "MCQ",
-        difficultyLevel: 1,
-        options: "Option A, Option B, Option C, Option D",
-        answerKey: "Option A",
-        solution: "Explanation here",
+        Question: "Sample Question?",
+        Type: "MCQ",
+        Level: 1,
+        "Option 1": "Option A",
+        "Option 2": "Option B",
+        "Option 3": "Option C",
+        "Option 4": "Option D",
+        "Correct answers": "Option A",
+        Solution: "Explanation here",
+        "Blank 1": "",
       },
     ];
-    writeExcel(data, "Question_Import_Template.xlsx", "Template", headers);
+
+    const validations = {
+      Type: {
+        type: "list",
+        allowBlank: false,
+        formulae: ['"MCQ,MSQ,FIB"'],
+      },
+      Level: {
+        type: "list",
+        allowBlank: false,
+        formulae: ['"1,2,3"'],
+      },
+    };
+
+    writeExcel(
+      data,
+      "Question_Import_Template.xlsx",
+      "Template",
+      headers,
+      validations
+    );
   };
 
   const handleFileChange = async (e) => {
     const uploadedFile = e.target.files[0];
     if (!uploadedFile) return;
 
+    // Validate file extension
+    const fileName = uploadedFile.name.toLowerCase();
+    if (!fileName.endsWith(".xlsx") && !fileName.endsWith(".csv")) {
+      enqueueSnackbar("Only .xlsx and .csv files are supported.", {
+        variant: "warning",
+      });
+      return;
+    }
+
     setFile(uploadedFile);
 
     const data = await uploadedFile.arrayBuffer();
-    const jsonData = await readExcel(data);
+    const jsonData = await readExcel(data, fileName);
     const { questions: sanitizedQuestions, errors } = sanitizeQuestions(
       jsonData,
       selectedSubject
@@ -330,7 +367,7 @@ export default function BulkImport({ subjectTitle, isOpen, close, onSuccess }) {
         <input
           type="file"
           ref={fileInputRef}
-          accept=".csv, .xlsx, .xls"
+          accept=".csv, .xlsx"
           onChange={handleFileChange}
           style={{ display: "none" }}
         />
@@ -390,7 +427,7 @@ export default function BulkImport({ subjectTitle, isOpen, close, onSuccess }) {
                 Click to upload or drag and drop
               </Typography>
               <Typography variant="body2" color="var(--text3)" fontSize="12px">
-                Supports .csv, .xlsx, .xls
+                Supports .xlsx, .csv
               </Typography>
             </Stack>
           </Stack>

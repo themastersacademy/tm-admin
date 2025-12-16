@@ -62,6 +62,27 @@ export async function createFile({ title, bankID, fileName, fileType }) {
     const command = new PutObjectCommand(fileParams);
     const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
 
+    // 🔹 Update parent Bank item with new resource count/list
+    await dynamoDB.send(
+      new UpdateCommand({
+        TableName: `${process.env.AWS_DB_NAME}content`,
+        Key: { pKey: `BANK#${bankID}`, sKey: `BANKS` },
+        UpdateExpression:
+          "SET resources = list_append(if_not_exists(resources, :empty_list), :new_resource)",
+        ExpressionAttributeValues: {
+          ":empty_list": [],
+          ":new_resource": [
+            {
+              resourceID: resourceParams.Item.pKey.split("#")[1],
+              type: "FILE",
+              name: title,
+              createdAt: resourceParams.Item.createdAt,
+            },
+          ],
+        },
+      })
+    );
+
     return {
       success: true,
       message: "File created successfully",

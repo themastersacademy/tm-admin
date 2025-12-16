@@ -11,6 +11,11 @@ import {
   Search,
   People,
   UploadFile,
+  Edit,
+  Person,
+  LocalOffer,
+  Badge,
+  CheckCircleOutline,
 } from "@mui/icons-material";
 import BulkStudentImport from "./BulkStudentImport";
 import {
@@ -25,12 +30,15 @@ import {
   CircularProgress,
   Card,
   InputAdornment,
+  Dialog,
+  Fade,
+  Box,
 } from "@mui/material";
 import { useParams } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { enqueueSnackbar } from "notistack";
 
-export default function BatchStudents({ setStudentCount }) {
+export default function BatchStudents({ setStudentCount, batch }) {
   const params = useParams();
   const [studentsList, setStudentsList] = useState([]);
   const [studentDialog, setStudentDialog] = useState(false);
@@ -40,6 +48,9 @@ export default function BatchStudents({ setStudentCount }) {
 
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState(null);
+
+  const [editDialog, setEditDialog] = useState(false);
+  const [editingStudent, setEditingStudent] = useState(null);
 
   const studentDialogOpen = () => {
     setStudentDialog(true);
@@ -94,6 +105,40 @@ export default function BatchStudents({ setStudentCount }) {
         enqueueSnackbar(data.message, { variant: "error" });
       }
     });
+  };
+
+  const handleEditClick = (student) => {
+    setEditingStudent(student);
+    setEditDialog(true);
+  };
+
+  const saveStudentUpdate = async (updatedData) => {
+    // updatedData: { tag, rollNo }
+    try {
+      const resp = await apiFetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/institute/${params.instituteID}/${params.batchID}/update-student`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userID: editingStudent.userID,
+            tag: updatedData.tag,
+            rollNo: updatedData.rollNo,
+          }),
+        }
+      );
+      if (resp.success) {
+        enqueueSnackbar("Student updated successfully", { variant: "success" });
+        setEditDialog(false);
+        setEditingStudent(null);
+        fetchStudents(); // Refresh list
+      } else {
+        enqueueSnackbar(resp.message, { variant: "error" });
+      }
+    } catch (err) {
+      console.error(err);
+      enqueueSnackbar("Failed to update student", { variant: "error" });
+    }
   };
 
   const filteredStudents = studentsList.filter(
@@ -185,6 +230,7 @@ export default function BatchStudents({ setStudentCount }) {
                   key={index}
                   student={student}
                   onRemove={confirmDelete}
+                  onEdit={handleEditClick}
                 />
               ))
             ) : (
@@ -213,6 +259,17 @@ export default function BatchStudents({ setStudentCount }) {
           isOpen={bulkImportDialog}
           close={() => setBulkImportDialog(false)}
           onSuccess={fetchStudents}
+          batch={batch}
+        />
+        <EditStudentDialog
+          open={editDialog}
+          onClose={() => {
+            setEditDialog(false);
+            setEditingStudent(null);
+          }}
+          student={editingStudent}
+          batchTags={batch?.tags || []} // Pass batch tags
+          onSave={saveStudentUpdate}
         />
         <DialogBox
           isOpen={deleteDialog}
@@ -247,6 +304,273 @@ export default function BatchStudents({ setStudentCount }) {
     </Stack>
   );
 }
+
+// ... StatCard ...
+
+const EditStudentDialog = ({ open, onClose, student, batchTags, onSave }) => {
+  const [tag, setTag] = useState("");
+  const [rollNo, setRollNo] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (student) {
+      setTag(student.tag || "");
+      setRollNo(student.rollNo || "");
+    }
+  }, [student]);
+
+  const handleSave = async () => {
+    setLoading(true);
+    await onSave({ tag, rollNo });
+    setLoading(false);
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: "24px",
+          overflow: "hidden",
+          boxShadow: "0 24px 48px rgba(0,0,0,0.1)",
+        },
+      }}
+      TransitionComponent={Fade}
+      transitionDuration={400}
+    >
+      {/* Header Section */}
+      <Box
+        sx={{
+          background: "linear-gradient(135deg, #E3F2FD 0%, #FFFFFF 100%)",
+          padding: "32px 32px 24px",
+          borderBottom: "1px solid rgba(33, 150, 243, 0.1)",
+          position: "relative",
+        }}
+      >
+        <IconButton
+          onClick={onClose}
+          sx={{
+            position: "absolute",
+            right: "24px",
+            top: "24px",
+            color: "var(--text3)",
+            "&:hover": { backgroundColor: "rgba(0,0,0,0.04)" },
+          }}
+        >
+          <Close />
+        </IconButton>
+
+        <Stack direction="row" gap="20px" alignItems="center">
+          <Stack
+            sx={{
+              width: "64px",
+              height: "64px",
+              borderRadius: "20px",
+              background: "linear-gradient(135deg, #2196F3 0%, #1976D2 100%)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              boxShadow: "0 8px 16px rgba(33, 150, 243, 0.2)",
+            }}
+          >
+            <Person sx={{ fontSize: "32px", color: "#fff" }} />
+          </Stack>
+          <Stack>
+            <Typography
+              sx={{
+                fontSize: "24px",
+                fontWeight: 800,
+                color: "var(--text1)",
+                fontFamily: "Lato",
+                mb: "4px",
+              }}
+            >
+              Edit Student
+            </Typography>
+            <Typography sx={{ fontSize: "14px", color: "var(--text3)" }}>
+              Update student details for this batch
+            </Typography>
+          </Stack>
+        </Stack>
+      </Box>
+
+      <DialogContent sx={{ padding: "32px" }}>
+        <Stack gap="24px">
+          {/* Input Fields */}
+          <Stack gap="20px">
+            {/* Student Name (Read Only) */}
+            <TextField
+              fullWidth
+              value={student?.studentMeta?.name || ""}
+              disabled
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Person sx={{ color: "var(--text3)" }} />
+                  </InputAdornment>
+                ),
+                sx: {
+                  borderRadius: "12px",
+                  backgroundColor: "var(--bg-color)",
+                  "& fieldset": { border: "1px solid transparent" },
+                },
+              }}
+            />
+
+            <Stack gap="8px">
+              <Typography
+                sx={{
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "var(--text2)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                  ml: "4px",
+                }}
+              >
+                Department (Tag)
+              </Typography>
+              {batchTags && batchTags.length > 0 ? (
+                <TextField
+                  select
+                  fullWidth
+                  value={tag}
+                  onChange={(e) => setTag(e.target.value)}
+                  SelectProps={{ native: true }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LocalOffer sx={{ color: "var(--text3)" }} />
+                      </InputAdornment>
+                    ),
+                    sx: {
+                      borderRadius: "12px",
+                      backgroundColor: "var(--bg-color)",
+                      "& fieldset": { border: "1px solid transparent" },
+                      "&:hover fieldset": {
+                        border: "1px solid var(--primary-color) !important",
+                      },
+                      "&.Mui-focused fieldset": {
+                        border: "1px solid var(--primary-color) !important",
+                      },
+                      transition: "all 0.2s ease",
+                    },
+                  }}
+                >
+                  <option value="">Select Department</option>
+                  {batchTags.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </TextField>
+              ) : (
+                <Typography variant="body2" color="var(--text3)" sx={{ ml: 1 }}>
+                  No tags available for this batch.
+                </Typography>
+              )}
+            </Stack>
+
+            <Stack gap="8px">
+              <Typography
+                sx={{
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "var(--text2)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                  ml: "4px",
+                }}
+              >
+                Roll Number
+              </Typography>
+              <TextField
+                fullWidth
+                placeholder="Enter Roll No"
+                value={rollNo}
+                onChange={(e) => setRollNo(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Badge sx={{ color: "var(--text3)" }} />
+                    </InputAdornment>
+                  ),
+                  sx: {
+                    borderRadius: "12px",
+                    backgroundColor: "var(--bg-color)",
+                    "& fieldset": { border: "1px solid transparent" },
+                    "&:hover fieldset": {
+                      border: "1px solid var(--primary-color) !important",
+                    },
+                    "&.Mui-focused fieldset": {
+                      border: "1px solid var(--primary-color) !important",
+                    },
+                    transition: "all 0.2s ease",
+                  },
+                }}
+              />
+            </Stack>
+          </Stack>
+
+          {/* Action Buttons */}
+          <Stack direction="row" gap="12px" pt="12px">
+            <Button
+              fullWidth
+              onClick={onClose}
+              sx={{
+                height: "52px",
+                borderRadius: "12px",
+                color: "var(--text2)",
+                fontWeight: 600,
+                fontSize: "15px",
+                textTransform: "none",
+                backgroundColor: "var(--bg-color)",
+                "&:hover": { backgroundColor: "var(--border-color)" },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={handleSave}
+              disabled={loading}
+              sx={{
+                height: "52px",
+                borderRadius: "12px",
+                background: "linear-gradient(135deg, #2196F3 0%, #1976D2 100%)",
+                fontWeight: 700,
+                fontSize: "15px",
+                textTransform: "none",
+                boxShadow: "0 8px 20px rgba(33, 150, 243, 0.25)",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, #1E88E5 0%, #1565C0 100%)",
+                  boxShadow: "0 12px 24px rgba(33, 150, 243, 0.35)",
+                },
+                "&.Mui-disabled": {
+                  background: "#e0e0e0",
+                },
+              }}
+            >
+              {loading ? (
+                <CircularProgress size={24} sx={{ color: "var(--text2)" }} />
+              ) : (
+                <Stack direction="row" alignItems="center" gap="8px">
+                  <span>Save Changes</span>
+                  <CheckCircleOutline sx={{ fontSize: "20px" }} />
+                </Stack>
+              )}
+            </Button>
+          </Stack>
+        </Stack>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 function StatCard({ title, value, icon }) {
   return (

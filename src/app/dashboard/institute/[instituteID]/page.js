@@ -49,6 +49,9 @@ export default function InstituteID() {
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/institute/${instituteID}/get-all-batch`,
           { signal: abortSignal }
         );
+
+        if (data.isAborted || signal?.aborted) return;
+
         if (data.success) {
           setBatch(data.data);
           setBatchList(data.data.batchList);
@@ -67,14 +70,16 @@ export default function InstituteID() {
   );
 
   const handleCreateOrUpdateBatch = useCallback(
-    async ({ title }) => {
+    async ({ title, tags }) => {
       const controller = new AbortController();
       const isEdit = !!editingBatch;
       const url = isEdit
         ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/institute/batch/update`
         : `${process.env.NEXT_PUBLIC_BASE_URL}/api/institute/${instituteID}/create-batch`;
 
-      const body = isEdit ? { batchID: editingBatch.id, title } : { title };
+      const body = isEdit
+        ? { batchID: editingBatch.id, title, tags }
+        : { title, tags };
 
       try {
         const data = await apiFetch(url, {

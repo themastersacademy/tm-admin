@@ -11,12 +11,14 @@ import {
   Fade,
   CircularProgress,
   Box,
+  Chip,
 } from "@mui/material";
 import {
   Close,
   ClassOutlined,
   CheckCircleOutline,
   School,
+  LocalOfferOutlined,
 } from "@mui/icons-material";
 
 export default function CreateBatchDialog({
@@ -27,6 +29,8 @@ export default function CreateBatchDialog({
   initialData,
 }) {
   const [title, setTitle] = useState("");
+  const [tags, setTags] = useState([]);
+  const [tagInput, setTagInput] = useState("");
   const [errors, setErrors] = useState({});
 
   // Reset form when dialog opens/closes
@@ -34,9 +38,12 @@ export default function CreateBatchDialog({
     if (open) {
       if (initialData) {
         setTitle(initialData.title || "");
+        setTags(initialData.tags || []);
       } else {
         setTitle("");
+        setTags([]);
       }
+      setTagInput("");
       setErrors({});
     }
   }, [open, initialData]);
@@ -51,8 +58,22 @@ export default function CreateBatchDialog({
 
   const handleSubmit = () => {
     if (validate()) {
-      onSubmit({ title });
+      onSubmit({ title, tags });
     }
+  };
+
+  const handleAddTag = (e) => {
+    if (e.key === "Enter" && tagInput.trim()) {
+      e.preventDefault();
+      if (!tags.includes(tagInput.trim())) {
+        setTags([...tags, tagInput.trim()]);
+      }
+      setTagInput("");
+    }
+  };
+
+  const handleDeleteTag = (tagToDelete) => {
+    setTags(tags.filter((tag) => tag !== tagToDelete));
   };
 
   const isEdit = !!initialData;
@@ -179,6 +200,70 @@ export default function CreateBatchDialog({
                   },
                 }}
               />
+
+              <Stack gap="8px">
+                <Typography
+                  sx={{
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    color: "var(--text2)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    ml: "4px",
+                    mt: "12px",
+                  }}
+                >
+                  Departments (Tags)
+                </Typography>
+                <TextField
+                  fullWidth
+                  placeholder="Add Department (e.g. CSE, ECE) and press Enter"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleAddTag}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LocalOfferOutlined sx={{ color: "var(--text3)" }} />
+                      </InputAdornment>
+                    ),
+                    sx: {
+                      borderRadius: "12px",
+                      backgroundColor: "var(--bg-color)",
+                      "& fieldset": { border: "1px solid transparent" },
+                      "&:hover fieldset": {
+                        border: "1px solid var(--primary-color) !important",
+                      },
+                      "&.Mui-focused fieldset": {
+                        border: "1px solid var(--primary-color) !important",
+                      },
+                      transition: "all 0.2s ease",
+                    },
+                  }}
+                />
+
+                <Stack
+                  direction="row"
+                  flexWrap="wrap"
+                  gap="8px"
+                  minHeight="32px"
+                >
+                  {tags.map((tag, index) => (
+                    <Chip
+                      key={index}
+                      label={tag}
+                      onDelete={() => handleDeleteTag(tag)}
+                      sx={{
+                        backgroundColor: "rgba(33, 150, 243, 0.1)",
+                        color: "var(--primary-color)",
+                        fontWeight: 600,
+                        fontFamily: "Lato",
+                        borderRadius: "8px",
+                      }}
+                    />
+                  ))}
+                </Stack>
+              </Stack>
             </Stack>
           </Stack>
 

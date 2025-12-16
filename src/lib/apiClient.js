@@ -54,6 +54,13 @@ class ApiClient {
 
       return await response.json(); // Should try parsing anyway
     } catch (error) {
+      if (error.name === "AbortError") {
+        return {
+          success: false,
+          isAborted: true,
+          message: "Request cancelled",
+        };
+      }
       console.error("API Request Failed:", error);
       return { success: false, message: error.message };
     }

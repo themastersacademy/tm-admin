@@ -34,6 +34,29 @@ export async function deleteResource({ resourceID, bankID }) {
       throw new Error("Invalid resource type");
     }
     await dynamoDB.send(new DeleteCommand(params));
+
+    // 🔹 Update parent Bank item to remove resource
+    const bankParams = {
+      TableName: `${process.env.AWS_DB_NAME}content`,
+      Key: { pKey: `BANK#${bankID}`, sKey: `BANKS` },
+    };
+    const bankResponse = await dynamoDB.send(new GetCommand(bankParams));
+    if (bankResponse.Item && bankResponse.Item.resources) {
+      const updatedResources = bankResponse.Item.resources.filter(
+        (r) => r.resourceID !== resourceID
+      );
+      await dynamoDB.send(
+        new UpdateCommand({
+          TableName: `${process.env.AWS_DB_NAME}content`,
+          Key: { pKey: `BANK#${bankID}`, sKey: `BANKS` },
+          UpdateExpression: "SET resources = :resources",
+          ExpressionAttributeValues: {
+            ":resources": updatedResources,
+          },
+        })
+      );
+    }
+
     return { success: true, message: "Resource deleted successfully" };
   } catch (err) {
     console.error("DynamoDB Error:", err);

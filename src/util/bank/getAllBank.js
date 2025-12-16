@@ -16,8 +16,13 @@ export default async function getAllBank() {
       message: "All banks fetched successfully",
       data: {
         banks: response.Items.map((bank) => {
-          const { pKey, title } = bank;
-          return { bankID: pKey.split("#")[1], title };
+          const { pKey, title, createdAt, resources } = bank;
+          return {
+            bankID: pKey.split("#")[1],
+            title,
+            createdAt,
+            resources: resources || [],
+          };
         }),
       },
     };

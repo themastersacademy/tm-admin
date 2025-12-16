@@ -2,7 +2,7 @@ import { createBatch } from "@/src/util/institute/batchControllers";
 
 export async function POST(req, { params }) {
   const { instituteID } = await params;
-  const { title } = await req.json();
+  const { title, tags } = await req.json();
 
   if (!instituteID || !title) {
     return Response.json(
@@ -12,7 +12,7 @@ export async function POST(req, { params }) {
   }
 
   try {
-    const result = await createBatch({ instituteID, title });
+    const result = await createBatch({ instituteID, title, tags });
     return Response.json(result);
   } catch (error) {
     return Response.json(

@@ -19,7 +19,7 @@ import {
 import { enqueueSnackbar } from "notistack";
 import { useParams } from "next/navigation";
 
-export default function BulkStudentImport({ isOpen, close, onSuccess }) {
+export default function BulkStudentImport({ isOpen, close, onSuccess, batch }) {
   const params = useParams();
   const fileInputRef = useRef(null);
   const [file, setFile] = useState(null);
@@ -28,19 +28,43 @@ export default function BulkStudentImport({ isOpen, close, onSuccess }) {
   const [error, setError] = useState([]);
   const [isOpenAccordion, setIsOpenAccordion] = useState(false);
 
+  const hasTags = batch?.tags && batch.tags.length > 0;
+
   const triggerFileInput = () => {
     fileInputRef.current.click();
   };
 
   const handleDownloadTemplate = () => {
     const headers = ["Email", "RollNo"];
+    if (hasTags) {
+      headers.push("Department");
+    }
+
     const data = [
       {
         Email: "student@example.com",
         RollNo: "12345",
+        ...(hasTags && { Department: batch.tags[0] }),
       },
     ];
-    writeExcel(data, "Student_Import_Template.xlsx", "Template", headers);
+
+    const validations = hasTags
+      ? {
+          Department: {
+            type: "list",
+            allowBlank: true,
+            formulae: [`"${batch.tags.join(",")}"`],
+          },
+        }
+      : null;
+
+    writeExcel(
+      data,
+      "Student_Import_Template.xlsx",
+      "Template",
+      headers,
+      validations
+    );
   };
 
   const handleDownloadErrors = () => {
@@ -62,8 +86,20 @@ export default function BulkStudentImport({ isOpen, close, onSuccess }) {
     const errors = [];
 
     jsonData.forEach((row, index) => {
+      let rowError = null;
+
       if (!row.Email) {
-        errors.push({ ...row, row: index + 2, error: "Email is required" });
+        rowError = "Email is required";
+      } else if (hasTags) {
+        if (!row.Department) {
+          rowError = "Department is required";
+        } else if (!batch.tags.includes(row.Department)) {
+          rowError = `Invalid Department. Allowed: ${batch.tags.join(", ")}`;
+        }
+      }
+
+      if (rowError) {
+        errors.push({ ...row, row: index + 2, error: rowError });
       } else {
         validStudents.push(row);
       }

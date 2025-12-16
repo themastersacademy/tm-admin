@@ -19,7 +19,7 @@ export async function POST(req, { params }) {
   const errors = [];
 
   for (const student of students) {
-    const { Email, RollNo } = student;
+    const { Email, RollNo, Department } = student; // Extract Department
 
     if (!Email) {
       errors.push({ ...student, error: "Email is required" });
@@ -28,9 +28,6 @@ export async function POST(req, { params }) {
 
     try {
       // Find user by email
-      // We use getAllUsers with search parameter.
-      // Note: This might return multiple users if the search term matches multiple names/emails.
-      // We need to filter exactly by email.
       const userSearch = await getAllUsers({ search: Email, limit: 10 });
 
       let user = null;
@@ -45,8 +42,13 @@ export async function POST(req, { params }) {
         continue;
       }
 
-      // Enroll user
-      await enrollStudentInBatch({ userID: user.id, batchID, rollNo: RollNo });
+      // Enroll user with tag
+      await enrollStudentInBatch({
+        userID: user.id,
+        batchID,
+        rollNo: RollNo,
+        tag: Department, // Pass tag
+      });
       results.push({ ...student, status: "Enrolled" });
     } catch (error) {
       errors.push({ ...student, error: error.message });

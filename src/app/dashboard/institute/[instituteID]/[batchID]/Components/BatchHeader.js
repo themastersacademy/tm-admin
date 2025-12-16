@@ -204,14 +204,14 @@ export default function BatchHeader({
             bgColor="rgba(76, 175, 80, 0.08)"
             isLoading={isLoading}
           />
-          <ModernStatCard
+          {/* <ModernStatCard
             icon={<School />}
             label="Courses"
             value={courseCount || 0}
             color="#2196F3"
             bgColor="rgba(33, 150, 243, 0.08)"
             isLoading={isLoading}
-          />
+          /> */}
         </Stack>
       </Stack>
     </Stack>
