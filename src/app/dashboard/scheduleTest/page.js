@@ -47,8 +47,6 @@ export default function ScheduleTest() {
       if (data.success) {
         setStudentList(data.data);
       }
-    } catch (error) {
-      console.error("Error searching students:", error);
     } finally {
       setIsSearchingStudents(false);
     }
@@ -77,13 +75,15 @@ export default function ScheduleTest() {
           { signal: abortSignal }
         );
         if (data.success) {
-          setTestList(data.data);
+          const sortedData = data.data.sort(
+            (a, b) => b.createdAt - a.createdAt
+          );
+          setTestList(sortedData);
         } else {
           showSnackbar(data.message, "error", "", "3000");
         }
       } catch (error) {
         if (error.name !== "AbortError") {
-          console.error("Error fetching scheduled tests:", error);
         }
       } finally {
         setIsLoading(false);
@@ -103,11 +103,11 @@ export default function ScheduleTest() {
         if (data.success) {
           setBatchList(data.data);
         } else {
-          showSnackbar("No Batch Found", "error", "", "3000");
+          // showSnackbar("No Batch Found", "error", "", "3000");
         }
       } catch (error) {
         if (error.name !== "AbortError") {
-          console.error("Error fetching batches:", error);
+          // console.error("Error fetching batches:", error);
         }
       }
     },
@@ -182,7 +182,7 @@ export default function ScheduleTest() {
         showSnackbar("Something went wrong", "error", "", "3000");
       }
     } catch (error) {
-      console.error("Error creating exam:", error);
+      // console.error("Error creating exam:", error);
       showSnackbar("Failed to create exam", "error", "", "3000");
     } finally {
       setIsCreating(false);
