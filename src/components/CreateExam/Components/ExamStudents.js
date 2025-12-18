@@ -150,6 +150,14 @@ export default function ExamStudents({
     examAttempts.forEach((attempt) => {
       const email = attempt.userMeta?.email;
       if (email) {
+        // Try to find matching batch student to enrich attempt with rollNo/tag
+        const batchStudent = batchStudents.find(
+          (bs) => bs.studentMeta?.email?.toLowerCase() === email.toLowerCase()
+        );
+        if (batchStudent) {
+          attempt.rollNo = batchStudent.rollNo || "-";
+          attempt.tag = batchStudent.tag || "-";
+        }
         attemptsMap.set(email.toLowerCase(), attempt);
       }
     });
@@ -190,6 +198,8 @@ export default function ExamStudents({
                   instituteMeta: student.batchMeta?.instituteMeta,
                 }
               : null,
+            rollNo: isBatch ? student.rollNo || "-" : "-",
+            tag: isBatch ? student.tag || "-" : "-",
             status: "NOT_ATTENDED",
             obtainedMarks: 0,
             totalMarks: 0,
@@ -262,10 +272,12 @@ export default function ExamStudents({
     // Export filtered data
     const dataToExport = filteredAttempts.map((item) => ({
       Name: item.userMeta?.name,
+      "Roll No": item.rollNo || "-",
       Email: item.userMeta?.email,
       "Exam Name": item.title,
       College: item.batchMeta?.instituteMeta?.title,
       Batch: item.batchMeta?.title,
+      Department: item.tag || "-",
       Status: item.status,
       "Date & Time": new Date(item.startTimeStamp).toLocaleString(),
       Marks: `${item.obtainedMarks} / ${item.totalMarks}`,
@@ -978,6 +990,8 @@ export default function ExamStudents({
                       }
                       college={item.batchMeta?.instituteMeta?.title}
                       year={item.batchMeta?.title}
+                      rollNo={item.rollNo}
+                      tag={item.tag}
                       examName={item?.title}
                       marks={
                         item.status === "NOT_ATTENDED"

@@ -19,6 +19,8 @@ export default function StudentProgressCard({
   image,
   year,
   college,
+  rollNo,
+  tag,
   time,
   status,
   percent,
@@ -145,6 +147,54 @@ export default function StudentProgressCard({
           >
             {year}
           </Typography>
+        </Stack>
+
+        <Stack gap="8px" flex={1}>
+          <Typography
+            sx={{
+              fontFamily: "Lato",
+              fontSize: "14px",
+              fontWeight: "600",
+              color: "var(--text2)",
+            }}
+          >
+            {rollNo || "-"}
+          </Typography>
+          <Stack flexDirection="row" alignItems="center" gap="6px">
+            <Typography
+              sx={{
+                fontFamily: "Lato",
+                fontSize: "12px",
+                color: "var(--text4)",
+              }}
+            >
+              Roll No
+            </Typography>
+          </Stack>
+        </Stack>
+
+        <Stack gap="8px" flex={1}>
+          <Typography
+            sx={{
+              fontFamily: "Lato",
+              fontSize: "14px",
+              fontWeight: "600",
+              color: "var(--text2)",
+            }}
+          >
+            {tag || "-"}
+          </Typography>
+          <Stack flexDirection="row" alignItems="center" gap="6px">
+            <Typography
+              sx={{
+                fontFamily: "Lato",
+                fontSize: "12px",
+                color: "var(--text4)",
+              }}
+            >
+              Department
+            </Typography>
+          </Stack>
         </Stack>
 
         <Stack gap="8px" flex={1}>
