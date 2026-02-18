@@ -8,29 +8,79 @@ import {
   useRef,
 } from "react";
 import { useRouter } from "next/navigation";
-
 import { apiFetch } from "@/src/lib/apiFetch";
 
 const SubjectContext = createContext();
 
+const CACHE_KEY = "tma_subjects_cache";
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+/** Read subjects from localStorage. Returns null if missing or expired. */
+function readCache() {
+  try {
+    if (typeof window === "undefined") return null;
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { data, timestamp } = JSON.parse(raw);
+    if (Date.now() - timestamp > CACHE_TTL_MS) {
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+/** Write subjects to localStorage with a timestamp. */
+function writeCache(data) {
+  try {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({ data, timestamp: Date.now() }),
+    );
+  } catch {
+    // localStorage may be unavailable (private mode, quota exceeded) — ignore
+  }
+}
+
+/** Remove the subjects cache (call after create/delete/update subject). */
+export function clearSubjectCache() {
+  try {
+    if (typeof window !== "undefined") localStorage.removeItem(CACHE_KEY);
+  } catch {}
+}
+
 export const SubjectProvider = ({ children }) => {
-  const [subjectList, setSubjectList] = useState([]);
+  // Initialise from cache synchronously so the first render already has data
+  const [subjectList, setSubjectList] = useState(() => readCache() ?? []);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasSessionExpired, setHasSessionExpired] = useState(false);
   const router = useRouter();
 
   // Request deduplication: prevent duplicate concurrent API calls
   const fetchPromiseRef = useRef(null);
-  const pathname =
-    typeof window !== "undefined" ? window.location.pathname : "";
 
   const fetchSubject = useCallback(async (forceRefresh = false) => {
     // Skip fetching if on login page to prevent 401 loops
-    if (pathname === "/login") {
+    if (
+      typeof window !== "undefined" &&
+      window.location.pathname === "/login"
+    ) {
       return;
     }
 
-    // If already fetching and not forcing refresh, return existing promise
+    // Return cached data if still fresh and not forcing a refresh
+    if (!forceRefresh) {
+      const cached = readCache();
+      if (cached) {
+        setSubjectList(cached);
+        setIsLoading(false);
+        return;
+      }
+    }
+
+    // If already fetching, reuse the in-flight promise
     if (fetchPromiseRef.current && !forceRefresh) {
       return fetchPromiseRef.current;
     }
@@ -39,19 +89,21 @@ export const SubjectProvider = ({ children }) => {
       setIsLoading(true);
       try {
         const data = await apiFetch(
-          `${
-            process.env.NEXT_PUBLIC_BASE_URL || ""
-          }/api/subjects/get-all-subjects?_t=${Date.now()}`
+          `${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/subjects/get-all-subjects`,
         );
 
         if (data?.success) {
-          setSubjectList(data.data.subjects);
+          const subjects = data.data.subjects;
+          setSubjectList(subjects);
+          writeCache(subjects);
         } else {
           setSubjectList([]);
         }
       } catch (error) {
-        console.error("Fetch error:", error);
-        setSubjectList([]);
+        console.error("Fetch subjects error:", error);
+        // Keep stale cache rather than wiping the list on a transient error
+        const stale = readCache();
+        if (stale) setSubjectList(stale);
       } finally {
         setIsLoading(false);
       }
@@ -64,17 +116,10 @@ export const SubjectProvider = ({ children }) => {
     }
   }, []);
 
-  // Fetch subjects on mount
+  // Fetch on mount (will use cache if fresh)
   useEffect(() => {
     fetchSubject();
   }, [fetchSubject]);
-
-  // Handle session expiration
-  useEffect(() => {
-    if (hasSessionExpired) {
-      router.push("/login");
-    }
-  }, [hasSessionExpired, router]);
 
   const contextValue = useMemo(
     () => ({
@@ -82,7 +127,7 @@ export const SubjectProvider = ({ children }) => {
       fetchSubject,
       isLoading,
     }),
-    [subjectList, fetchSubject, isLoading]
+    [subjectList, fetchSubject, isLoading],
   );
 
   return (

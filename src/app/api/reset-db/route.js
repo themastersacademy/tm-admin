@@ -44,7 +44,7 @@ export async function POST() {
               RequestItems: {
                 [TABLE]: deleteRequests,
               },
-            })
+            }),
           );
           deletedCount += chunk.length;
         }
@@ -61,7 +61,7 @@ export async function POST() {
     console.error("Error resetting DB:", error);
     return Response.json(
       { success: false, error: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

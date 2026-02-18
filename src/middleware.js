@@ -19,7 +19,6 @@ const publicRoutes = [
 
 export async function middleware(request) {
   const pathname = request.nextUrl.pathname;
-  console.log(pathname);
   const { device } = userAgent(request);
   const cookieStore = await cookies();
 
@@ -50,7 +49,7 @@ export async function middleware(request) {
           {
             status: 401,
             headers: { "Content-Type": "application/json" },
-          }
+          },
         );
       }
       return loginRedirect(request);
@@ -71,7 +70,8 @@ export async function middleware(request) {
 
     return NextResponse.next({ headers: requestHeaders });
   } catch (error) {
-    console.log(error);
+    // Log only the error name (e.g. "JWTExpired") — never log the full token or payload
+    console.error("Middleware auth error:", error.name);
     await cookieStore.delete("session");
     if (pathname.startsWith("/api/")) {
       return new Response(JSON.stringify({ message: "Unauthorized" }), {

@@ -15,6 +15,9 @@ import { ScanCommand } from "@aws-sdk/lib-dynamodb";
  * @param {Object} [params.lastKey=null] - (Optional) The last evaluated key for pagination.
  * @returns {Promise<Object>} An object containing the fetched questions, pagination token, and a success message.
  */
+// IMPORTANT: DynamoDB applies `Limit` BEFORE evaluating FilterExpression on a Scan.
+// This means a page may return fewer items than `limit` even when more matching items exist.
+// Always check `lastEvaluatedKey` to determine if more pages are available.
 export default async function getQuestions({
   type,
   difficulty,
@@ -23,13 +26,15 @@ export default async function getQuestions({
   limit = 10,
   lastKey = null,
 }) {
-  console.log(searchTerm);
-
-  // Build the base FilterExpression for sKey.
-  // If a subjectID is provided, the prefix becomes "QUESTIONS@<subjectID>"; otherwise, it defaults to "QUESTIONS@".
-  let filterExp = "begins_with(sKey, :prefix)";
+  // Build the base FilterExpression.
+  // Questions have sKey = QUESTION#<id> and pKey = SUBJECT#<subjectID>.
+  // When filtering by subjectID, we match on pKey prefix; otherwise we match all QUESTION# sKeys.
+  let filterExp = subjectID
+    ? "pKey = :pKey AND begins_with(sKey, :prefix)"
+    : "begins_with(sKey, :prefix)";
   const expAttrVals = {
-    ":prefix": subjectID ? `QUESTIONS@${subjectID}` : "QUESTIONS@",
+    ":prefix": "QUESTION#",
+    ...(subjectID && { ":pKey": `SUBJECT#${subjectID}` }),
   };
   const expAttrNames = {};
 
@@ -46,10 +51,10 @@ export default async function getQuestions({
     expAttrVals[":type"] = type;
   }
 
-  // Add difficulty filter if provided.
+  // Add difficulty filter if provided (DB field is difficultyLevel, not difficulty).
   if (difficulty) {
-    filterExp += " AND difficulty = :difficulty";
-    expAttrVals[":difficulty"] = difficulty;
+    filterExp += " AND difficultyLevel = :difficulty";
+    expAttrVals[":difficulty"] = Number(difficulty);
   }
 
   // Prepare the DynamoDB scan parameters with the built filter expression.
@@ -73,21 +78,20 @@ export default async function getQuestions({
   try {
     // Execute the scan operation.
     const result = await dynamoDB.send(new ScanCommand(params));
-    console.log(result);
-    // Sort the items by createdAt in descending order so that the most recent questions appear first.
+    // Sort items by createdAt descending so the most recent questions appear first.
     const sortedItems = result.Items.sort((a, b) => b.createdAt - a.createdAt);
 
     return {
       success: true,
       message: "Questions fetched successfully",
       data: sortedItems.map((item) => ({
-        id: item.pKey.split("#")[1],
-        subjectID: item.sKey.split("@")[1],
+        id: item.sKey.split("#")[1], // sKey = QUESTION#<id>
+        subjectID: item.pKey.split("#")[1], // pKey = SUBJECT#<subjectID>
         title: item.title,
         type: item.type,
         options: item.options,
-        difficulty: item.difficulty,
-        correctAnswers: item.correctAnswers, // or correctAnswers if that's your field name
+        difficulty: item.difficultyLevel, // DB field is difficultyLevel
+        correctAnswers: item.correctAnswers,
         solution: item.solution,
         subjectTitle: item.subjectTitle,
         ...(item.type === "FIB" && { noOfBlanks: item.noOfBlanks }),

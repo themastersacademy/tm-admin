@@ -44,8 +44,8 @@ import MDPreview from "@/src/components/MarkdownPreview/MarkdownPreview";
 import SearchQuestions from "./Components/SearchQuestion";
 
 const BulkImport = dynamic(() => import("./addQuestion/Components/BulkImport"));
-const CreateQuestionDialog = dynamic(() =>
-  import("./Components/CreateQuestionDialog")
+const CreateQuestionDialog = dynamic(
+  () => import("./Components/CreateQuestionDialog"),
 );
 
 export default function AllQuestions() {
@@ -117,7 +117,7 @@ export default function AllQuestions() {
         ],
       },
     ],
-    [subjectList]
+    [subjectList],
   );
 
   const dialogDeleteOpen = (id, subjectID) => {
@@ -163,7 +163,7 @@ export default function AllQuestions() {
 
         const res = await apiFetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/stats${query}`,
-          { signal: abortSignal }
+          { signal: abortSignal },
         );
         if (res.success) {
           setStats(res.data);
@@ -174,7 +174,7 @@ export default function AllQuestions() {
         }
       }
     },
-    [filters, searchQuery]
+    [filters, searchQuery],
   );
 
   const fetchQuestions = useCallback(
@@ -235,7 +235,7 @@ export default function AllQuestions() {
         setIsLoading(false);
       }
     },
-    [filters, searchQuery, page, rowsPerPage]
+    [filters, searchQuery, page, rowsPerPage],
   );
 
   // Reset pagination when filters or search change
@@ -278,7 +278,7 @@ export default function AllQuestions() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ questionID: id, subjectID }),
-        }
+        },
       );
       if (res.success) {
         setQuestionList((prev) => prev.filter((q) => q.id !== id));
@@ -508,7 +508,7 @@ export default function AllQuestions() {
                     questionType={item.type || "MCQ"}
                     subjectID={item.subjectID}
                     question={<MDPreview value={item.title} />}
-                    difficulty={item.difficultyLevel}
+                    difficulty={item.difficulty}
                     preview={
                       <Chip
                         icon={<Visibility sx={{ fontSize: "16px" }} />}
@@ -643,7 +643,7 @@ export default function AllQuestions() {
               questionData={selectedQuestion}
               subjectTitle={
                 subjectList.find(
-                  (subject) => subject.subjectID === selectedQuestion.subjectID
+                  (subject) => subject.subjectID === selectedQuestion.subjectID,
                 )?.title || "Unknown"
               }
             />

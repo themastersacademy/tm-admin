@@ -9,7 +9,7 @@ import {
   Box,
   Tooltip,
 } from "@mui/material";
-import React, { useContext, useEffect } from "react";
+import React, { useContext } from "react";
 
 export default function QuestionCard({
   questionNumber,
@@ -23,15 +23,11 @@ export default function QuestionCard({
   subjectID,
   isLive,
 }) {
-  const { subjectList, fetchSubject } = useContext(SubjectContext);
-
-  useEffect(() => {
-    fetchSubject();
-  }, [fetchSubject]);
+  const { subjectList } = useContext(SubjectContext);
 
   const subjectTitle = React.useMemo(() => {
     const subject = subjectList.find(
-      (subject) => subject.subjectID === subjectID
+      (subject) => subject.subjectID === subjectID,
     );
     return subject ? subject.title : "Unknown";
   }, [subjectList, subjectID]);
@@ -117,8 +113,8 @@ export default function QuestionCard({
                       difficulty === 1
                         ? "Easy"
                         : difficulty === 2
-                        ? "Medium"
-                        : "Hard"
+                          ? "Medium"
+                          : "Hard"
                     }
                     size="small"
                     sx={{
@@ -130,14 +126,14 @@ export default function QuestionCard({
                         difficulty === 1
                           ? "rgba(76, 175, 80, 0.08)"
                           : difficulty === 2
-                          ? "rgba(255, 152, 0, 0.08)"
-                          : "rgba(244, 67, 54, 0.08)",
+                            ? "rgba(255, 152, 0, 0.08)"
+                            : "rgba(244, 67, 54, 0.08)",
                       color:
                         difficulty === 1
                           ? "#4caf50"
                           : difficulty === 2
-                          ? "#ff9800"
-                          : "#f44336",
+                            ? "#ff9800"
+                            : "#f44336",
                     }}
                   />
                 </Stack>

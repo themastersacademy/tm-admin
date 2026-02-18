@@ -51,10 +51,13 @@ export async function POST(request) {
           success: false,
           message: "Too many login attempts. Please try again in 15 minutes.",
         },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
+    // NOTE: ScanCommand is O(n) — it reads the entire TMA-DEV-admin table to find the user.
+    // At small admin table sizes this is acceptable, but the correct fix is to add a GSI
+    // on the `email` attribute so this becomes an O(1) Query instead of a full Scan.
     const params = {
       TableName: `TMA-DEV-admin`,
       FilterExpression: "email = :email",
@@ -89,10 +92,10 @@ export async function POST(request) {
       message: "Welcome",
     });
   } catch (error) {
-    console.log(error);
+    console.error("Login error:", error.name);
     return Response.json(
       { success: false, message: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

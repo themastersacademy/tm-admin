@@ -8,6 +8,7 @@ export const createSession = async (payload) => {
     sameSite: "lax",
     secure: true,
     httpOnly: true,
+    maxAge: 60 * 60 * 24 * 10, // 10 days — matches JWT expiry set in jwtToken.js
   });
 };
 

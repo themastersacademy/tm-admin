@@ -17,6 +17,10 @@ const USER_GSI_INDEX = "GSI1-index";
 
 // This function is used to create a new user in the database
 
+// NOTE: getAllUsers uses a full-table Scan with in-memory pagination.
+// This works fine at small scale but will become slow and expensive at 10k+ users.
+// The proper fix is to add a GSI on a sortable attribute (e.g. createdAt) and use
+// DynamoDB-native pagination with LastEvaluatedKey. Schema change required — deferred.
 export async function getAllUsers({
   search,
   status,
@@ -100,8 +104,6 @@ export async function getAllUsers({
 }
 
 export async function getUserByID(id) {
-  console.log(id);
-
   const params = {
     TableName: `${process.env.AWS_DB_NAME}users`,
     Key: {
@@ -178,7 +180,7 @@ export async function getUsersByIds(ids) {
         response.Responses[`${process.env.AWS_DB_NAME}users`]
       ) {
         allUsers = allUsers.concat(
-          response.Responses[`${process.env.AWS_DB_NAME}users`]
+          response.Responses[`${process.env.AWS_DB_NAME}users`],
         );
       }
     }
@@ -388,7 +390,7 @@ export async function createCourseEnrollment(
   userID,
   courseID,
   goalID,
-  subscriptionPlanIndex
+  subscriptionPlanIndex,
 ) {
   const userResp = await getUserByID(userID);
   if (!userResp.success) {
@@ -446,13 +448,13 @@ export async function createCourseEnrollment(
 
 export async function makeCourseEnrollmentActiveOrInactive(
   enrollmentID,
-  status
+  status,
 ) {
   // 1) Validate status
   const allowed = ["active", "inactive", "cancelled"];
   if (!allowed.includes(status)) {
     throw new Error(
-      "Invalid status. Must be 'active', 'inactive', or 'cancelled'."
+      "Invalid status. Must be 'active', 'inactive', or 'cancelled'.",
     );
   }
 
@@ -543,10 +545,8 @@ export async function createProSubscriptionAdmin({
   if (!userResp.success) {
     return userResp;
   }
-  const subscriptionPlanResp = await getSubscriptionPlanByID(
-    subscriptionPlanID
-  );
-  console.log("subscriptionPlanResp", subscriptionPlanResp);
+  const subscriptionPlanResp =
+    await getSubscriptionPlanByID(subscriptionPlanID);
   if (!subscriptionPlanResp.success) {
     return subscriptionPlanResp;
   }
@@ -555,7 +555,7 @@ export async function createProSubscriptionAdmin({
   const expiresAt = calculateExpiresAt(
     subscriptionPlan.duration,
     subscriptionPlan.type,
-    Date.now()
+    Date.now(),
   );
 
   const user = userResp.data;
@@ -622,7 +622,7 @@ export async function makeProSubscriptionActiveOrInactive(id, status) {
   const expiresAt = calculateExpiresAt(
     proSubscription.plan.duration,
     proSubscription.plan.type,
-    proSubscription.createdAt
+    proSubscription.createdAt,
   );
   const params = {
     TableName: USER_TABLE,
