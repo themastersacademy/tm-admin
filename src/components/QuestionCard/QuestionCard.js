@@ -114,7 +114,9 @@ export default function QuestionCard({
                         ? "Easy"
                         : difficulty === 2
                           ? "Medium"
-                          : "Hard"
+                          : difficulty === 3
+                            ? "Hard"
+                            : "Unknown"
                     }
                     size="small"
                     sx={{
@@ -127,13 +129,17 @@ export default function QuestionCard({
                           ? "rgba(76, 175, 80, 0.08)"
                           : difficulty === 2
                             ? "rgba(255, 152, 0, 0.08)"
-                            : "rgba(244, 67, 54, 0.08)",
+                            : difficulty === 3
+                              ? "rgba(244, 67, 54, 0.08)"
+                              : "rgba(0, 0, 0, 0.06)",
                       color:
                         difficulty === 1
                           ? "#4caf50"
                           : difficulty === 2
                             ? "#ff9800"
-                            : "#f44336",
+                            : difficulty === 3
+                              ? "#f44336"
+                              : "var(--text2)",
                     }}
                   />
                 </Stack>

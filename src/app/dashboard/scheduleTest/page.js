@@ -42,7 +42,7 @@ export default function ScheduleTest() {
     setIsSearchingStudents(true);
     try {
       const data = await apiFetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/get-all-users?search=${studentSearchQuery}&limit=20`
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/get-all-users?search=${studentSearchQuery}&limit=20`,
       );
       if (data.success) {
         setStudentList(data.data);
@@ -72,14 +72,14 @@ export default function ScheduleTest() {
         const abortSignal = signal instanceof AbortSignal ? signal : null;
         const data = await apiFetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/get-all-scheduled-exam`,
-          { signal: abortSignal }
+          { signal: abortSignal },
         );
         if (data.success) {
           const sortedData = data.data.sort(
-            (a, b) => b.createdAt - a.createdAt
+            (a, b) => b.createdAt - a.createdAt,
           );
           setTestList(sortedData);
-        } else {
+        } else if (!data.isAborted) {
           showSnackbar(data.message, "error", "", "3000");
         }
       } catch (error) {
@@ -89,7 +89,7 @@ export default function ScheduleTest() {
         setIsLoading(false);
       }
     },
-    [showSnackbar]
+    [showSnackbar],
   );
 
   const getBatchList = useCallback(
@@ -98,7 +98,7 @@ export default function ScheduleTest() {
         const abortSignal = signal instanceof AbortSignal ? signal : null;
         const data = await apiFetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/get-all-batch`,
-          { signal: abortSignal }
+          { signal: abortSignal },
         );
         if (data.success) {
           setBatchList(data.data);
@@ -111,7 +111,7 @@ export default function ScheduleTest() {
         }
       }
     },
-    [showSnackbar]
+    [showSnackbar],
   );
 
   useEffect(() => {
@@ -152,7 +152,7 @@ export default function ScheduleTest() {
         "Please select at least one batch or student",
         "error",
         "",
-        "3000"
+        "3000",
       );
       return;
     }
@@ -169,7 +169,7 @@ export default function ScheduleTest() {
             batchList: selectedBatchIds,
             studentList: selectedStudentIds,
           }),
-        }
+        },
       );
       if (data.success) {
         showSnackbar("Exam created successfully", "success", "", "3000");
@@ -241,13 +241,13 @@ export default function ScheduleTest() {
 
       return acc;
     },
-    { total: 0, live: 0, scheduled: 0, ended: 0 }
+    { total: 0, live: 0, scheduled: 0, ended: 0 },
   );
 
   // Pagination logic
   const paginatedTestList = filteredTestList.slice(
     currentPage * rowsPerPage,
-    currentPage * rowsPerPage + rowsPerPage
+    currentPage * rowsPerPage + rowsPerPage,
   );
 
   const handleChangePage = (event, newPage) => {
@@ -418,13 +418,13 @@ export default function ScheduleTest() {
                     }}
                     onClick={() => {
                       const isSelected = selectedBatchIds.includes(
-                        option.value
+                        option.value,
                       );
                       if (isSelected) {
                         handleBatchChange({
                           target: {
                             value: selectedBatchIds.filter(
-                              (id) => id !== option.value
+                              (id) => id !== option.value,
                             ),
                           },
                         });
@@ -500,7 +500,7 @@ export default function ScheduleTest() {
                         handleBatchChange({
                           target: {
                             value: selectedBatchIds.filter(
-                              (batchId) => batchId !== id
+                              (batchId) => batchId !== id,
                             ),
                           },
                         });
@@ -576,11 +576,11 @@ export default function ScheduleTest() {
                     }}
                     onClick={() => {
                       const isSelected = selectedStudentIds.includes(
-                        student.id
+                        student.id,
                       );
                       if (isSelected) {
                         setSelectedStudentIds((prev) =>
-                          prev.filter((id) => id !== student.id)
+                          prev.filter((id) => id !== student.id),
                         );
                       } else {
                         setSelectedStudentIds((prev) => [...prev, student.id]);

@@ -161,10 +161,9 @@ export default function AllQuestions() {
         }
         const query = parts.length ? `?${parts.join("&")}` : "";
 
-        const res = await apiFetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/stats${query}`,
-          { signal: abortSignal },
-        );
+        const res = await apiFetch(`/api/questions/stats${query}`, {
+          signal: abortSignal,
+        });
         if (res.success) {
           setStats(res.data);
         }
@@ -184,9 +183,7 @@ export default function AllQuestions() {
         const abortSignal = signal instanceof AbortSignal ? signal : null;
         if (searchQuery) {
           // Use Global Search API
-          const url = `${
-            process.env.NEXT_PUBLIC_BASE_URL
-          }/api/questions/search?q=${encodeURIComponent(searchQuery)}`;
+          const url = `/api/questions/search?q=${encodeURIComponent(searchQuery)}`;
           const data = await apiFetch(url, { signal: abortSignal });
           if (data.success) {
             setQuestionList(data.data);
@@ -211,7 +208,7 @@ export default function AllQuestions() {
           }
 
           const query = parts.length ? `?${parts.join("&")}` : "";
-          const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/questions/get${query}`;
+          const url = `/api/questions/get${query}`;
           const data = await apiFetch(url, { signal: abortSignal });
 
           if (data.success) {
@@ -508,7 +505,7 @@ export default function AllQuestions() {
                     questionType={item.type || "MCQ"}
                     subjectID={item.subjectID}
                     question={<MDPreview value={item.title} />}
-                    difficulty={item.difficulty}
+                    difficulty={item.difficultyLevel}
                     preview={
                       <Chip
                         icon={<Visibility sx={{ fontSize: "16px" }} />}

@@ -6,9 +6,15 @@ import { ScanCommand } from "@aws-sdk/lib-dynamodb";
  * Fetches questions with optional filters for type, difficulty, subjectID, and title search.
  * Supports pagination using a limit and lastKey (LastEvaluatedKey).
  *
+ * The DB has two key schemas (old and new):
+ *   OLD: pKey = "QUESTIONS", sKey = "QUESTIONS@<subjectID>#QUESTION#<questionID>"
+ *   NEW: pKey = "SUBJECT#<subjectID>", sKey = "QUESTION#<questionID>"
+ *
+ * Both are supported here so existing production data is not lost.
+ *
  * @param {Object} params - The parameters for fetching questions.
  * @param {string} [params.type] - (Optional) Filter by question type (e.g., "MCQ", "MSQ", "FIB").
- * @param {string} [params.difficulty] - (Optional) Filter by difficulty ("easy", "medium", "hard").
+ * @param {string|number} [params.difficulty] - (Optional) Filter by difficulty ("easy", "medium", "hard").
  * @param {string} [params.subjectID] - (Optional) Filter by subject; used to narrow the sKey prefix.
  * @param {string} [params.searchTerm] - (Optional) A term to search within the question title.
  * @param {number} [params.limit=10] - (Optional) The number of questions per page.
@@ -26,32 +32,47 @@ export default async function getQuestions({
   limit = 10,
   lastKey = null,
 }) {
-  // Build the base FilterExpression.
-  // Questions have sKey = QUESTION#<id> and pKey = SUBJECT#<subjectID>.
-  // When filtering by subjectID, we match on pKey prefix; otherwise we match all QUESTION# sKeys.
-  let filterExp = subjectID
-    ? "pKey = :pKey AND begins_with(sKey, :prefix)"
-    : "begins_with(sKey, :prefix)";
-  const expAttrVals = {
-    ":prefix": "QUESTION#",
-    ...(subjectID && { ":pKey": `SUBJECT#${subjectID}` }),
-  };
+  // Support both key schemas:
+  //   NEW: sKey begins_with "QUESTION#"  (pKey = SUBJECT#<subjectID>)
+  //   OLD: sKey begins_with "QUESTIONS@" (pKey = "QUESTIONS")
+  // When filtering by subjectID we narrow each schema separately.
+  let filterExp;
+  const expAttrVals = {};
   const expAttrNames = {};
+
+  if (subjectID) {
+    // NEW schema: pKey = SUBJECT#<subjectID>, sKey = QUESTION#...
+    // OLD schema: pKey = "QUESTIONS", sKey = QUESTIONS@<subjectID>#...
+    filterExp =
+      "(pKey = :newPKey AND begins_with(sKey, :newPrefix))" +
+      " OR (pKey = :oldPKey AND begins_with(sKey, :oldPrefix))";
+    expAttrVals[":newPKey"] = `SUBJECT#${subjectID}`;
+    expAttrVals[":newPrefix"] = "QUESTION#";
+    expAttrVals[":oldPKey"] = "QUESTIONS";
+    expAttrVals[":oldPrefix"] = `QUESTIONS@${subjectID}`;
+  } else {
+    // No subject filter — match all questions from both schemas
+    filterExp =
+      "begins_with(sKey, :newPrefix) OR begins_with(sKey, :oldPrefix)";
+    expAttrVals[":newPrefix"] = "QUESTION#";
+    expAttrVals[":oldPrefix"] = "QUESTIONS@";
+  }
 
   // Add searchTerm filter if provided.
   if (searchTerm) {
-    filterExp += " AND contains(titleLower, :searchTerm)";
+    filterExp = `(${filterExp}) AND contains(titleLower, :searchTerm)`;
     expAttrVals[":searchTerm"] = searchTerm.toLowerCase();
   }
 
   // Add type filter if provided.
   if (type) {
     filterExp += " AND #type = :type";
-    expAttrNames["#type"] = "type"; // 'type' is a reserved word, so we alias it.
+    expAttrNames["#type"] = "type"; // 'type' is a reserved word in DynamoDB
     expAttrVals[":type"] = type;
   }
 
-  // Add difficulty filter if provided (DB field is difficultyLevel, not difficulty).
+  // Add difficulty filter if provided.
+  // Coerce to Number because some old records may have stored it as a string.
   if (difficulty) {
     filterExp += " AND difficultyLevel = :difficulty";
     expAttrVals[":difficulty"] = Number(difficulty);
@@ -84,18 +105,33 @@ export default async function getQuestions({
     return {
       success: true,
       message: "Questions fetched successfully",
-      data: sortedItems.map((item) => ({
-        id: item.sKey.split("#")[1], // sKey = QUESTION#<id>
-        subjectID: item.pKey.split("#")[1], // pKey = SUBJECT#<subjectID>
-        title: item.title,
-        type: item.type,
-        options: item.options,
-        difficulty: item.difficultyLevel, // DB field is difficultyLevel
-        correctAnswers: item.correctAnswers,
-        solution: item.solution,
-        subjectTitle: item.subjectTitle,
-        ...(item.type === "FIB" && { noOfBlanks: item.noOfBlanks }),
-      })),
+      data: sortedItems.map((item) => {
+        // Determine which schema this item uses and extract IDs accordingly.
+        const isNewSchema = item.pKey?.startsWith("SUBJECT#");
+        const questionID = isNewSchema
+          ? item.sKey.split("#")[1] // QUESTION#<id>
+          : item.sKey.split("#").pop(); // QUESTIONS@<subjectID>#QUESTION#<id> → take last segment
+        const subjectIDFromKey = isNewSchema
+          ? item.pKey.split("#")[1] // SUBJECT#<subjectID>
+          : item.sKey.split("@")[1]?.split("#")[0]; // QUESTIONS@<subjectID>#...
+
+        return {
+          id: questionID,
+          subjectID: subjectIDFromKey,
+          title: item.title,
+          type: item.type,
+          options: item.options,
+          // Coerce to Number — old records may have stored difficultyLevel as a string
+          difficulty:
+            item.difficultyLevel != null
+              ? Number(item.difficultyLevel)
+              : undefined,
+          correctAnswers: item.correctAnswers,
+          solution: item.solution,
+          subjectTitle: item.subjectTitle,
+          ...(item.type === "FIB" && { noOfBlanks: item.noOfBlanks }),
+        };
+      }),
       lastEvaluatedKey: result.LastEvaluatedKey || null,
     };
   } catch (error) {

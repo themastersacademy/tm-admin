@@ -12,10 +12,20 @@ import { apiFetch } from "@/src/lib/apiFetch";
 
 const SubjectContext = createContext();
 
-const CACHE_KEY = "tma_subjects_cache";
+const CACHE_KEY = "tma_subjects_cache_v3";
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
-/** Read subjects from localStorage. Returns null if missing or expired. */
+// Remove stale caches from old key names
+if (typeof window !== "undefined") {
+  try {
+    localStorage.removeItem("tma_subjects_cache");
+  } catch {}
+  try {
+    localStorage.removeItem("tma_subjects_cache_v2");
+  } catch {}
+}
+
+/** Read subjects from localStorage. Returns null if missing, expired, or empty. */
 function readCache() {
   try {
     if (typeof window === "undefined") return null;
@@ -26,16 +36,19 @@ function readCache() {
       localStorage.removeItem(CACHE_KEY);
       return null;
     }
+    // Never serve an empty cached list — treat it as a miss so we re-fetch
+    if (!Array.isArray(data) || data.length === 0) return null;
     return data;
   } catch {
     return null;
   }
 }
 
-/** Write subjects to localStorage with a timestamp. */
+/** Write subjects to localStorage with a timestamp. Never caches an empty list. */
 function writeCache(data) {
   try {
     if (typeof window === "undefined") return;
+    if (!Array.isArray(data) || data.length === 0) return; // never cache empty
     localStorage.setItem(
       CACHE_KEY,
       JSON.stringify({ data, timestamp: Date.now() }),
