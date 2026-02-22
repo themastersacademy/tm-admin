@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { Add, Close, East, InfoOutlined } from "@mui/icons-material";
 import {
@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import { apiFetch } from "@/src/lib/apiFetch";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
+import SubjectContext from "@/src/app/context/SubjectContext";
 import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
 import CourseCardSkeleton from "@/src/components/CourseCardSkeleton/CourseCardSkeleton";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
@@ -57,6 +58,7 @@ const StyledTab = styled(Tab)({
 export default function Syllabus({ goal, fetchGoal, goalLoading }) {
   const { showSnackbar } = useSnackbar();
   const router = useRouter();
+  const { subjectList, fetchSubject } = useContext(SubjectContext);
   const [activeTab, setActiveTab] = useState(0);
   const [dialog, setDialog] = useState({
     open: false,
@@ -67,7 +69,7 @@ export default function Syllabus({ goal, fetchGoal, goalLoading }) {
     open: false,
     loading: false,
   });
-  const [subjects, setSubjects] = useState({ all: [], selected: "" });
+  const [selectedSubjectID, setSelectedSubjectID] = useState("");
 
   // Local state for optimistic updates
   const [localSubjects, setLocalSubjects] = useState([]);
@@ -79,41 +81,37 @@ export default function Syllabus({ goal, fetchGoal, goalLoading }) {
   }, [goal]);
 
   useEffect(() => {
-    apiFetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/subjects/get-all-subjects`
-    )
-      .then((data) =>
-        setSubjects((prev) => ({ ...prev, all: data.data?.subjects || [] }))
-      )
-      .catch(() => showSnackbar("Failed to fetch subjects", "error"));
-  }, [showSnackbar]);
+    if (subjectList.length === 0) {
+      fetchSubject();
+    }
+  }, [subjectList, fetchSubject]);
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
 
   const handleSubjectAction = async (action, subjectID = null) => {
-    if (!subjects.selected && action === "add") {
+    if (!selectedSubjectID && action === "add") {
       return showSnackbar("Select subject", "error");
     }
 
-    const selectedSubjectID =
-      action === "remove" ? subjectID : subjects.selected;
+    const targetSubjectID =
+      action === "remove" ? subjectID : selectedSubjectID;
 
     // Optimistic Update
     const previousSubjects = [...localSubjects];
     if (action === "add") {
-      const subjectToAdd = subjects.all.find(
-        (s) => s.subjectID === selectedSubjectID
+      const subjectToAdd = subjectList.find(
+        (s) => s.subjectID === targetSubjectID
       );
       if (subjectToAdd) {
         setLocalSubjects((prev) => [...prev, subjectToAdd]);
         setDialog({ open: false, loading: false }); // Close dialog immediately
-        setSubjects((prev) => ({ ...prev, selected: "" }));
+        setSelectedSubjectID("");
       }
     } else {
       setLocalSubjects((prev) =>
-        prev.filter((s) => s.subjectID !== selectedSubjectID)
+        prev.filter((s) => s.subjectID !== targetSubjectID)
       );
     }
 
@@ -125,7 +123,7 @@ export default function Syllabus({ goal, fetchGoal, goalLoading }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             goalID: goal.goalID,
-            subjectID: selectedSubjectID,
+            subjectID: targetSubjectID,
           }),
         }
       );
@@ -354,11 +352,9 @@ export default function Syllabus({ goal, fetchGoal, goalLoading }) {
             search bar to find specific subjects quickly.
           </Typography>
           <SubjectSelection
-            value={subjects.selected}
-            onChange={(e) =>
-              setSubjects((prev) => ({ ...prev, selected: e.target.value }))
-            }
-            options={subjects.all}
+            value={selectedSubjectID}
+            onChange={(e) => setSelectedSubjectID(e.target.value)}
+            options={subjectList}
             alreadyAdded={localSubjects.map((s) => s.subjectID)}
             getLabel={(s) => s.title}
             getValue={(s) => s.subjectID}

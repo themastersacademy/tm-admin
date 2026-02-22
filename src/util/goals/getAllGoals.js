@@ -8,15 +8,29 @@ export default async function getAllGoals() {
     ExpressionAttributeValues: {
       ":sKey": "GOALS",
     },
-    ReturnConsumedCapacity: "TOTAL",
+    ProjectionExpression:
+      "pKey, title, icon, isLive, coursesList, subjectList, blogList, updatedAt",
   };
   try {
-    const response = await dynamoDB.send(new ScanCommand(params));
+    const items = [];
+    let lastKey;
+
+    do {
+      const response = await dynamoDB.send(
+        new ScanCommand({
+          ...params,
+          ...(lastKey && { ExclusiveStartKey: lastKey }),
+        })
+      );
+      items.push(...(response.Items || []));
+      lastKey = response.LastEvaluatedKey;
+    } while (lastKey);
+
     return {
       success: true,
       message: "All goals fetched successfully",
       data: {
-        goals: response.Items.map((goal) => {
+        goals: items.map((goal) => {
           const {
             pKey,
             title,
@@ -25,7 +39,6 @@ export default async function getAllGoals() {
             coursesList = [],
             subjectList = [],
             blogList = [],
-            createdAt,
             updatedAt,
           } = goal;
           return {

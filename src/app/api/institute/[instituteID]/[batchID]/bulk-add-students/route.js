@@ -28,7 +28,11 @@ export async function POST(req, { params }) {
 
     try {
       // Find user by email
-      const userSearch = await getAllUsers({ search: Email, limit: 10 });
+      const userSearch = await getAllUsers({
+        search: Email,
+        limit: 10,
+        includeStats: false,
+      });
 
       let user = null;
       if (userSearch.success && userSearch.data.length > 0) {

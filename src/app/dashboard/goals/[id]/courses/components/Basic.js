@@ -95,7 +95,7 @@ export default function Basic({ course, setCourse }) {
           <Typography
             sx={{ fontFamily: "Lato", fontSize: "14px", color: "var(--text3)" }}
           >
-            Manage your course's core details and settings
+            Manage your course&apos;s core details and settings
           </Typography>
         </Stack>
         <Button

@@ -12,20 +12,68 @@ import { HeadObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 export async function getAllBanners() {
   const TableName = `${process.env.AWS_DB_NAME}master`;
-  const params = {
+  const queryParams = {
+    TableName,
+    IndexName: "masterTableIndex",
+    KeyConditionExpression: "#gsi1pk = :gsi1pk",
+    ExpressionAttributeNames: {
+      "#gsi1pk": "GSI1-pKey",
+      "#path": "path",
+    },
+    ExpressionAttributeValues: {
+      ":gsi1pk": "BANNERS",
+    },
+    ProjectionExpression:
+      "pKey, sKey, bannerID, title, fileType, bannerURL, #path, isUploaded, createdAt, updatedAt",
+  };
+
+  const fallbackScanParams = {
     TableName,
     FilterExpression: "sKey = :sKey",
     ExpressionAttributeValues: {
       ":sKey": "BANNERS",
     },
+    ProjectionExpression:
+      "pKey, sKey, bannerID, title, fileType, bannerURL, #path, isUploaded, createdAt, updatedAt",
+    ExpressionAttributeNames: {
+      "#path": "path",
+    },
   };
 
   try {
-    const result = await dynamoDB.send(new ScanCommand(params));
+    const items = [];
+    let lastKey;
+
+    do {
+      const result = await dynamoDB.send(
+        new QueryCommand({
+          ...queryParams,
+          ...(lastKey && { ExclusiveStartKey: lastKey }),
+        })
+      );
+      items.push(...(result.Items || []));
+      lastKey = result.LastEvaluatedKey;
+    } while (lastKey);
+
+    // Backward compatibility for legacy records missing GSI attributes.
+    if (items.length === 0) {
+      let legacyLastKey;
+      do {
+        const result = await dynamoDB.send(
+          new ScanCommand({
+            ...fallbackScanParams,
+            ...(legacyLastKey && { ExclusiveStartKey: legacyLastKey }),
+          })
+        );
+        items.push(...(result.Items || []));
+        legacyLastKey = result.LastEvaluatedKey;
+      } while (legacyLastKey);
+    }
+
     return {
       success: true,
       message: "Banners fetched successfully",
-      data: result.Items.map((item) => ({
+      data: items.map((item) => ({
         ...item,
         id: item.bannerID,
         pKey: undefined,

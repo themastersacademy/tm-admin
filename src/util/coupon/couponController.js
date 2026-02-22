@@ -87,13 +87,28 @@ export async function getAllCoupons() {
     ExpressionAttributeValues: {
       ":sKey": COUPON_SKEY,
     },
+    ProjectionExpression:
+      "pKey, sKey, title, code, couponClass, discountType, discountValue, maxDiscountPrice, minOrderAmount, totalRedemptions, totalRedemptionsPerUser, startDate, endDate, applicableCourses, applicableGoals, isActive, createdAt, updatedAt",
   };
 
   try {
-    const response = await dynamoDB.send(new ScanCommand(params));
+    const items = [];
+    let lastKey;
+
+    do {
+      const response = await dynamoDB.send(
+        new ScanCommand({
+          ...params,
+          ...(lastKey && { ExclusiveStartKey: lastKey }),
+        })
+      );
+      items.push(...(response.Items || []));
+      lastKey = response.LastEvaluatedKey;
+    } while (lastKey);
+
     return {
       success: true,
-      data: response.Items.map((item) => ({
+      data: items.map((item) => ({
         ...item,
         id: item.pKey.split("#")[1],
         pKey: undefined,

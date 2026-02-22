@@ -50,6 +50,7 @@ export async function createVideo({ title, bankID }) {
               resourceID: resourceParams.Item.pKey.split("#")[1],
               type: "VIDEO",
               name: title,
+              videoID,
               createdAt: new Date().toISOString(),
             },
           ],

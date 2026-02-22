@@ -1,4 +1,4 @@
-import { createToken, verifyToken } from "./jwtToken";
+import { createToken } from "./jwtToken";
 import { cookies } from "next/headers";
 
 export const createSession = async (payload) => {

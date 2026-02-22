@@ -338,7 +338,7 @@ export default function CreateBankDialog({ open, onClose, fetchCourse }) {
                   sx={{ fontSize: "18px", color: "#4CAF50" }}
                 />
                 <Typography fontSize="13px" fontWeight={600} color="#4CAF50">
-                  What's Next?
+                  What&apos;s Next?
                 </Typography>
               </Stack>
               <Typography fontSize="12px" color="var(--text2)">

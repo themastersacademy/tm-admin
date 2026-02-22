@@ -287,7 +287,7 @@ export default function Subscription({ course, setCourse }) {
                   color: "var(--text3)",
                 }}
               >
-                Create paid plans for users who don't have free access
+                Create paid plans for users who don&apos;t have free access
               </Typography>
             </Stack>
             <Button

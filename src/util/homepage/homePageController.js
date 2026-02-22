@@ -75,12 +75,29 @@ export async function getAllAnnouncements() {
     ExpressionAttributeValues: {
       ":prefix": "ANNOUNCEMENT#",
     },
+    ProjectionExpression:
+      "pKey, title, message, #type, isActive, createdAt, updatedAt",
+    ExpressionAttributeNames: {
+      "#type": "type",
+    },
   };
 
   try {
-    const response = await dynamoDB.send(new ScanCommand(params));
+    const items = [];
+    let lastKey;
 
-    const announcements = (response.Items || []).map((item) => ({
+    do {
+      const response = await dynamoDB.send(
+        new ScanCommand({
+          ...params,
+          ...(lastKey && { ExclusiveStartKey: lastKey }),
+        })
+      );
+      items.push(...(response.Items || []));
+      lastKey = response.LastEvaluatedKey;
+    } while (lastKey);
+
+    const announcements = items.map((item) => ({
       announcementID: item.pKey.split("#")[1],
       title: item.title,
       message: item.message,
@@ -201,12 +218,28 @@ export async function getActiveAnnouncements() {
       ":prefix": "ANNOUNCEMENT#",
       ":active": true,
     },
+    ProjectionExpression: "pKey, title, message, #type, createdAt",
+    ExpressionAttributeNames: {
+      "#type": "type",
+    },
   };
 
   try {
-    const response = await dynamoDB.send(new ScanCommand(params));
+    const items = [];
+    let lastKey;
 
-    const announcements = (response.Items || []).map((item) => ({
+    do {
+      const response = await dynamoDB.send(
+        new ScanCommand({
+          ...params,
+          ...(lastKey && { ExclusiveStartKey: lastKey }),
+        })
+      );
+      items.push(...(response.Items || []));
+      lastKey = response.LastEvaluatedKey;
+    } while (lastKey);
+
+    const announcements = items.map((item) => ({
       announcementID: item.pKey.split("#")[1],
       title: item.title,
       message: item.message,

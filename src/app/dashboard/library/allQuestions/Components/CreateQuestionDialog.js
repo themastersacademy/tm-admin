@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useContext } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import QuestionStepper from "../addQuestion/Components/QuestionStepper";
-import { apiFetch } from "@/src/lib/apiFetch";
+import SubjectContext from "@/src/app/context/SubjectContext";
 
 const defaultQuestionData = {
   subjectID: "",
@@ -97,7 +97,7 @@ export default function CreateQuestionDialog({
   const [activeStep, setActiveStep] = useState(0);
   const [data, setData] = useState(defaultQuestionData);
   const [isNextDisabled, setIsNextDisabled] = useState(true);
-  const [allSubjects, setAllSubjects] = useState([]);
+  const { subjectList: allSubjects } = useContext(SubjectContext);
 
   // Initialize data when dialog opens or initialData changes
   useEffect(() => {
@@ -121,17 +121,6 @@ export default function CreateQuestionDialog({
   useEffect(() => {
     setIsNextDisabled(!validateStep());
   }, [validateStep]);
-
-  // load subjects for dropdown
-  useEffect(() => {
-    if (open) {
-      apiFetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/subjects/get-all-subjects`
-      )
-        .then((res) => setAllSubjects(res.success ? res.data.subjects : []))
-        .catch(() => setAllSubjects([]));
-    }
-  }, [open]);
 
   const handleNext = () => {
     if (activeStep < steps.length - 1) {

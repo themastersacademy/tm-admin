@@ -146,7 +146,7 @@ export default function Payments() {
         label: "Transactions",
         content: (
           <TabContentWrapper>
-            <Transactions />
+            <Transactions initialTransactions={transactions} />
           </TabContentWrapper>
         ),
       },
@@ -167,7 +167,7 @@ export default function Payments() {
         ),
       },
     ],
-    []
+    [transactions]
   );
 
   return (

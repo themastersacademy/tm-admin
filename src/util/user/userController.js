@@ -28,7 +28,11 @@ export async function getAllUsers({
   emailVerified,
   page = 1,
   limit = 10,
+  includeStats = true,
 } = {}) {
+  const currentPage = Math.max(Number(page) || 1, 1);
+  const pageSize = Math.max(Number(limit) || 10, 1);
+
   const params = {
     TableName: `${process.env.AWS_DB_NAME}users`,
     IndexName: "GSI1-index",
@@ -43,7 +47,7 @@ export async function getAllUsers({
     ExpressionAttributeValues: {
       ":pKey": "USER#",
     },
-  }; // Fixed syntax error
+  };
 
   if (search) {
     params.FilterExpression +=
@@ -70,31 +74,62 @@ export async function getAllUsers({
   }
 
   try {
-    const response = await dynamoDB.send(new ScanCommand(params));
-    const allItems = response.Items || [];
-    const totalItems = allItems.length;
-    const totalPages = Math.ceil(totalItems / limit);
-    const currentPage = Number(page);
+    const allItems = [];
+    let lastKey;
 
-    // Slice for pagination
-    const startIndex = (currentPage - 1) * limit;
-    const endIndex = startIndex + Number(limit);
+    // In fast mode (autocomplete/search), stop scanning once page data is filled.
+    const shouldStopEarly = !includeStats;
+    const requiredItems = currentPage * pageSize;
+
+    do {
+      const response = await dynamoDB.send(
+        new ScanCommand({
+          ...params,
+          Limit: shouldStopEarly ? Math.max(pageSize * 3, 50) : undefined,
+          ...(lastKey && { ExclusiveStartKey: lastKey }),
+        })
+      );
+
+      const batch = response.Items || [];
+      allItems.push(...batch);
+      lastKey = response.LastEvaluatedKey;
+
+      if (shouldStopEarly && allItems.length >= requiredItems) {
+        break;
+      }
+    } while (lastKey);
+
+    const totalItems = includeStats ? allItems.length : undefined;
+    const totalPages = includeStats
+      ? Math.max(Math.ceil(totalItems / pageSize), 1)
+      : undefined;
+
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
     const paginatedItems = allItems.slice(startIndex, endIndex);
 
-    // Calculate global stats
-    const totalVerified = allItems.filter((u) => u.emailVerified).length;
-    const totalActive = allItems.filter((u) => u.status === "active").length;
+    const totalVerified = includeStats
+      ? allItems.filter((u) => u.emailVerified).length
+      : undefined;
+    const totalActive = includeStats
+      ? allItems.filter((u) => u.status === "active").length
+      : undefined;
 
     return {
       success: true,
       data: paginatedItems,
       pagination: {
-        totalItems,
-        totalPages,
         currentPage,
-        limit: Number(limit),
-        totalVerified,
-        totalActive,
+        limit: pageSize,
+        ...(includeStats && {
+          totalItems,
+          totalPages,
+          totalVerified,
+          totalActive,
+        }),
+        ...(!includeStats && {
+          hasMore: Boolean(lastKey),
+        }),
       },
     };
   } catch (error) {

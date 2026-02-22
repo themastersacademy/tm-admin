@@ -18,13 +18,25 @@ export default async function getAllResources({ bankID }) {
   };
   try {
     const bankResponse = await dynamoDB.send(new GetCommand(bankParams));
-    console.log("bankResponse", bankResponse);
 
     if (!bankResponse.Item) {
       return { success: false, message: "Bank not found" };
     }
 
-    const response = await dynamoDB.send(new ScanCommand(params));
+    const items = [];
+    let lastKey;
+
+    do {
+      const response = await dynamoDB.send(
+        new ScanCommand({
+          ...params,
+          ...(lastKey && { ExclusiveStartKey: lastKey }),
+        })
+      );
+      items.push(...(response.Items || []));
+      lastKey = response.LastEvaluatedKey;
+    } while (lastKey);
+
     return {
       success: true,
       message: "All resources fetched successfully",
@@ -32,7 +44,7 @@ export default async function getAllResources({ bankID }) {
         bankID,
         bankTitle: bankResponse.Item.title,
         videoCollectionID: bankResponse.Item.videoCollectionID,
-        resources: response.Items.map((resource) => {
+        resources: items.map((resource) => {
           const {
             pKey,
             name,

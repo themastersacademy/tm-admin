@@ -1,10 +1,10 @@
 "use client";
-import { Suspense } from "react";
+import { Suspense, useContext } from "react";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import Header from "@/src/components/Header/Header";
 import { Stack, CircularProgress } from "@mui/material";
-import { apiFetch } from "@/src/lib/apiFetch";
+import SubjectContext from "@/src/app/context/SubjectContext";
 import QuestionStepper from "./Components/QuestionStepper";
 
 const defaultQuestionData = {
@@ -95,7 +95,7 @@ function AddQuestionContent() {
     subjectID: prefillSubjectID || "",
   });
   const [isNextDisabled, setIsNextDisabled] = useState(true);
-  const [allSubjects, setAllSubjects] = useState([]);
+  const { subjectList: allSubjects, fetchSubject } = useContext(SubjectContext);
 
   const validateStep = useCallback(() => {
     if (activeStep === 0) return validateBasicStep(data);
@@ -108,18 +108,10 @@ function AddQuestionContent() {
     setIsNextDisabled(!validateStep());
   }, [validateStep]);
 
+  // Ensure subjects are loaded
   useEffect(() => {
-    console.log(data);
-  }, [data]);
-
-  // load subjects for dropdown
-  useEffect(() => {
-    apiFetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/subjects/get-all-subjects`
-    )
-      .then((res) => setAllSubjects(res.success ? res.data.subjects : []))
-      .catch(() => setAllSubjects([]));
-  }, []);
+    if (allSubjects.length === 0) fetchSubject();
+  }, [allSubjects, fetchSubject]);
 
   // Update data if prefillSubjectID changes (though usually it's static on mount)
   useEffect(() => {

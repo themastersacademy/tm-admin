@@ -3,6 +3,7 @@
 class ApiClient {
   constructor(baseURL = "") {
     this.baseURL = baseURL;
+    this.inflightRequests = new Map();
   }
 
   async request(endpoint, options = {}) {
@@ -10,6 +11,7 @@ class ApiClient {
     const url = endpoint.startsWith("http")
       ? endpoint
       : `${this.baseURL}${endpoint}`;
+    const method = (options.method || "GET").toUpperCase();
 
     const defaultHeaders = {
       "Content-Type": "application/json",
@@ -24,45 +26,61 @@ class ApiClient {
       credentials: "include", // Always include cookies
     };
 
+    const canDedupe = method === "GET" && !(options.signal instanceof AbortSignal);
+    const requestKey = canDedupe ? `${method}:${url}` : null;
+
+    if (canDedupe && this.inflightRequests.has(requestKey)) {
+      return this.inflightRequests.get(requestKey);
+    }
+
+    const requestPromise = (async () => {
+      try {
+        const response = await fetch(url, config);
+
+        // Handle 401 Unauthorized globally
+        if (response.status === 401) {
+          return this.handleUnauthorized();
+        }
+
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          return await response.json();
+        }
+
+        if (!response.ok) {
+          return {
+            success: false,
+            status: response.status,
+            message: response.statusText,
+          };
+        }
+
+        return {
+          success: false,
+          message: "Unexpected response format",
+        };
+      } catch (error) {
+        if (error.name === "AbortError") {
+          return {
+            success: false,
+            isAborted: true,
+            message: "Request cancelled",
+          };
+        }
+        console.error("API Request Failed:", error);
+        return { success: false, message: error.message };
+      }
+    })();
+
+    if (!canDedupe) {
+      return requestPromise;
+    }
+
+    this.inflightRequests.set(requestKey, requestPromise);
     try {
-      const response = await fetch(url, config);
-
-      // Handle 401 Unauthorized globally
-      if (response.status === 401) {
-        return this.handleUnauthorized();
-      }
-
-      // Allow 400-level errors to be handled by the caller if needed,
-      // or we can reject here. The original apiFetch didn't reject non-ok,
-      // but let's parse JSON first.
-
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        return await response.json();
-      }
-
-      // If text/html or other, decide what to return.
-      // For now, if not OK and not JSON, might be an issue.
-      if (!response.ok) {
-        // Fallback for non-JSON errors
-        return {
-          success: false,
-          status: response.status,
-          message: response.statusText,
-        };
-      }
-
-      return await response.json(); // Should try parsing anyway
-    } catch (error) {
-      if (error.name === "AbortError") {
-        return {
-          success: false,
-          isAborted: true,
-          message: "Request cancelled",
-        };
-      }
-      console.error("API Request Failed:", error);
-      return { success: false, message: error.message };
+      return await requestPromise;
+    } finally {
+      this.inflightRequests.delete(requestKey);
     }
   }
 

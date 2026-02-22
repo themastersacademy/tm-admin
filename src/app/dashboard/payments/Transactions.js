@@ -9,8 +9,8 @@ import { printInvoice } from "./utils/printInvoice";
 import SearchBox from "@/src/components/SearchBox/SearchBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
-export default function Transactions() {
-  const [transactions, setTransactions] = useState([]);
+export default function Transactions({ initialTransactions = [] }) {
+  const [transactions, setTransactions] = useState(initialTransactions);
   const [selectedUser, setSelectedUser] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
@@ -19,6 +19,9 @@ export default function Transactions() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [skipInitialFetch, setSkipInitialFetch] = useState(
+    initialTransactions.length > 0
+  );
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -82,38 +85,8 @@ export default function Transactions() {
         setLoading(false);
       }
     },
-    [startDate, endDate]
-  ); // Removed enqueueSnackbar
-
-  const refreshTransaction = async () => {
-    if (!selectedUser) return;
-    try {
-      const res = await fetch("/api/transactions/get-all");
-      const data = await res.json();
-      if (data.success) {
-        const updatedTransaction = data.data.find(
-          (t) => t.id === selectedUser.id
-        );
-        if (updatedTransaction) {
-          setSelectedUser(updatedTransaction);
-        } else {
-          enqueueSnackbar("Transaction not found", {
-            variant: "error",
-          });
-          handleDrawerClose();
-        }
-      } else {
-        enqueueSnackbar("Failed to refresh transaction: " + data.message, {
-          variant: "error",
-        });
-      }
-    } catch (err) {
-      console.error("Error refreshing transaction:", err);
-      enqueueSnackbar("Failed to refresh transaction", {
-        variant: "error",
-      });
-    }
-  };
+    [startDate, endDate, enqueueSnackbar]
+  );
 
   const handleRefund = async () => {
     if (!selectedUser || !selectedUser.paymentDetails?.razorpayPaymentId) {
@@ -140,8 +113,15 @@ export default function Transactions() {
         enqueueSnackbar("Refund processed successfully", {
           variant: "success",
         });
-        await fetchTransactions();
-        await refreshTransaction();
+        const updatedTransaction = result?.data?.transaction;
+        if (updatedTransaction) {
+          setSelectedUser(updatedTransaction);
+          setTransactions((prev) =>
+            prev.map((t) => (t.id === updatedTransaction.id ? updatedTransaction : t))
+          );
+        } else {
+          await fetchTransactions();
+        }
       } else {
         enqueueSnackbar(`Refund failed: ${result.message}`, {
           variant: "error",
@@ -200,10 +180,22 @@ export default function Transactions() {
   };
 
   useEffect(() => {
+    if (!startDate && !endDate && initialTransactions.length > 0) {
+      setTransactions(initialTransactions);
+      setSkipInitialFetch(true);
+    }
+  }, [initialTransactions, startDate, endDate]);
+
+  useEffect(() => {
+    if (skipInitialFetch && !startDate && !endDate) {
+      setSkipInitialFetch(false);
+      return;
+    }
+
     const controller = new AbortController();
     fetchTransactions(controller.signal);
     return () => controller.abort();
-  }, [fetchTransactions]);
+  }, [fetchTransactions, skipInitialFetch, startDate, endDate]);
 
   return (
     <Stack gap="0px" padding="24px">

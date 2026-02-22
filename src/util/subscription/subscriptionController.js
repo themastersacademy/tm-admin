@@ -2,6 +2,7 @@ import { dynamoDB } from "../awsAgent.js";
 import {
   PutCommand,
   ScanCommand,
+  QueryCommand,
   GetCommand,
   UpdateCommand,
   DeleteCommand,
@@ -69,20 +70,68 @@ export async function createSubscriptionPlan({
 }
 
 export async function getAllSubscriptionPlan() {
-  const params = {
+  const queryParams = {
     TableName: `${process.env.AWS_DB_NAME}master`,
-    FilterExpression: "sKey = :sKey",
+    IndexName: "masterTableIndex",
+    KeyConditionExpression: "#gsi1pk = :gsi1pk",
     ExpressionAttributeValues: {
-      ":sKey": "SUBSCRIPTION_PLAN",
+      ":gsi1pk": "SUBSCRIPTION_PLAN",
+    },
+    ProjectionExpression:
+      "pKey, sKey, priceWithTax, #type, #duration, #discountInPercent, createdAt, updatedAt",
+    ExpressionAttributeNames: {
+      "#gsi1pk": "GSI1-pKey",
+      "#type": "type",
+      "#duration": "duration",
+      "#discountInPercent": "discountInPercent",
     },
   };
 
   try {
-    const response = await dynamoDB.send(new ScanCommand(params));
+    const items = [];
+    let lastKey;
+
+    do {
+      const response = await dynamoDB.send(
+        new QueryCommand({
+          ...queryParams,
+          ...(lastKey && { ExclusiveStartKey: lastKey }),
+        })
+      );
+      items.push(...(response.Items || []));
+      lastKey = response.LastEvaluatedKey;
+    } while (lastKey);
+
+    // Backward compatibility for legacy records missing GSI attributes.
+    if (items.length === 0) {
+      let legacyLastKey;
+      do {
+        const response = await dynamoDB.send(
+          new ScanCommand({
+            TableName: `${process.env.AWS_DB_NAME}master`,
+            FilterExpression: "sKey = :sKey",
+            ExpressionAttributeValues: {
+              ":sKey": "SUBSCRIPTION_PLAN",
+            },
+            ProjectionExpression:
+              "pKey, sKey, priceWithTax, #type, #duration, #discountInPercent, createdAt, updatedAt",
+            ExpressionAttributeNames: {
+              "#type": "type",
+              "#duration": "duration",
+              "#discountInPercent": "discountInPercent",
+            },
+            ...(legacyLastKey && { ExclusiveStartKey: legacyLastKey }),
+          })
+        );
+        items.push(...(response.Items || []));
+        legacyLastKey = response.LastEvaluatedKey;
+      } while (legacyLastKey);
+    }
+
     return {
       status: true,
       message: "Subscription plans fetched successfully",
-      data: response.Items.map((item) => ({
+      data: items.map((item) => ({
         ...item,
         id: item.pKey.split("#")[1], // Extracting the ID from pKey
         pKey: undefined,

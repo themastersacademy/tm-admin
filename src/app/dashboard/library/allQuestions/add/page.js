@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useContext } from "react";
 import Header from "@/src/components/Header/Header";
 import { Stack } from "@mui/material";
-import { apiFetch } from "@/src/lib/apiFetch";
+import SubjectContext from "@/src/app/context/SubjectContext";
 import QuestionStepper from "./Components/QuestionStepper";
 
 const defaultQuestionData = {
@@ -82,7 +82,7 @@ export default function AddQuestion() {
   const [activeStep, setActiveStep] = useState(0);
   const [questionData, setQuestionData] = useState(defaultQuestionData);
   const [isNextDisabled, setIsNextDisabled] = useState(false);
-  const [allSubjects, setAllSubjects] = useState([]);
+  const { subjectList: allSubjects, fetchSubject } = useContext(SubjectContext);
 
   // Validate current step and update the "Next" button state.
   const validateStep = useCallback(() => {
@@ -96,21 +96,10 @@ export default function AddQuestion() {
     setIsNextDisabled(!validateStep());
   }, [questionData, activeStep, validateStep]);
 
-  const fetchAllSubjects = useCallback(async () => {
-    try {
-      const data = await apiFetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/subjects/get-all-subjects`
-      );
-      setAllSubjects(data.success ? data.data.subjects : []);
-    } catch (error) {
-      console.error("Error fetching subjects:", error);
-      setAllSubjects([]);
-    }
-  }, []);
-
+  // Ensure subjects are loaded
   useEffect(() => {
-    fetchAllSubjects();
-  }, [fetchAllSubjects]);
+    if (allSubjects.length === 0) fetchSubject();
+  }, [allSubjects, fetchSubject]);
 
   const handleNext = useCallback(() => {
     if (activeStep < steps.length - 1) {
