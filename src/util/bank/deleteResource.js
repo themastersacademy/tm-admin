@@ -1,5 +1,5 @@
 import { dynamoDB, s3 } from "../awsAgent";
-import { GetCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, DeleteCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 export async function deleteResource({ resourceID, bankID }) {
