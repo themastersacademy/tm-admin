@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   MoreVert,
   DeleteOutline,
+  DriveFileRenameOutline,
   FolderOutlined,
   ArrowForwardIos,
 } from "@mui/icons-material";
@@ -18,7 +19,7 @@ import {
 } from "@mui/material";
 import { useRouter } from "next/navigation";
 
-export default function BankFolderCard({ bank, onDelete }) {
+export default function BankFolderCard({ bank, onDelete, onRename }) {
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -37,6 +38,12 @@ export default function BankFolderCard({ bank, onDelete }) {
     event.stopPropagation();
     handleClose();
     onDelete(bank.bankID);
+  };
+
+  const handleRename = (event) => {
+    event.stopPropagation();
+    handleClose();
+    onRename(bank);
   };
 
   const itemCount = bank.resources?.length || 0;
@@ -213,6 +220,20 @@ export default function BankFolderCard({ bank, onDelete }) {
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
+        <MenuItem
+          onClick={handleRename}
+          sx={{
+            gap: "12px",
+            color: "var(--text1)",
+            fontSize: "14px",
+            fontWeight: 500,
+            padding: "10px 16px",
+            "&:hover": { backgroundColor: "rgba(102, 126, 234, 0.08)" },
+          }}
+        >
+          <DriveFileRenameOutline fontSize="small" sx={{ color: "#667eea" }} />
+          Rename Folder
+        </MenuItem>
         <MenuItem
           onClick={handleDelete}
           sx={{

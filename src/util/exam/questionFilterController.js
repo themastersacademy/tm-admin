@@ -210,7 +210,7 @@ export async function getQuestions({
 
     const page = await dynamoDB.send(cmd);
     allIDs.push(
-      ...(page.Items || []).map((i) => ({ pKey: i.pKey, sKey: i.sKey }))
+      ...(page.Items || []).map((i) => ({ pKey: i.pKey, sKey: i.sKey })),
     );
     lek = page.LastEvaluatedKey;
   } while (lek);
@@ -247,7 +247,7 @@ export async function getQuestions({
             },
           },
         },
-      })
+      }),
     );
     detailed.push(...(resp.Responses?.[TABLE] || []));
   }
@@ -367,7 +367,7 @@ export async function getQuestionStats({
       new QueryCommand({
         ...params,
         ...(lek && { ExclusiveStartKey: lek }),
-      })
+      }),
     );
 
     const items = page.Items || [];
@@ -421,7 +421,7 @@ export async function searchAllQuestions(searchTerm) {
       ":q": searchTerm.toLowerCase(),
     },
     ProjectionExpression:
-      "pKey, sKey, title, #typeAttr, difficultyLevel, createdAt",
+      "pKey, sKey, title, #typeAttr, difficultyLevel, options, answerKey, blanks, solution, createdAt",
     ReturnConsumedCapacity: "TOTAL",
   };
 
@@ -445,7 +445,7 @@ export async function searchAllQuestions(searchTerm) {
   } while (lek);
 
   console.log(
-    `[Global Search] Term: "${searchTerm}" | Items Scanned: ${allItems.length} | Total Consumed Capacity: ${totalConsumedCapacity} RCUs`
+    `[Global Search] Term: "${searchTerm}" | Items Scanned: ${allItems.length} | Total Consumed Capacity: ${totalConsumedCapacity} RCUs`,
   );
 
   return allItems.map((it) => ({
@@ -454,6 +454,10 @@ export async function searchAllQuestions(searchTerm) {
     title: it.title,
     type: it.type,
     difficultyLevel: it.difficultyLevel,
+    options: it.options,
+    answerKey: it.answerKey,
+    blanks: it.blanks,
+    solution: it.solution,
     createdAt: it.createdAt,
   }));
 }

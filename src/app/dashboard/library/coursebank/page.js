@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import CourseBankHeader from "./components/CourseBankHeader";
 import BankFolderCard from "./components/BankFolderCard";
 import CreateBankDialog from "./components/CreateBankDialog";
+import RenameBankDialog from "./components/RenameBankDialog";
 
 export default function Coursebank() {
   const router = useRouter();
@@ -28,6 +29,8 @@ export default function Coursebank() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedBankID, setselectedBankID] = useState(null);
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+  const [selectedBank, setSelectedBank] = useState(null);
 
   const dialogOpen = () => setIsDialogOpen(true);
   const dialogClose = () => setIsDialogOpen(false);
@@ -41,6 +44,15 @@ export default function Coursebank() {
     setselectedBankID(null);
   };
 
+  const renameDialogOpen = (bank) => {
+    setSelectedBank(bank);
+    setIsRenameDialogOpen(true);
+  };
+  const renameDialogClose = () => {
+    setIsRenameDialogOpen(false);
+    setSelectedBank(null);
+  };
+
   const fetchCourse = () => {
     setIsLoading(true);
     apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/bank/get-all-bank`).then(
@@ -51,7 +63,7 @@ export default function Coursebank() {
           setCourseList([]);
         }
         setIsLoading(false);
-      }
+      },
     );
   };
 
@@ -62,7 +74,7 @@ export default function Coursebank() {
   const bankDelete = () => {
     setIsLoading(true);
     apiFetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/bank/delete/${selectedBankID}`
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/bank/delete/${selectedBankID}`,
     ).then((data) => {
       if (data.success) {
         fetchCourse();
@@ -99,6 +111,13 @@ export default function Coursebank() {
         fetchCourse={fetchCourse}
       />
 
+      <RenameBankDialog
+        open={isRenameDialogOpen}
+        onClose={renameDialogClose}
+        bank={selectedBank}
+        fetchCourse={fetchCourse}
+      />
+
       <Stack
         sx={{
           border: "1px solid var(--border-color)",
@@ -129,6 +148,7 @@ export default function Coursebank() {
                   key={index}
                   bank={item}
                   onDelete={deleteDialogOpen}
+                  onRename={renameDialogOpen}
                 />
               ))
             ) : (
