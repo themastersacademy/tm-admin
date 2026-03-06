@@ -32,7 +32,6 @@ export async function uploadToS3({
     await axios.put(bannerData.data.signedUrl, file, {
       headers: { "Content-Type": file.type },
       onUploadProgress: (progressEvent) => {
-        console.log("Uploading...");
         const percent = (
           (progressEvent.loaded / progressEvent.total) *
           100

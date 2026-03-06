@@ -8,15 +8,12 @@ import {
   IconButton,
   InputAdornment,
   TextField,
-  Fade,
   CircularProgress,
-  Box,
   Chip,
 } from "@mui/material";
 import {
   Close,
   ClassOutlined,
-  CheckCircleOutline,
   School,
   LocalOfferOutlined,
 } from "@mui/icons-material";
@@ -33,7 +30,6 @@ export default function CreateBatchDialog({
   const [tagInput, setTagInput] = useState("");
   const [errors, setErrors] = useState({});
 
-  // Reset form when dialog opens/closes
   useEffect(() => {
     if (open) {
       if (initialData) {
@@ -82,202 +78,150 @@ export default function CreateBatchDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="xs"
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: "24px",
+          borderRadius: "14px",
           overflow: "hidden",
-          boxShadow: "0 24px 48px rgba(0,0,0,0.1)",
         },
       }}
-      TransitionComponent={Fade}
-      transitionDuration={400}
     >
-      {/* Header Section */}
-      <Box
+      {/* Header */}
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
         sx={{
-          background: "linear-gradient(135deg, #E3F2FD 0%, #FFFFFF 100%)",
-          padding: "32px 32px 24px",
-          borderBottom: "1px solid rgba(33, 150, 243, 0.1)",
-          position: "relative",
+          padding: "16px 20px",
+          borderBottom: "1px solid var(--border-color)",
         }}
       >
-        <IconButton
-          onClick={onClose}
-          sx={{
-            position: "absolute",
-            right: "24px",
-            top: "24px",
-            color: "var(--text3)",
-            "&:hover": { backgroundColor: "rgba(0,0,0,0.04)" },
-          }}
-        >
-          <Close />
-        </IconButton>
-
-        <Stack direction="row" gap="20px" alignItems="center">
+        <Stack direction="row" alignItems="center" gap="10px">
           <Stack
             sx={{
-              width: "64px",
-              height: "64px",
-              borderRadius: "20px",
-              background: "linear-gradient(135deg, #2196F3 0%, #1976D2 100%)",
+              width: "36px",
+              height: "36px",
+              borderRadius: "10px",
+              backgroundColor: "var(--primary-color)",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              boxShadow: "0 8px 16px rgba(33, 150, 243, 0.2)",
             }}
           >
-            <School sx={{ fontSize: "32px", color: "#fff" }} />
+            <School sx={{ fontSize: "18px", color: "#fff" }} />
           </Stack>
           <Stack>
             <Typography
-              sx={{
-                fontSize: "24px",
-                fontWeight: 800,
-                color: "var(--text1)",
-                fontFamily: "Lato",
-                mb: "4px",
-              }}
+              sx={{ fontSize: "15px", fontWeight: 700, color: "var(--text1)" }}
             >
-              {isEdit ? "Edit Batch" : "Create New Batch"}
+              {isEdit ? "Edit Batch" : "Create Batch"}
             </Typography>
-            <Typography sx={{ fontSize: "14px", color: "var(--text3)" }}>
-              {isEdit
-                ? "Update batch details"
-                : "Add a new batch to this institute"}
+            <Typography sx={{ fontSize: "11px", color: "var(--text4)" }}>
+              {isEdit ? "Update batch details" : "Add a new batch"}
             </Typography>
           </Stack>
         </Stack>
-      </Box>
+        <IconButton onClick={onClose} size="small">
+          <Close sx={{ fontSize: "18px" }} />
+        </IconButton>
+      </Stack>
 
-      <DialogContent sx={{ padding: "32px" }}>
-        <Stack gap="24px">
-          {/* Input Fields */}
-          <Stack gap="20px">
-            <Stack gap="8px">
-              <Typography
-                sx={{
+      <DialogContent sx={{ padding: "20px" }}>
+        <Stack gap="16px">
+          <Stack gap="6px">
+            <Typography
+              sx={{ fontSize: "12px", fontWeight: 700, color: "var(--text2)" }}
+            >
+              Batch Name*
+            </Typography>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="e.g. Class 10 - Science"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (errors.title) setErrors({ ...errors, title: "" });
+              }}
+              error={!!errors.title}
+              helperText={errors.title}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <ClassOutlined sx={{ color: "var(--text4)", fontSize: "18px" }} />
+                  </InputAdornment>
+                ),
+                sx: {
+                  borderRadius: "8px",
                   fontSize: "13px",
-                  fontWeight: 600,
-                  color: "var(--text2)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  ml: "4px",
-                }}
-              >
-                Batch Details
-              </Typography>
-
-              <TextField
-                fullWidth
-                placeholder="Batch Name (e.g. Class 10 - Science)"
-                value={title}
-                onChange={(e) => {
-                  setTitle(e.target.value);
-                  if (errors.title) setErrors({ ...errors, title: "" });
-                }}
-                error={!!errors.title}
-                helperText={errors.title}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <ClassOutlined sx={{ color: "var(--text3)" }} />
-                    </InputAdornment>
-                  ),
-                  sx: {
-                    borderRadius: "12px",
-                    backgroundColor: "var(--bg-color)",
-                    "& fieldset": { border: "1px solid transparent" },
-                    "&:hover fieldset": {
-                      border: "1px solid var(--primary-color) !important",
-                    },
-                    "&.Mui-focused fieldset": {
-                      border: "1px solid var(--primary-color) !important",
-                    },
-                    transition: "all 0.2s ease",
-                  },
-                }}
-              />
-
-              <Stack gap="8px">
-                <Typography
-                  sx={{
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "var(--text2)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                    ml: "4px",
-                    mt: "12px",
-                  }}
-                >
-                  Departments (Tags)
-                </Typography>
-                <TextField
-                  fullWidth
-                  placeholder="Add Department (e.g. CSE, ECE) and press Enter"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={handleAddTag}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <LocalOfferOutlined sx={{ color: "var(--text3)" }} />
-                      </InputAdornment>
-                    ),
-                    sx: {
-                      borderRadius: "12px",
-                      backgroundColor: "var(--bg-color)",
-                      "& fieldset": { border: "1px solid transparent" },
-                      "&:hover fieldset": {
-                        border: "1px solid var(--primary-color) !important",
-                      },
-                      "&.Mui-focused fieldset": {
-                        border: "1px solid var(--primary-color) !important",
-                      },
-                      transition: "all 0.2s ease",
-                    },
-                  }}
-                />
-
-                <Stack
-                  direction="row"
-                  flexWrap="wrap"
-                  gap="8px"
-                  minHeight="32px"
-                >
-                  {tags.map((tag, index) => (
-                    <Chip
-                      key={index}
-                      label={tag}
-                      onDelete={() => handleDeleteTag(tag)}
-                      sx={{
-                        backgroundColor: "rgba(33, 150, 243, 0.1)",
-                        color: "var(--primary-color)",
-                        fontWeight: 600,
-                        fontFamily: "Lato",
-                        borderRadius: "8px",
-                      }}
-                    />
-                  ))}
-                </Stack>
-              </Stack>
-            </Stack>
+                  backgroundColor: "var(--bg-color)",
+                  "& fieldset": { border: "none" },
+                },
+              }}
+            />
           </Stack>
 
-          {/* Action Buttons */}
-          <Stack direction="row" gap="12px" pt="12px">
+          <Stack gap="6px">
+            <Typography
+              sx={{ fontSize: "12px", fontWeight: 700, color: "var(--text2)" }}
+            >
+              Departments (Tags)
+            </Typography>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Add department and press Enter"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleAddTag}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LocalOfferOutlined sx={{ color: "var(--text4)", fontSize: "18px" }} />
+                  </InputAdornment>
+                ),
+                sx: {
+                  borderRadius: "8px",
+                  fontSize: "13px",
+                  backgroundColor: "var(--bg-color)",
+                  "& fieldset": { border: "none" },
+                },
+              }}
+            />
+            {tags.length > 0 && (
+              <Stack direction="row" flexWrap="wrap" gap="6px" mt="4px">
+                {tags.map((tag, index) => (
+                  <Chip
+                    key={index}
+                    label={tag}
+                    size="small"
+                    onDelete={() => handleDeleteTag(tag)}
+                    sx={{
+                      backgroundColor: "rgba(24, 113, 99, 0.08)",
+                      color: "var(--primary-color)",
+                      fontWeight: 600,
+                      fontSize: "11px",
+                      height: "24px",
+                      borderRadius: "6px",
+                    }}
+                  />
+                ))}
+              </Stack>
+            )}
+          </Stack>
+
+          {/* Actions */}
+          <Stack direction="row" gap="10px" pt="8px">
             <Button
               fullWidth
               onClick={onClose}
               sx={{
-                height: "52px",
-                borderRadius: "12px",
+                height: "38px",
+                borderRadius: "8px",
                 color: "var(--text2)",
                 fontWeight: 600,
-                fontSize: "15px",
+                fontSize: "13px",
                 textTransform: "none",
                 backgroundColor: "var(--bg-color)",
                 "&:hover": { backgroundColor: "var(--border-color)" },
@@ -290,31 +234,24 @@ export default function CreateBatchDialog({
               variant="contained"
               onClick={handleSubmit}
               disabled={isLoading}
+              disableElevation
               sx={{
-                height: "52px",
-                borderRadius: "12px",
-                background: "linear-gradient(135deg, #2196F3 0%, #1976D2 100%)",
-                fontWeight: 700,
-                fontSize: "15px",
+                height: "38px",
+                borderRadius: "8px",
+                backgroundColor: "var(--primary-color)",
+                fontWeight: 600,
+                fontSize: "13px",
                 textTransform: "none",
-                boxShadow: "0 8px 20px rgba(33, 150, 243, 0.25)",
-                "&:hover": {
-                  background:
-                    "linear-gradient(135deg, #1E88E5 0%, #1565C0 100%)",
-                  boxShadow: "0 12px 24px rgba(33, 150, 243, 0.35)",
-                },
-                "&.Mui-disabled": {
-                  background: "#e0e0e0",
-                },
+                "&:hover": { backgroundColor: "var(--primary-color-dark)" },
+                "&.Mui-disabled": { backgroundColor: "#e0e0e0" },
               }}
             >
               {isLoading ? (
-                <CircularProgress size={24} sx={{ color: "var(--text2)" }} />
+                <CircularProgress size={18} sx={{ color: "var(--white)" }} />
+              ) : isEdit ? (
+                "Update Batch"
               ) : (
-                <Stack direction="row" alignItems="center" gap="8px">
-                  <span>{isEdit ? "Update Batch" : "Create Batch"}</span>
-                  <CheckCircleOutline sx={{ fontSize: "20px" }} />
-                </Stack>
+                "Create Batch"
               )}
             </Button>
           </Stack>

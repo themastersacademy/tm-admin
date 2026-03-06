@@ -51,7 +51,7 @@ export default function TestID() {
         );
         if (data.success) {
           setTestList(data.data);
-        } else {
+        } else if (!data.isAborted) {
           showSnackbar(data.message, "error", "", "3000");
         }
       } catch (error) {

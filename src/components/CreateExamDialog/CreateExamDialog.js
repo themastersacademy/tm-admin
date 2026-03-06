@@ -1,9 +1,6 @@
 import {
   Button,
   Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   IconButton,
   Slide,
   Stack,
@@ -31,129 +28,130 @@ export default function CreateExamDialog({
       TransitionComponent={Slide}
       sx={{
         "& .MuiDialog-paper": {
-          minWidth: "500px",
-          maxWidth: "600px",
-          borderRadius: "16px",
-          border: "1px solid var(--border-color)",
-          boxShadow: "0px 12px 40px rgba(0, 0, 0, 0.12)",
+          minWidth: "520px",
+          maxWidth: "620px",
+          borderRadius: "20px",
+          overflow: "hidden",
         },
       }}
     >
-      <DialogTitle
+      {/* Teal Header */}
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          padding: "20px 20px",
-          borderBottom: "1px solid var(--border-color)",
-          backgroundColor: "#fafafa",
-          marginBottom: "20px",
+          padding: "20px 24px",
+          backgroundColor: "var(--primary-color)",
+          color: "white",
         }}
       >
-        <Stack gap="4px">
-          <Stack flexDirection="row" alignItems="center" gap="12px">
-            {icon && (
-              <Stack
-                sx={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "10px",
-                  backgroundColor: "var(--primary-color-light, #e3f2fd)",
-                  color: "var(--primary-color)",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                {icon}
-              </Stack>
-            )}
+        <Stack direction="row" alignItems="center" gap={1.5}>
+          {icon && (
+            <Stack
+              sx={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "10px",
+                backgroundColor: "rgba(255,255,255,0.15)",
+                justifyContent: "center",
+                alignItems: "center",
+                color: "white",
+              }}
+            >
+              {icon}
+            </Stack>
+          )}
+          <Stack>
             <Typography
               sx={{
                 fontFamily: "Lato",
-                fontSize: "20px",
-                fontWeight: "700",
-                color: "var(--text1)",
+                fontSize: "18px",
+                fontWeight: 700,
+                color: "white",
               }}
             >
               {title}
             </Typography>
-          </Stack>
-          {subtitle && (
-            <Typography
-              sx={{
-                fontFamily: "Lato",
-                fontSize: "14px",
-                color: "var(--text3)",
-                marginLeft: icon ? "52px" : "0px",
-              }}
-            >
-              {subtitle}
-            </Typography>
-          )}
-        </Stack>
-        <IconButton
-          onClick={onClose}
-          size="small"
-          sx={{
-            borderRadius: "8px",
-            color: "var(--text3)",
-            "&:hover": {
-              backgroundColor: "rgba(0,0,0,0.05)",
-              color: "var(--text1)",
-            },
-          }}
-        >
-          <Close fontSize="small" />
-        </IconButton>
-      </DialogTitle>
-
-      <DialogContent sx={{ padding: "32px 32px", paddingTop: "32px" }}>
-        <Stack gap="24px">
-          {infoText && (
-            <Stack
-              sx={{
-                backgroundColor: "#e3f2fd",
-                padding: "12px 16px",
-                borderRadius: "8px",
-                border: "1px solid #bbdefb",
-              }}
-            >
+            {subtitle && (
               <Typography
                 sx={{
                   fontSize: "13px",
-                  color: "#0d47a1",
-                  fontFamily: "Lato",
+                  color: "rgba(255,255,255,0.8)",
                 }}
               >
-                💡 {infoText}
+                {subtitle}
               </Typography>
-            </Stack>
-          )}
-          {children}
+            )}
+          </Stack>
         </Stack>
-      </DialogContent>
+        <IconButton
+          onClick={onClose}
+          sx={{
+            color: "white",
+            "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" },
+          }}
+        >
+          <Close />
+        </IconButton>
+      </Stack>
 
-      <DialogActions
+      {/* Content */}
+      <Stack
         sx={{
-          padding: "24px 32px",
+          padding: "24px",
+          gap: "20px",
+          maxHeight: "60vh",
+          overflowY: "auto",
+        }}
+      >
+        {infoText && (
+          <Stack
+            sx={{
+              backgroundColor: "rgba(24, 113, 99, 0.06)",
+              padding: "12px 16px",
+              borderRadius: "10px",
+              border: "1px solid rgba(24, 113, 99, 0.15)",
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: "13px",
+                color: "var(--primary-color)",
+                fontWeight: 500,
+              }}
+            >
+              {infoText}
+            </Typography>
+          </Stack>
+        )}
+        {children}
+      </Stack>
+
+      {/* Footer */}
+      <Stack
+        direction="row"
+        justifyContent="flex-end"
+        gap={2}
+        sx={{
+          padding: "16px 24px",
           borderTop: "1px solid var(--border-color)",
-          backgroundColor: "#fafafa",
+          backgroundColor: "var(--bg-color)",
         }}
       >
         <Button
           onClick={onClose}
-          variant="text"
+          variant="outlined"
           sx={{
             textTransform: "none",
-            color: "var(--text3)",
-            fontWeight: "600",
+            borderRadius: "10px",
+            height: "42px",
             fontSize: "14px",
-            "&:hover": {
-              backgroundColor: "transparent",
-              color: "var(--text1)",
-            },
+            fontWeight: 600,
+            color: "var(--text2)",
+            borderColor: "var(--border-color)",
+            minWidth: "100px",
           }}
-          disableElevation
         >
           Cancel
         </Button>
@@ -161,36 +159,34 @@ export default function CreateExamDialog({
           onClick={onCreate}
           variant="contained"
           disabled={isLoading}
-          startIcon={
-            isLoading ? (
-              <CircularProgress size={16} sx={{ color: "#fff" }} />
-            ) : null
-          }
           endIcon={!isLoading ? <East /> : null}
           sx={{
             textTransform: "none",
+            borderRadius: "10px",
+            height: "42px",
+            fontSize: "14px",
+            fontWeight: 600,
             backgroundColor: "var(--primary-color)",
-            color: "#fff",
-            fontWeight: "600",
-            padding: "10px 28px",
-            borderRadius: "8px",
-            boxShadow: "0px 4px 12px rgba(25, 118, 210, 0.2)",
+            minWidth: "120px",
+            boxShadow: "0 4px 15px rgba(24, 113, 99, 0.3)",
             "&:hover": {
-              backgroundColor: "var(--primary-color)",
-              opacity: 0.9,
-              boxShadow: "0px 6px 16px rgba(25, 118, 210, 0.3)",
+              backgroundColor: "var(--primary-color-dark)",
+              boxShadow: "0 6px 20px rgba(24, 113, 99, 0.4)",
             },
             "&.Mui-disabled": {
-              backgroundColor: "var(--primary-color)",
-              opacity: 0.6,
-              color: "#fff",
+              background: "var(--border-color)",
+              color: "var(--text3)",
             },
           }}
           disableElevation
         >
-          {isLoading ? "Creating..." : "Create"}
+          {isLoading ? (
+            <CircularProgress size={20} sx={{ color: "white" }} />
+          ) : (
+            "Create"
+          )}
         </Button>
-      </DialogActions>
+      </Stack>
     </Dialog>
   );
 }

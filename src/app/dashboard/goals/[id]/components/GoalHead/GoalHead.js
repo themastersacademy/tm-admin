@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import {
   Button,
   CircularProgress,
@@ -6,21 +7,21 @@ import {
   Stack,
   Typography,
   Chip,
-  Divider,
   Breadcrumbs,
   Link,
+  IconButton,
+  Box,
 } from "@mui/material";
 import Image from "next/image";
 import gate_cse from "@/public/Icons/gate_cse.svg";
 import placements from "@/public/Icons/placements.svg";
 import banking from "@/public/Icons/banking.svg";
 import {
-  ArrowBackIosRounded,
+  ArrowBack,
   Home,
   School,
   MenuBook,
   Article,
-  Quiz,
   Edit,
 } from "@mui/icons-material";
 import GoalDialogBox from "../GoalDialogBox/GoalDialogBox";
@@ -44,63 +45,56 @@ export default function GoalHead({ goal, goalLoading, fetchGoal }) {
         if (data.success) {
           showSnackbar(data.message, "success", "", "3000");
           fetchGoal();
-          setIsLoading(false);
         } else {
           showSnackbar(data.message, "error", "", "3000");
         }
         setIsLoading(false);
       });
     } catch (error) {
-      console.log(error);
       setIsLoading(false);
     }
   };
 
-  // Calculate stats
   const coursesCount = goal?.coursesList?.length || 0;
   const subjectsCount = goal?.subjectList?.length || 0;
   const blogsCount = goal?.blogList?.length || 0;
 
   return (
-    <Stack
-      sx={{
-        backgroundColor: "var(--white)",
-        border: "1px solid var(--border-color)",
-        borderRadius: "12px",
-        overflow: "hidden",
-      }}
-    >
-      {/* Top Section: Breadcrumbs & Actions */}
+    <>
+      {/* Breadcrumb Bar */}
       <Stack
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        padding="16px 24px"
         sx={{
-          borderBottom: "1px solid var(--border-color)",
-          backgroundColor: "#F8F9FA",
+          backgroundColor: "var(--white)",
+          border: "1px solid var(--border-color)",
+          borderRadius: "12px",
+          padding: "12px 20px",
         }}
       >
-        {/* Breadcrumbs */}
-        <Stack direction="row" alignItems="center" gap="12px">
-          <ArrowBackIosRounded
+        <Stack direction="row" alignItems="center" gap="10px">
+          <IconButton
             onClick={() => router.back()}
             sx={{
-              fontSize: "18px",
-              cursor: "pointer",
-              color: "var(--text3)",
+              width: 30,
+              height: 30,
+              border: "1px solid var(--border-color)",
+              borderRadius: "8px",
               "&:hover": {
-                color: "var(--primary-color)",
+                backgroundColor: "var(--primary-color)",
+                borderColor: "var(--primary-color)",
+                "& svg": { color: "#fff" },
               },
             }}
-          />
+          >
+            <ArrowBack sx={{ fontSize: "16px", color: "var(--text2)", transition: "color 0.2s" }} />
+          </IconButton>
           <Breadcrumbs
             separator="›"
             sx={{
               fontSize: "13px",
-              "& .MuiBreadcrumbs-separator": {
-                color: "var(--text3)",
-              },
+              "& .MuiBreadcrumbs-separator": { color: "var(--text4)" },
             }}
           >
             <Link
@@ -111,22 +105,19 @@ export default function GoalHead({ goal, goalLoading, fetchGoal }) {
                 display: "flex",
                 alignItems: "center",
                 gap: "4px",
-                color: "var(--text3)",
-                fontSize: "13px",
-                cursor: "pointer",
-                "&:hover": {
-                  color: "var(--primary-color)",
-                },
+                color: "var(--text4)",
+                fontSize: "12px",
+                "&:hover": { color: "var(--primary-color)" },
               }}
             >
-              <Home sx={{ fontSize: "16px" }} />
+              <Home sx={{ fontSize: "14px" }} />
               Dashboard
             </Link>
             <Typography
-              sx={{ fontSize: "13px", color: "var(--text2)", fontWeight: 600 }}
+              sx={{ fontSize: "12px", color: "var(--text1)", fontWeight: 600 }}
             >
               {goalLoading ? (
-                <Skeleton variant="text" width="80px" height="20px" />
+                <Skeleton variant="text" width={100} height={18} />
               ) : (
                 goal.title || "Goal"
               )}
@@ -134,34 +125,31 @@ export default function GoalHead({ goal, goalLoading, fetchGoal }) {
           </Breadcrumbs>
         </Stack>
 
-        {/* Publish/Draft Button */}
         <Button
           variant="contained"
           onClick={handleLive}
           disabled={isLoading || goalLoading}
+          disableElevation
           sx={{
             textTransform: "none",
-            backgroundColor: goal.isLive ? "#FFA726" : "#4CAF50",
-            color: "#FFFFFF",
+            backgroundColor: goal.isLive ? "#FF9800" : "#4CAF50",
+            color: "#fff",
             borderRadius: "8px",
-            padding: "8px 24px",
+            padding: "6px 16px",
             fontWeight: 600,
-            fontSize: "13px",
-            minWidth: "120px",
-            boxShadow: "none",
+            fontSize: "12px",
+            height: "34px",
             "&:hover": {
-              backgroundColor: goal.isLive ? "#FB8C00" : "#43A047",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              backgroundColor: goal.isLive ? "#F57C00" : "#388E3C",
             },
             "&:disabled": {
               backgroundColor: "#9E9E9E",
-              color: "#FFFFFF",
+              color: "#fff",
             },
           }}
-          disableElevation
         >
           {isLoading ? (
-            <CircularProgress size={20} sx={{ color: "white" }} />
+            <CircularProgress size={16} sx={{ color: "white" }} />
           ) : goal.isLive ? (
             "Set to Draft"
           ) : (
@@ -176,9 +164,10 @@ export default function GoalHead({ goal, goalLoading, fetchGoal }) {
           sx={{
             width: "100%",
             position: "relative",
-            paddingBottom: "33.33%", // 3:1 aspect ratio (1200/400 = 3)
-            borderBottom: "1px solid var(--border-color)",
+            paddingBottom: "25%",
+            borderRadius: "12px",
             overflow: "hidden",
+            border: "1px solid var(--border-color)",
             backgroundColor: "var(--bg-color)",
           }}
         >
@@ -198,25 +187,35 @@ export default function GoalHead({ goal, goalLoading, fetchGoal }) {
         </Stack>
       )}
 
-      {/* Main Section: Title & Icon */}
-      <Stack padding="24px 24px 20px 24px" gap="16px">
-        <Stack direction="row" alignItems="flex-start" gap="20px">
+      {/* Main Header */}
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{
+          backgroundColor: "var(--white)",
+          border: "1px solid var(--border-color)",
+          borderRadius: "12px",
+          padding: "16px 20px",
+        }}
+      >
+        <Stack direction="row" alignItems="center" gap="12px">
           {/* Icon */}
-          <Stack
+          <Box
             sx={{
-              width: "64px",
-              height: "64px",
-              backgroundColor: "var(--bg-color)",
-              borderRadius: "16px",
+              width: 42,
+              height: 42,
+              borderRadius: "10px",
+              backgroundColor: "var(--primary-color-acc-2)",
               display: "flex",
-              justifyContent: "center",
               alignItems: "center",
-              border: "1px solid var(--border-color)",
+              justifyContent: "center",
+              border: "1px solid rgba(24, 113, 99, 0.15)",
               flexShrink: 0,
             }}
           >
             {goalLoading ? (
-              <Skeleton variant="circular" width={32} height={32} />
+              <Skeleton variant="rounded" width={22} height={24} />
             ) : (
               <Image
                 src={
@@ -227,123 +226,97 @@ export default function GoalHead({ goal, goalLoading, fetchGoal }) {
                     : banking.src
                 }
                 alt="icon"
-                width="32"
-                height="36"
+                width={22}
+                height={24}
               />
             )}
-          </Stack>
+          </Box>
 
-          {/* Title & Status */}
-          <Stack flex={1} gap="8px">
-            <Stack direction="row" alignItems="center" gap="12px">
+          {/* Title + Status */}
+          <Stack>
+            <Stack direction="row" alignItems="center" gap="8px">
               {goalLoading ? (
-                <Skeleton variant="text" width="200px" height="32px" />
+                <Skeleton variant="text" width={200} height={24} />
               ) : (
-                <Typography
-                  sx={{
-                    fontFamily: "Lato",
-                    fontSize: "24px",
-                    fontWeight: 700,
-                    color: "var(--text1)",
-                  }}
-                >
-                  {goal.title || "Goal not found"}
-                </Typography>
-              )}
-              {!goalLoading && (
-                <Stack direction="row" gap="8px" alignItems="center">
+                <>
+                  <Typography
+                    sx={{
+                      fontFamily: "Lato",
+                      fontSize: "18px",
+                      fontWeight: 700,
+                      color: "var(--text1)",
+                    }}
+                  >
+                    {goal.title || "Goal"}
+                  </Typography>
                   <Chip
                     label={goal.isLive ? "Published" : "Draft"}
                     size="small"
                     sx={{
-                      backgroundColor: goal.isLive
-                        ? "rgba(76, 175, 80, 0.1)"
-                        : "rgba(158, 158, 158, 0.1)",
-                      color: goal.isLive
-                        ? "var(--success-color)"
-                        : "var(--text3)",
+                      height: "20px",
+                      fontSize: "10px",
                       fontWeight: 700,
-                      fontSize: "11px",
-                      height: "24px",
+                      backgroundColor: goal.isLive
+                        ? "rgba(76, 175, 80, 0.08)"
+                        : "rgba(0, 0, 0, 0.04)",
+                      color: goal.isLive ? "#4CAF50" : "#9E9E9E",
+                      border: `1px solid ${goal.isLive ? "#4caf5030" : "#00000015"}`,
+                      "& .MuiChip-label": { padding: "0 6px" },
                     }}
                   />
-                  <Stack
+                  <IconButton
                     onClick={() => setIsEditDialogOpen(true)}
+                    size="small"
                     sx={{
-                      width: "24px",
-                      height: "24px",
-                      borderRadius: "50%",
-                      backgroundColor: "var(--bg-color)",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      cursor: "pointer",
+                      width: 24,
+                      height: 24,
                       border: "1px solid var(--border-color)",
+                      borderRadius: "6px",
                       "&:hover": {
                         backgroundColor: "var(--primary-color)",
                         borderColor: "var(--primary-color)",
-                        "& svg": {
-                          color: "white",
-                        },
+                        "& svg": { color: "#fff" },
                       },
                     }}
                   >
-                    <Edit
-                      sx={{
-                        fontSize: "14px",
-                        color: "var(--text3)",
-                        transition: "all 0.2s ease",
-                      }}
-                    />
-                  </Stack>
-                </Stack>
+                    <Edit sx={{ fontSize: "12px", color: "var(--text3)", transition: "color 0.15s" }} />
+                  </IconButton>
+                </>
               )}
             </Stack>
-            {goal.tagline && (
-              <Typography
-                sx={{
-                  fontSize: "14px",
-                  color: "var(--text2)",
-                  fontStyle: "italic",
-                }}
-              >
-                {goal.tagline}
-              </Typography>
+            {goalLoading ? (
+              <Skeleton variant="text" width={250} height={16} />
+            ) : (
+              <Stack direction="row" alignItems="center" gap="12px">
+                {goal.tagline && (
+                  <Typography sx={{ fontSize: "12px", color: "var(--text3)", fontStyle: "italic" }}>
+                    {goal.tagline}
+                  </Typography>
+                )}
+                <Stack direction="row" alignItems="center" gap="4px">
+                  <School sx={{ fontSize: "12px", color: "var(--primary-color)" }} />
+                  <Typography sx={{ fontSize: "12px", color: "var(--text4)" }}>
+                    {coursesCount} courses
+                  </Typography>
+                </Stack>
+                <Stack direction="row" alignItems="center" gap="4px">
+                  <MenuBook sx={{ fontSize: "12px", color: "#4CAF50" }} />
+                  <Typography sx={{ fontSize: "12px", color: "var(--text4)" }}>
+                    {subjectsCount} subjects
+                  </Typography>
+                </Stack>
+                <Stack direction="row" alignItems="center" gap="4px">
+                  <Article sx={{ fontSize: "12px", color: "#2196F3" }} />
+                  <Typography sx={{ fontSize: "12px", color: "var(--text4)" }}>
+                    {blogsCount} blogs
+                  </Typography>
+                </Stack>
+              </Stack>
             )}
-            <Typography sx={{ fontSize: "13px", color: "var(--text3)" }}>
-              {goalLoading ? (
-                <Skeleton variant="text" width="300px" />
-              ) : (
-                `Manage courses, subjects, blogs, and exams for this goal`
-              )}
-            </Typography>
           </Stack>
         </Stack>
-
-        {/* Stats Cards */}
-        <Stack direction="row" gap="16px" marginTop="8px" flexWrap="wrap">
-          <StatCard
-            icon={<School />}
-            label="Courses"
-            value={coursesCount}
-            color="#2196F3"
-            isLoading={goalLoading}
-          />
-          <StatCard
-            icon={<MenuBook />}
-            label="Subjects"
-            value={subjectsCount}
-            color="#9C27B0"
-            isLoading={goalLoading}
-          />
-          <StatCard
-            icon={<Article />}
-            label="Blogs"
-            value={blogsCount}
-            color="#FF9800"
-            isLoading={goalLoading}
-          />
-        </Stack>
       </Stack>
+
       <GoalDialogBox
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
@@ -351,70 +324,6 @@ export default function GoalHead({ goal, goalLoading, fetchGoal }) {
         goalData={goal}
         onUpdateSuccess={fetchGoal}
       />
-    </Stack>
+    </>
   );
 }
-
-// Stat Card Component
-const StatCard = ({ icon, label, value, color, isLoading }) => (
-  <Stack
-    direction="row"
-    alignItems="center"
-    gap="12px"
-    padding="12px 16px"
-    sx={{
-      backgroundColor: "var(--bg-color)",
-      borderRadius: "10px",
-      border: "1px solid var(--border-color)",
-      minWidth: "140px",
-    }}
-  >
-    <Stack
-      sx={{
-        width: "36px",
-        height: "36px",
-        backgroundColor: "var(--white)",
-        borderRadius: "8px",
-        justifyContent: "center",
-        alignItems: "center",
-        border: `1px solid ${color}20`,
-      }}
-    >
-      {icon &&
-        React.cloneElement(icon, {
-          sx: { fontSize: "20px", color: color },
-        })}
-    </Stack>
-    <Stack gap="2px">
-      <Typography
-        sx={{
-          fontSize: "11px",
-          color: "var(--text3)",
-          fontWeight: 600,
-          textTransform: "uppercase",
-          letterSpacing: "0.5px",
-        }}
-      >
-        {label}
-      </Typography>
-      {isLoading ? (
-        <Skeleton variant="text" width="30px" height="24px" />
-      ) : (
-        <Typography
-          sx={{
-            fontSize: "20px",
-            fontWeight: 800,
-            color: "var(--text1)",
-            fontFamily: "Lato",
-            lineHeight: 1,
-          }}
-        >
-          {value}
-        </Typography>
-      )}
-    </Stack>
-  </Stack>
-);
-
-// Import React for cloneElement
-import React from "react";

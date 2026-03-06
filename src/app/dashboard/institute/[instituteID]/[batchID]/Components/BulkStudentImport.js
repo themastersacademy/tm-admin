@@ -1,5 +1,4 @@
 "use client";
-import LongDialogBox from "@/src/components/LongDialogBox/LongDialogBox";
 import {
   Button,
   Chip,
@@ -7,6 +6,10 @@ import {
   Stack,
   Typography,
   Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  CircularProgress,
 } from "@mui/material";
 import { readExcel, writeExcel } from "@/src/lib/excel";
 import { useRef, useState } from "react";
@@ -15,6 +18,8 @@ import {
   CloudUpload,
   InsertDriveFile,
   Download,
+  CheckCircle,
+  ErrorOutline,
 } from "@mui/icons-material";
 import { enqueueSnackbar } from "notistack";
 import { useParams } from "next/navigation";
@@ -26,7 +31,7 @@ export default function BulkStudentImport({ isOpen, close, onSuccess, batch }) {
   const [isLoading, setIsLoading] = useState(false);
   const [students, setStudents] = useState([]);
   const [error, setError] = useState([]);
-  const [isOpenAccordion, setIsOpenAccordion] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
 
   const hasTags = batch?.tags && batch.tags.length > 0;
 
@@ -81,7 +86,6 @@ export default function BulkStudentImport({ isOpen, close, onSuccess, batch }) {
     const data = await uploadedFile.arrayBuffer();
     const jsonData = await readExcel(data);
 
-    // Basic validation
     const validStudents = [];
     const errors = [];
 
@@ -108,7 +112,7 @@ export default function BulkStudentImport({ isOpen, close, onSuccess, batch }) {
     setError(errors);
     setStudents(validStudents);
     if (errors.length > 0) {
-      setIsOpenAccordion(true);
+      setShowErrors(true);
     }
   };
 
@@ -116,7 +120,13 @@ export default function BulkStudentImport({ isOpen, close, onSuccess, batch }) {
     setFile(null);
     setStudents([]);
     setError([]);
+    setShowErrors(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleClose = () => {
+    handleRemoveFile();
+    close();
   };
 
   const handleSubmit = async () => {
@@ -143,24 +153,17 @@ export default function BulkStudentImport({ isOpen, close, onSuccess, batch }) {
         const failed = result.data.errors;
         if (failed.length > 0) {
           setError(failed);
-          setIsOpenAccordion(true);
+          setShowErrors(true);
           enqueueSnackbar(`Import completed with ${failed.length} errors.`, {
             variant: "warning",
           });
-          // Update valid students to exclude failed ones if needed, or just keep them as is.
-          // For now, we just show the errors.
-          if (onSuccess) {
-            onSuccess();
-          }
+          if (onSuccess) onSuccess();
         } else {
           enqueueSnackbar("Students imported successfully.", {
             variant: "success",
           });
-          handleRemoveFile();
-          close();
-          if (onSuccess) {
-            onSuccess();
-          }
+          handleClose();
+          if (onSuccess) onSuccess();
         }
       } else {
         enqueueSnackbar("Import failed: " + result.message, {
@@ -168,371 +171,331 @@ export default function BulkStudentImport({ isOpen, close, onSuccess, batch }) {
         });
       }
     } catch (err) {
-      enqueueSnackbar("Upload failed.", {
-        variant: "error",
-      });
+      enqueueSnackbar("Upload failed.", { variant: "error" });
     } finally {
       setIsLoading(false);
     }
   };
 
+  const displayList = showErrors ? error : students;
+  const hasResults = file && (students.length > 0 || error.length > 0);
+
   return (
-    <LongDialogBox
-      isOpen={isOpen}
-      title="Import Students"
-      onClose={close}
-      actions={
-        <Stack direction="row" gap="12px">
-          <Button
-            variant="outlined"
-            onClick={() => {
-              handleRemoveFile();
-              close();
-            }}
-            disabled={isLoading}
-            sx={{
-              color: "var(--text2)",
-              borderColor: "var(--border-color)",
-              textTransform: "none",
-              borderRadius: "8px",
-              fontWeight: 600,
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleSubmit}
-            disabled={!students.length || !file || isLoading}
-            sx={{
-              backgroundColor: "var(--primary-color)",
-              textTransform: "none",
-              borderRadius: "8px",
-              boxShadow: "none",
-              fontWeight: 600,
-              px: 3,
-            }}
-          >
-            {isLoading ? "Importing..." : "Import Students"}
-          </Button>
-        </Stack>
-      }
-      titleComponent={<Box />}
+    <Dialog
+      open={isOpen}
+      onClose={handleClose}
+      disableScrollLock
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: "12px",
+          border: "1px solid var(--border-color)",
+          maxHeight: "80vh",
+        },
+      }}
     >
-      <Stack p="24px" gap="20px" height="100%">
-        {/* Header: Template */}
-        <Stack
-          direction="row"
-          gap="16px"
-          alignItems="center"
-          justifyContent="flex-end"
-          sx={{
-            p: "16px",
-            backgroundColor: "var(--bg-color)",
-            borderRadius: "12px",
-            border: "1px solid var(--border-color)",
-          }}
-        >
-          <Button
-            variant="outlined"
-            startIcon={<InsertDriveFile />}
-            onClick={handleDownloadTemplate}
-            size="small"
+      {/* Header */}
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ padding: "16px 20px", borderBottom: "1px solid var(--border-color)" }}
+      >
+        <Stack direction="row" alignItems="center" gap="10px">
+          <Box
             sx={{
-              height: "40px",
-              textTransform: "none",
-              borderColor: "var(--border-color)",
-              color: "var(--text2)",
-              backgroundColor: "white",
-              whiteSpace: "nowrap",
-              "&:hover": {
-                backgroundColor: "#f5f5f5",
-                borderColor: "var(--text2)",
-              },
+              width: 32,
+              height: 32,
+              borderRadius: "8px",
+              backgroundColor: "var(--primary-color-acc-2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            Download Template
-          </Button>
+            <CloudUpload sx={{ fontSize: "16px", color: "var(--primary-color)" }} />
+          </Box>
+          <Typography sx={{ fontSize: "15px", fontWeight: 700, color: "var(--text1)" }}>
+            Import Students
+          </Typography>
         </Stack>
-
-        {/* Smart Upload Area */}
-        <input
-          type="file"
-          ref={fileInputRef}
-          accept=".csv, .xlsx, .xls"
-          onChange={handleFileChange}
-          style={{ display: "none" }}
-        />
-
-        {!file ? (
-          <Stack
-            onClick={triggerFileInput}
-            alignItems="center"
-            justifyContent="center"
-            gap="12px"
+        <Stack direction="row" alignItems="center" gap="8px">
+          <Button
+            size="small"
+            startIcon={<InsertDriveFile sx={{ fontSize: "14px" }} />}
+            onClick={handleDownloadTemplate}
             sx={{
-              flex: 1,
-              minHeight: "200px",
-              border: "2px dashed",
-              borderColor: "var(--border-color)",
-              borderRadius: "12px",
-              backgroundColor: "var(--bg-color)",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-              "&:hover": {
-                borderColor: "var(--primary-color)",
-                backgroundColor: "rgba(102, 126, 234, 0.04)",
-              },
+              textTransform: "none",
+              fontSize: "11px",
+              fontWeight: 600,
+              color: "var(--text2)",
+              borderRadius: "6px",
+              padding: "4px 10px",
+              border: "1px solid var(--border-color)",
+              "&:hover": { backgroundColor: "var(--bg-color)" },
             }}
           >
-            <Box
-              sx={{
-                width: "48px",
-                height: "48px",
-                borderRadius: "50%",
-                backgroundColor: "rgba(102, 126, 234, 0.1)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <CloudUpload
-                sx={{ fontSize: "24px", color: "var(--primary-color)" }}
-              />
-            </Box>
-            <Stack alignItems="center">
-              <Typography
-                variant="h6"
-                fontWeight="600"
-                color="var(--text1)"
-                fontSize="14px"
-              >
-                Click to upload or drag and drop
-              </Typography>
-              <Typography variant="body2" color="var(--text3)" fontSize="12px">
-                Supports .csv, .xlsx, .xls
-              </Typography>
-            </Stack>
-          </Stack>
-        ) : (
-          <Stack gap="16px" height="100%" overflow="hidden">
-            {/* Slim File Bar */}
+            Template
+          </Button>
+          <IconButton onClick={handleClose} size="small">
+            <Close sx={{ fontSize: "18px", color: "var(--text3)" }} />
+          </IconButton>
+        </Stack>
+      </Stack>
+
+      <DialogContent sx={{ padding: "16px 20px" }}>
+        <Stack gap="14px">
+          {/* File Upload Area */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept=".csv, .xlsx, .xls"
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+          />
+
+          {!file ? (
             <Stack
-              direction="row"
+              onClick={triggerFileInput}
               alignItems="center"
-              justifyContent="space-between"
+              justifyContent="center"
+              gap="10px"
               sx={{
-                p: "12px 16px",
-                border: "1px solid var(--border-color)",
+                minHeight: "140px",
+                border: "2px dashed var(--border-color)",
                 borderRadius: "10px",
-                backgroundColor: "var(--white)",
+                backgroundColor: "var(--bg-color, #fafafa)",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                "&:hover": {
+                  borderColor: "var(--primary-color)",
+                  backgroundColor: "rgba(24, 113, 99, 0.04)",
+                },
               }}
             >
-              <Stack direction="row" alignItems="center" gap={2}>
-                <Box
-                  sx={{
-                    width: "32px",
-                    height: "32px",
-                    borderRadius: "6px",
-                    backgroundColor: "#E8F0FE",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Typography
-                    fontWeight="700"
-                    fontSize="9px"
-                    color="var(--primary-color)"
-                  >
-                    XLSX
-                  </Typography>
-                </Box>
-                <Stack>
-                  <Typography fontWeight="600" fontSize="13px">
-                    {file.name}
-                  </Typography>
-                  <Typography fontSize="11px" color="var(--text3)">
-                    {(file.size / 1024).toFixed(2)} KB
-                  </Typography>
-                </Stack>
-              </Stack>
-              <IconButton onClick={handleRemoveFile} size="small">
-                <Close sx={{ fontSize: "18px", color: "var(--text3)" }} />
-              </IconButton>
-            </Stack>
-
-            {/* Tabbed Content Area */}
-            <Stack flex={1} overflow="hidden" gap="12px">
-              {/* Status Bar / Tabs */}
-              <Stack direction="row" gap="12px">
-                <Button
-                  variant={!isOpenAccordion ? "contained" : "outlined"}
-                  onClick={() => setIsOpenAccordion(false)}
-                  sx={{
-                    flex: 1,
-                    textTransform: "none",
-                    borderRadius: "8px",
-                    boxShadow: "none",
-                    backgroundColor: !isOpenAccordion
-                      ? "rgba(102, 126, 234, 0.1)"
-                      : "transparent",
-                    color: !isOpenAccordion
-                      ? "var(--primary-color)"
-                      : "var(--text3)",
-                    borderColor: !isOpenAccordion
-                      ? "transparent"
-                      : "var(--border-color)",
-                  }}
-                >
-                  <Stack direction="row" alignItems="center" gap="8px">
-                    <Typography fontWeight="700" fontSize="13px">
-                      Valid Students
-                    </Typography>
-                    <Chip
-                      label={students.length}
-                      size="small"
-                      sx={{
-                        height: "20px",
-                        fontSize: "10px",
-                        fontWeight: "700",
-                        backgroundColor: !isOpenAccordion
-                          ? "var(--primary-color)"
-                          : "var(--text3)",
-                        color: "white",
-                      }}
-                    />
-                  </Stack>
-                </Button>
-
-                {error && error.length > 0 && (
-                  <Button
-                    variant={isOpenAccordion ? "contained" : "outlined"}
-                    onClick={() => setIsOpenAccordion(true)}
-                    sx={{
-                      flex: 1,
-                      textTransform: "none",
-                      borderRadius: "8px",
-                      boxShadow: "none",
-                      backgroundColor: isOpenAccordion
-                        ? "#FEE2E2"
-                        : "transparent",
-                      color: isOpenAccordion ? "#DC2626" : "var(--text3)",
-                      borderColor: isOpenAccordion
-                        ? "transparent"
-                        : "var(--border-color)",
-                    }}
-                  >
-                    <Stack direction="row" alignItems="center" gap="8px">
-                      <Typography fontWeight="700" fontSize="13px">
-                        Errors Found
-                      </Typography>
-                      <Chip
-                        label={error.length}
-                        size="small"
-                        sx={{
-                          height: "20px",
-                          fontSize: "10px",
-                          fontWeight: "700",
-                          backgroundColor: isOpenAccordion
-                            ? "#DC2626"
-                            : "var(--text3)",
-                          color: "white",
-                        }}
-                      />
-                    </Stack>
-                  </Button>
-                )}
-                {error.length > 0 && isOpenAccordion && (
-                  <IconButton onClick={handleDownloadErrors} size="small">
-                    <Download sx={{ color: "#DC2626" }} />
-                  </IconButton>
-                )}
-              </Stack>
-
-              {/* Scrollable List */}
-              <Stack
+              <Box
                 sx={{
-                  flex: 1,
-                  overflowY: "auto",
-                  pr: "4px",
-                  gap: "12px",
+                  width: 40,
+                  height: 40,
+                  borderRadius: "10px",
+                  backgroundColor: "var(--primary-color-acc-2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
-                {isOpenAccordion ? (
-                  // Error List
-                  <Stack gap="12px">
-                    {error.map((e, idx) => (
-                      <Stack
-                        key={idx}
-                        sx={{
-                          p: "12px",
-                          border: "1px solid #FECACA",
-                          borderRadius: "8px",
-                          backgroundColor: "#FEF2F2",
-                        }}
-                      >
-                        <Typography
-                          fontSize="13px"
-                          fontWeight="600"
-                          color="#DC2626"
-                        >
-                          {e.Email || "Unknown Email"}
-                        </Typography>
-                        <Typography fontSize="12px" color="#DC2626">
-                          {e.error}
-                        </Typography>
-                      </Stack>
-                    ))}
+                <CloudUpload sx={{ fontSize: "20px", color: "var(--primary-color)" }} />
+              </Box>
+              <Stack alignItems="center">
+                <Typography sx={{ fontSize: "13px", fontWeight: 600, color: "var(--text1)" }}>
+                  Click to upload or drag and drop
+                </Typography>
+                <Typography sx={{ fontSize: "11px", color: "var(--text4)" }}>
+                  Supports .csv, .xlsx, .xls
+                </Typography>
+              </Stack>
+            </Stack>
+          ) : (
+            <Stack gap="12px">
+              {/* File Info Bar */}
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{
+                  padding: "8px 12px",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: "8px",
+                  backgroundColor: "var(--bg-color, #fafafa)",
+                }}
+              >
+                <Stack direction="row" alignItems="center" gap="10px">
+                  <Box
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: "6px",
+                      backgroundColor: "var(--primary-color-acc-2)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Typography sx={{ fontSize: "8px", fontWeight: 700, color: "var(--primary-color)" }}>
+                      XLSX
+                    </Typography>
+                  </Box>
+                  <Stack>
+                    <Typography sx={{ fontSize: "12px", fontWeight: 600, color: "var(--text1)" }}>
+                      {file.name}
+                    </Typography>
+                    <Typography sx={{ fontSize: "10px", color: "var(--text4)" }}>
+                      {(file.size / 1024).toFixed(1)} KB
+                    </Typography>
                   </Stack>
-                ) : (
-                  // Valid Student List
-                  <Stack gap="12px">
-                    {students.length > 0 ? (
-                      students.map((row, i) => (
+                </Stack>
+                <IconButton onClick={handleRemoveFile} size="small" sx={{ width: 24, height: 24 }}>
+                  <Close sx={{ fontSize: "14px", color: "var(--text3)" }} />
+                </IconButton>
+              </Stack>
+
+              {/* Status Tabs */}
+              {hasResults && (
+                <Stack gap="10px">
+                  <Stack direction="row" gap="6px" alignItems="center">
+                    <Chip
+                      icon={<CheckCircle sx={{ fontSize: "13px !important" }} />}
+                      label={`${students.length} Valid`}
+                      size="small"
+                      onClick={() => setShowErrors(false)}
+                      sx={{
+                        height: "24px",
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        backgroundColor: !showErrors ? "rgba(76, 175, 80, 0.1)" : "transparent",
+                        color: !showErrors ? "#4caf50" : "var(--text3)",
+                        border: `1px solid ${!showErrors ? "#4caf5040" : "var(--border-color)"}`,
+                        "& .MuiChip-icon": { color: !showErrors ? "#4caf50" : "var(--text4)" },
+                      }}
+                    />
+                    {error.length > 0 && (
+                      <>
+                        <Chip
+                          icon={<ErrorOutline sx={{ fontSize: "13px !important" }} />}
+                          label={`${error.length} Errors`}
+                          size="small"
+                          onClick={() => setShowErrors(true)}
+                          sx={{
+                            height: "24px",
+                            fontSize: "11px",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            backgroundColor: showErrors ? "rgba(244, 67, 54, 0.08)" : "transparent",
+                            color: showErrors ? "#f44336" : "var(--text3)",
+                            border: `1px solid ${showErrors ? "#f4433640" : "var(--border-color)"}`,
+                            "& .MuiChip-icon": { color: showErrors ? "#f44336" : "var(--text4)" },
+                          }}
+                        />
+                        {showErrors && (
+                          <IconButton onClick={handleDownloadErrors} size="small" sx={{ width: 24, height: 24 }}>
+                            <Download sx={{ fontSize: "14px", color: "#f44336" }} />
+                          </IconButton>
+                        )}
+                      </>
+                    )}
+                  </Stack>
+
+                  {/* List */}
+                  <Stack
+                    sx={{
+                      maxHeight: "240px",
+                      overflowY: "auto",
+                      border: "1px solid var(--border-color)",
+                      borderRadius: "8px",
+                    }}
+                  >
+                    {displayList.length > 0 ? (
+                      displayList.map((row, i) => (
                         <Stack
                           key={i}
                           direction="row"
-                          justifyContent="space-between"
                           alignItems="center"
+                          justifyContent="space-between"
                           sx={{
-                            p: "12px",
-                            border: "1px solid var(--border-color)",
-                            borderRadius: "8px",
-                            backgroundColor: "var(--white)",
+                            padding: "6px 12px",
+                            backgroundColor: i % 2 === 0 ? "var(--white)" : "var(--bg-color, #fafafa)",
+                            borderBottom: i < displayList.length - 1 ? "1px solid var(--border-color)" : "none",
                           }}
                         >
-                          <Stack>
-                            <Typography fontSize="13px" fontWeight="600">
-                              {row.Email}
+                          <Stack direction="row" alignItems="center" gap="8px">
+                            <Typography sx={{ fontSize: "10px", fontWeight: 600, color: "var(--text4)", minWidth: "20px" }}>
+                              {i + 1}
                             </Typography>
-                            {row.RollNo && (
-                              <Typography fontSize="11px" color="var(--text3)">
-                                Roll No: {row.RollNo}
+                            <Stack>
+                              <Typography sx={{ fontSize: "12px", fontWeight: 600, color: showErrors ? "#f44336" : "var(--text1)" }}>
+                                {row.Email || "Unknown Email"}
                               </Typography>
-                            )}
+                              {showErrors ? (
+                                <Typography sx={{ fontSize: "10px", color: "#f44336" }}>
+                                  {row.error}
+                                </Typography>
+                              ) : (
+                                row.RollNo && (
+                                  <Typography sx={{ fontSize: "10px", color: "var(--text4)" }}>
+                                    Roll No: {row.RollNo}
+                                  </Typography>
+                                )
+                              )}
+                            </Stack>
                           </Stack>
+                          {row.Department && !showErrors && (
+                            <Chip
+                              label={row.Department}
+                              size="small"
+                              sx={{
+                                height: "18px",
+                                fontSize: "9px",
+                                fontWeight: 600,
+                                backgroundColor: "var(--primary-color-acc-2)",
+                                color: "var(--primary-color)",
+                              }}
+                            />
+                          )}
                         </Stack>
                       ))
                     ) : (
-                      <Stack
-                        alignItems="center"
-                        justifyContent="center"
-                        height="100%"
-                        color="var(--text3)"
-                      >
-                        <Typography fontSize="14px">
-                          No valid students to display.
+                      <Stack alignItems="center" justifyContent="center" py="20px">
+                        <Typography sx={{ fontSize: "12px", color: "var(--text4)" }}>
+                          No {showErrors ? "errors" : "valid students"} to display
                         </Typography>
                       </Stack>
                     )}
                   </Stack>
-                )}
-              </Stack>
+                </Stack>
+              )}
             </Stack>
-          </Stack>
-        )}
-      </Stack>
-    </LongDialogBox>
+          )}
+        </Stack>
+      </DialogContent>
+
+      <DialogActions sx={{ padding: "12px 20px", borderTop: "1px solid var(--border-color)" }}>
+        <Button
+          onClick={handleClose}
+          disabled={isLoading}
+          sx={{
+            textTransform: "none",
+            fontSize: "12px",
+            fontWeight: 600,
+            color: "var(--text2)",
+            borderRadius: "8px",
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={!students.length || !file || isLoading}
+          disableElevation
+          sx={{
+            backgroundColor: "var(--primary-color)",
+            textTransform: "none",
+            borderRadius: "8px",
+            fontSize: "12px",
+            fontWeight: 600,
+            padding: "6px 20px",
+            "&:hover": { backgroundColor: "var(--primary-color-dark)" },
+          }}
+        >
+          {isLoading ? (
+            <CircularProgress size={16} sx={{ color: "#fff" }} />
+          ) : (
+            `Import ${students.length > 0 ? students.length : ""} Students`
+          )}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }

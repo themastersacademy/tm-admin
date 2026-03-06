@@ -70,7 +70,6 @@ export async function createGoalContent({ goalID, content }) {
       data: { blogID },
     };
   } catch (err) {
-    console.log(err);
 
     console.error("Error creating goal content:", err);
     throw new Error("Internal server error");
@@ -144,7 +143,6 @@ export async function updateGoalContent({ goalID, contentIndex, content }) {
   if (!success) {
     return { success: false, message: "Goal not found" };
   }
-  console.log(blogList);
 
   if (contentIndex < 0 || contentIndex >= blogList.length) {
     return { success: false, message: "Content not found" };

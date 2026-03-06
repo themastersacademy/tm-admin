@@ -100,79 +100,126 @@ export default function SelectBatch({
   }
 
   return (
-    <Stack>
-      <FormControl size="small">
-        <InputLabel
-          sx={{
-            "&.Mui-focused": {
-              color: "var(--sec-color)",
+    <FormControl size="small" fullWidth>
+      <InputLabel
+        sx={{
+          fontSize: "13px",
+          "&.Mui-focused": {
+            color: "var(--primary-color)",
+          },
+        }}
+      >
+        Select Batch
+      </InputLabel>
+      <Select
+        multiple
+        size="small"
+        label="Select Batch"
+        value={exam?.batchList || []}
+        onChange={(e) => {
+          setExam((prev) => ({
+            ...prev,
+            batchList: e.target.value,
+          }));
+        }}
+        onBlur={() => {
+          if (exam.batchList) {
+            updateBatchList(exam.batchList);
+          }
+        }}
+        disabled={isLive}
+        renderValue={(selectedIds) => (
+          <Stack flexDirection="row" flexWrap="wrap" gap="4px">
+            {selectedIds.map((id) => {
+              const match = batchOptions.find((opt) => opt.value === id);
+              return (
+                <Chip
+                  key={id}
+                  label={match?.label || "Loading..."}
+                  size="small"
+                  sx={{
+                    height: "24px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    backgroundColor: "var(--primary-color-acc-2)",
+                    color: "var(--primary-color)",
+                    border: "1px solid rgba(24, 113, 99, 0.2)",
+                    "& .MuiChip-deleteIcon": {
+                      color: "var(--primary-color)",
+                      fontSize: "16px",
+                    },
+                  }}
+                  onDelete={() => {
+                    const newList = (exam?.batchList || []).filter(
+                      (bId) => bId !== id
+                    );
+                    setExam((prev) => ({ ...prev, batchList: newList }));
+                    updateBatchList(newList);
+                  }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                />
+              );
+            })}
+          </Stack>
+        )}
+        sx={{
+          borderRadius: "8px",
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderColor: "var(--border-color)",
+          },
+          "&:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: "var(--primary-color)",
+          },
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "var(--primary-color)",
+          },
+        }}
+        MenuProps={{
+          PaperProps: {
+            sx: {
+              maxHeight: 250,
+              borderRadius: "8px",
+              mt: "4px",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
             },
-          }}
-        >
-          Select Batch
-        </InputLabel>
-        <Select
-          multiple
-          size="small"
-          label="Select Batch"
-          value={exam?.batchList || []}
-          onChange={(e) => {
-            setExam((prev) => ({
-              ...prev,
-              batchList: e.target.value,
-            }));
-          }}
-          onBlur={() => {
-            if (exam.batchList) {
-              updateBatchList(exam.batchList);
-            }
-          }}
-          disabled={isLive}
-          renderValue={(selectedIds) => (
-            <Stack flexDirection="row" flexWrap="wrap" gap="10px">
-              {selectedIds.map((id) => {
-                const match = batchOptions.find((opt) => opt.value === id);
-                return (
-                  <Chip
-                    key={id}
-                    label={match?.label || "Loading..."}
-                    sx={{
-                      backgroundColor: "var(--sec-color-acc-2)",
-                      color: "var(--sec-color)",
-                    }}
-                  />
-                );
-              })}
-            </Stack>
-          )}
-          sx={{
-            "&:hover .MuiOutlinedInput-notchedOutline": {
-              borderColor: "var(--sec-color)",
-            },
-            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-              borderColor: "var(--sec-color)",
-            },
-          }}
-        >
-          {batchOptions.map((option) => (
+          },
+        }}
+      >
+        {batchOptions.map((option) => {
+          const isSelected = (exam?.batchList || []).includes(option.value);
+          return (
             <MenuItem
               key={option.value}
               value={option.value}
               sx={{
+                fontSize: "13px",
+                fontFamily: "Lato",
+                padding: "8px 12px",
+                borderRadius: "4px",
+                mx: "4px",
+                my: "2px",
+                fontWeight: isSelected ? 600 : 400,
+                backgroundColor: isSelected
+                  ? "var(--primary-color-acc-2)"
+                  : "transparent",
+                color: isSelected ? "var(--primary-color)" : "var(--text1)",
                 "&.Mui-selected": {
-                  backgroundColor: "var(--sec-color-acc-2)",
-                  color: "var(--sec-color)",
+                  backgroundColor: "var(--primary-color-acc-2)",
+                  color: "var(--primary-color)",
                 },
                 "&.Mui-selected:hover": {
-                  backgroundColor: "var(--sec-color-acc-2)",
+                  backgroundColor: "rgba(24, 113, 99, 0.12)",
+                },
+                "&:hover": {
+                  backgroundColor: "rgba(24, 113, 99, 0.06)",
                 },
               }}
             >
               {option.label}
             </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    </Stack>
+          );
+        })}
+      </Select>
+    </FormControl>
   );
 }

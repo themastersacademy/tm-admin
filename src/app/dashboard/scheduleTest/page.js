@@ -1,12 +1,11 @@
 "use client";
-import SearchBox from "@/src/components/SearchBox/SearchBox";
 import { Schedule, CheckCircle } from "@mui/icons-material";
 import {
   Stack,
   MenuItem,
   Chip,
   Menu,
-  TablePagination,
+  Pagination,
   Typography,
   TextField,
 } from "@mui/material";
@@ -28,8 +27,8 @@ export default function ScheduleTest() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(12);
+  const [page, setPage] = useState(1);
+  const ITEMS_PER_PAGE = 24;
   const [isCreating, setIsCreating] = useState(false);
 
   // Student selection state
@@ -107,7 +106,7 @@ export default function ScheduleTest() {
         }
       } catch (error) {
         if (error.name !== "AbortError") {
-          // console.error("Error fetching batches:", error);
+          console.error("Error fetching batches:", error);
         }
       }
     },
@@ -182,7 +181,7 @@ export default function ScheduleTest() {
         showSnackbar("Something went wrong", "error", "", "3000");
       }
     } catch (error) {
-      // console.error("Error creating exam:", error);
+      console.error("Error creating exam:", error);
       showSnackbar("Failed to create exam", "error", "", "3000");
     } finally {
       setIsCreating(false);
@@ -244,21 +243,16 @@ export default function ScheduleTest() {
     { total: 0, live: 0, scheduled: 0, ended: 0 },
   );
 
-  // Pagination logic
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, statusFilter]);
+
+  const totalPages = Math.ceil(filteredTestList.length / ITEMS_PER_PAGE);
   const paginatedTestList = filteredTestList.slice(
-    currentPage * rowsPerPage,
-    currentPage * rowsPerPage + rowsPerPage,
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE,
   );
-
-  const handleChangePage = (event, newPage) => {
-    setCurrentPage(newPage);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setCurrentPage(0);
-  };
 
   return (
     <Stack padding="20px" gap="20px">
@@ -278,37 +272,70 @@ export default function ScheduleTest() {
         sx={{
           border: "1px solid var(--border-color)",
           backgroundColor: "var(--white)",
-          borderRadius: "10px",
-          padding: "20px",
-          minHeight: "80vh",
+          borderRadius: "16px",
+          padding: "24px",
+          minHeight: "75vh",
+          justifyContent: "space-between",
         }}
       >
-        <Stack>
-          <Active testList={paginatedTestList} isLoading={isLoading} />
+        <Active testList={paginatedTestList} isLoading={isLoading} />
 
-          {/* Pagination */}
-          {!isLoading && filteredTestList.length > 0 && (
-            <Stack alignItems="flex-start" mt="20px">
-              <TablePagination
-                component="div"
-                count={filteredTestList.length}
-                page={currentPage}
-                onPageChange={handleChangePage}
-                rowsPerPage={rowsPerPage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                rowsPerPageOptions={[12, 24, 50, 100]}
-                sx={{
+        {totalPages > 1 && (
+          <Stack
+            direction="row"
+            justifyContent="center"
+            alignItems="center"
+            gap={1.5}
+            mt={4}
+            pt={3}
+            borderTop="1px solid var(--border-color)"
+          >
+            <Typography
+              sx={{ fontSize: "13px", color: "var(--text3)", fontWeight: 500 }}
+            >
+              Page {page} of {totalPages}
+            </Typography>
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={(_, value) => {
+                setPage(value);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              shape="rounded"
+              sx={{
+                "& .MuiPaginationItem-root": {
+                  fontWeight: 600,
+                  fontSize: "14px",
+                  minWidth: "36px",
+                  height: "36px",
+                  borderRadius: "10px",
+                  color: "var(--text2)",
                   border: "1px solid var(--border-color)",
-                  borderRadius: "8px",
-                  "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
-                    {
-                      margin: 0,
+                  "&:hover": {
+                    backgroundColor: "rgba(24, 113, 99, 0.08)",
+                    borderColor: "var(--primary-color)",
+                  },
+                  "&.Mui-selected": {
+                    backgroundColor: "var(--primary-color)",
+                    color: "white",
+                    borderColor: "var(--primary-color)",
+                    "&:hover": {
+                      backgroundColor: "var(--primary-color-dark)",
                     },
-                }}
-              />
-            </Stack>
-          )}
-        </Stack>
+                  },
+                },
+                "& .MuiPaginationItem-previousNext": {
+                  border: "1px solid var(--border-color)",
+                  "&:hover": {
+                    backgroundColor: "rgba(24, 113, 99, 0.08)",
+                    borderColor: "var(--primary-color)",
+                  },
+                },
+              }}
+            />
+          </Stack>
+        )}
       </Stack>
       {/* Filter Menu */}
       <Menu
@@ -379,100 +406,138 @@ export default function ScheduleTest() {
         onCreate={() => handleCreateExam({ title })}
       >
         <Stack gap="20px">
-          <Stack gap="8px">
+          {/* Exam Title - First */}
+          <Stack gap="6px">
             <Typography
               sx={{
-                fontSize: "14px",
-                fontWeight: "600",
+                fontSize: "13px",
+                fontWeight: 600,
                 color: "var(--text1)",
-                fontFamily: "Lato",
+              }}
+            >
+              Exam Title
+            </Typography>
+            <TextField
+              fullWidth
+              placeholder="e.g., Assessment 1 - Mathematics"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              size="small"
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "10px",
+                  backgroundColor: "var(--bg-color)",
+                  fontSize: "14px",
+                  "& fieldset": { borderColor: "var(--border-color)" },
+                  "&:hover fieldset": { borderColor: "var(--primary-color)" },
+                  "&.Mui-focused fieldset": { borderColor: "var(--primary-color)" },
+                },
+              }}
+            />
+          </Stack>
+
+          {/* Select Batches */}
+          <Stack gap="6px">
+            <Typography
+              sx={{
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "var(--text1)",
               }}
             >
               Select Batches
             </Typography>
             <Stack
               sx={{
-                maxHeight: "150px",
+                maxHeight: "180px",
                 overflowY: "auto",
                 border: "1px solid var(--border-color)",
-                borderRadius: "8px",
-                padding: "8px",
-                backgroundColor: "#fafafa",
+                borderRadius: "10px",
+                backgroundColor: "var(--bg-color)",
               }}
             >
               {batchOptions.length > 0 ? (
-                batchOptions.map((option) => (
-                  <Stack
-                    key={option.value}
-                    flexDirection="row"
-                    alignItems="center"
-                    gap="12px"
-                    sx={{
-                      padding: "10px 12px",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                      transition: "all 0.2s",
-                      "&:hover": {
-                        backgroundColor: "#e3f2fd",
-                      },
-                    }}
-                    onClick={() => {
-                      const isSelected = selectedBatchIds.includes(
-                        option.value,
-                      );
-                      if (isSelected) {
-                        handleBatchChange({
-                          target: {
-                            value: selectedBatchIds.filter(
-                              (id) => id !== option.value,
-                            ),
-                          },
-                        });
-                      } else {
-                        handleBatchChange({
-                          target: {
-                            value: [...selectedBatchIds, option.value],
-                          },
-                        });
-                      }
-                    }}
-                  >
+                batchOptions.map((option) => {
+                  const isSelected = selectedBatchIds.includes(option.value);
+                  return (
                     <Stack
+                      key={option.value}
+                      flexDirection="row"
+                      alignItems="center"
+                      gap="10px"
                       sx={{
-                        width: "20px",
-                        height: "20px",
-                        borderRadius: "4px",
-                        border: selectedBatchIds.includes(option.value)
-                          ? "2px solid var(--primary-color)"
-                          : "2px solid #ccc",
-                        backgroundColor: selectedBatchIds.includes(option.value)
-                          ? "var(--primary-color)"
+                        padding: "10px 14px",
+                        cursor: "pointer",
+                        transition: "all 0.15s",
+                        backgroundColor: isSelected
+                          ? "rgba(24, 113, 99, 0.06)"
                           : "transparent",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        transition: "all 0.2s",
+                        borderBottom: "1px solid var(--border-color)",
+                        "&:last-child": { borderBottom: "none" },
+                        "&:hover": {
+                          backgroundColor: "rgba(24, 113, 99, 0.04)",
+                        },
+                      }}
+                      onClick={() => {
+                        if (isSelected) {
+                          handleBatchChange({
+                            target: {
+                              value: selectedBatchIds.filter(
+                                (id) => id !== option.value,
+                              ),
+                            },
+                          });
+                        } else {
+                          handleBatchChange({
+                            target: {
+                              value: [...selectedBatchIds, option.value],
+                            },
+                          });
+                        }
                       }}
                     >
-                      {selectedBatchIds.includes(option.value) && (
-                        <CheckCircle sx={{ fontSize: "14px", color: "#fff" }} />
-                      )}
+                      <Stack
+                        sx={{
+                          width: "18px",
+                          height: "18px",
+                          borderRadius: "4px",
+                          border: isSelected
+                            ? "2px solid var(--primary-color)"
+                            : "2px solid var(--border-color)",
+                          backgroundColor: isSelected
+                            ? "var(--primary-color)"
+                            : "transparent",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          transition: "all 0.15s",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {isSelected && (
+                          <CheckCircle
+                            sx={{ fontSize: "12px", color: "#fff" }}
+                          />
+                        )}
+                      </Stack>
+                      <Typography
+                        sx={{
+                          fontSize: "13px",
+                          color: isSelected
+                            ? "var(--primary-color)"
+                            : "var(--text1)",
+                          fontWeight: isSelected ? 600 : 400,
+                        }}
+                      >
+                        {option.label}
+                      </Typography>
                     </Stack>
-                    <Typography
-                      sx={{
-                        fontSize: "14px",
-                        fontFamily: "Lato",
-                        color: "var(--text1)",
-                      }}
-                    >
-                      {option.label}
-                    </Typography>
-                  </Stack>
-                ))
+                  );
+                })
               ) : (
                 <Typography
                   sx={{
-                    fontSize: "14px",
+                    fontSize: "13px",
                     color: "var(--text3)",
                     padding: "20px",
                     textAlign: "center",
@@ -483,12 +548,7 @@ export default function ScheduleTest() {
               )}
             </Stack>
             {selectedBatchIds.length > 0 && (
-              <Stack
-                flexDirection="row"
-                flexWrap="wrap"
-                gap="8px"
-                marginTop="8px"
-              >
+              <Stack flexDirection="row" flexWrap="wrap" gap="6px" mt="4px">
                 {selectedBatchIds.map((id) => {
                   const match = batchOptions.find((opt) => opt.value === id);
                   return (
@@ -506,14 +566,14 @@ export default function ScheduleTest() {
                         });
                       }}
                       sx={{
+                        height: "26px",
                         backgroundColor: "var(--primary-color)",
                         color: "#fff",
+                        fontSize: "12px",
                         "& .MuiChip-deleteIcon": {
-                          color: "#fff",
-                          "&:hover": {
-                            color: "#fff",
-                            opacity: 0.7,
-                          },
+                          color: "rgba(255,255,255,0.7)",
+                          fontSize: "16px",
+                          "&:hover": { color: "#fff" },
                         },
                       }}
                     />
@@ -524,16 +584,21 @@ export default function ScheduleTest() {
           </Stack>
 
           {/* Student Selection */}
-          <Stack gap="8px">
+          <Stack gap="6px">
             <Typography
               sx={{
-                fontSize: "14px",
-                fontWeight: "600",
+                fontSize: "13px",
+                fontWeight: 600,
                 color: "var(--text1)",
-                fontFamily: "Lato",
               }}
             >
-              Select Students (Optional)
+              Select Students{" "}
+              <Typography
+                component="span"
+                sx={{ fontSize: "12px", color: "var(--text3)", fontWeight: 400 }}
+              >
+                (Optional)
+              </Typography>
             </Typography>
             <TextField
               placeholder="Search students by name or email..."
@@ -543,8 +608,12 @@ export default function ScheduleTest() {
               fullWidth
               sx={{
                 "& .MuiOutlinedInput-root": {
-                  borderRadius: "8px",
-                  backgroundColor: "#fff",
+                  borderRadius: "10px",
+                  backgroundColor: "var(--bg-color)",
+                  fontSize: "13px",
+                  "& fieldset": { borderColor: "var(--border-color)" },
+                  "&:hover fieldset": { borderColor: "var(--primary-color)" },
+                  "&.Mui-focused fieldset": { borderColor: "var(--primary-color)" },
                 },
               }}
             />
@@ -554,138 +623,104 @@ export default function ScheduleTest() {
                   maxHeight: "150px",
                   overflowY: "auto",
                   border: "1px solid var(--border-color)",
-                  borderRadius: "8px",
-                  padding: "8px",
-                  backgroundColor: "#fafafa",
+                  borderRadius: "10px",
+                  backgroundColor: "var(--bg-color)",
                 }}
               >
-                {studentList.map((student) => (
-                  <Stack
-                    key={student.id}
-                    flexDirection="row"
-                    alignItems="center"
-                    gap="12px"
-                    sx={{
-                      padding: "10px 12px",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                      transition: "all 0.2s",
-                      "&:hover": {
-                        backgroundColor: "#e3f2fd",
-                      },
-                    }}
-                    onClick={() => {
-                      const isSelected = selectedStudentIds.includes(
-                        student.id,
-                      );
-                      if (isSelected) {
-                        setSelectedStudentIds((prev) =>
-                          prev.filter((id) => id !== student.id),
-                        );
-                      } else {
-                        setSelectedStudentIds((prev) => [...prev, student.id]);
-                      }
-                    }}
-                  >
+                {studentList.map((student) => {
+                  const isSelected = selectedStudentIds.includes(student.id);
+                  return (
                     <Stack
+                      key={student.id}
+                      flexDirection="row"
+                      alignItems="center"
+                      gap="10px"
                       sx={{
-                        width: "20px",
-                        height: "20px",
-                        borderRadius: "4px",
-                        border: selectedStudentIds.includes(student.id)
-                          ? "2px solid var(--primary-color)"
-                          : "2px solid #ccc",
-                        backgroundColor: selectedStudentIds.includes(student.id)
-                          ? "var(--primary-color)"
+                        padding: "10px 14px",
+                        cursor: "pointer",
+                        transition: "all 0.15s",
+                        backgroundColor: isSelected
+                          ? "rgba(24, 113, 99, 0.06)"
                           : "transparent",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        transition: "all 0.2s",
+                        borderBottom: "1px solid var(--border-color)",
+                        "&:last-child": { borderBottom: "none" },
+                        "&:hover": {
+                          backgroundColor: "rgba(24, 113, 99, 0.04)",
+                        },
+                      }}
+                      onClick={() => {
+                        if (isSelected) {
+                          setSelectedStudentIds((prev) =>
+                            prev.filter((id) => id !== student.id),
+                          );
+                        } else {
+                          setSelectedStudentIds((prev) => [
+                            ...prev,
+                            student.id,
+                          ]);
+                        }
                       }}
                     >
-                      {selectedStudentIds.includes(student.id) && (
-                        <CheckCircle sx={{ fontSize: "14px", color: "#fff" }} />
-                      )}
-                    </Stack>
-                    <Stack>
-                      <Typography
+                      <Stack
                         sx={{
-                          fontSize: "14px",
-                          fontFamily: "Lato",
-                          color: "var(--text1)",
-                          fontWeight: 500,
+                          width: "18px",
+                          height: "18px",
+                          borderRadius: "4px",
+                          border: isSelected
+                            ? "2px solid var(--primary-color)"
+                            : "2px solid var(--border-color)",
+                          backgroundColor: isSelected
+                            ? "var(--primary-color)"
+                            : "transparent",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          transition: "all 0.15s",
+                          flexShrink: 0,
                         }}
                       >
-                        {student.name}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: "12px",
-                          fontFamily: "Lato",
-                          color: "var(--text3)",
-                        }}
-                      >
-                        {student.email}
-                      </Typography>
+                        {isSelected && (
+                          <CheckCircle
+                            sx={{ fontSize: "12px", color: "#fff" }}
+                          />
+                        )}
+                      </Stack>
+                      <Stack>
+                        <Typography
+                          sx={{
+                            fontSize: "13px",
+                            color: isSelected
+                              ? "var(--primary-color)"
+                              : "var(--text1)",
+                            fontWeight: isSelected ? 600 : 500,
+                          }}
+                        >
+                          {student.name}
+                        </Typography>
+                        <Typography
+                          sx={{ fontSize: "11px", color: "var(--text3)" }}
+                        >
+                          {student.email}
+                        </Typography>
+                      </Stack>
                     </Stack>
-                  </Stack>
-                ))}
+                  );
+                })}
               </Stack>
             )}
-
             {selectedStudentIds.length > 0 && (
-              <Stack
-                flexDirection="row"
-                flexWrap="wrap"
-                gap="8px"
-                marginTop="8px"
+              <Typography
+                sx={{
+                  fontSize: "12px",
+                  color: "var(--primary-color)",
+                  fontWeight: 600,
+                }}
               >
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  width="100%"
-                >
-                  Selected Students: {selectedStudentIds.length}
-                </Typography>
-                {/* We don't have full student details for all selected IDs if they are not in current search results, 
-                    so we might only show count or need a way to fetch details. 
-                    For now, showing count is safer or just showing chips for those in list. 
-                    Let's just show count to keep it simple or chips if we can. 
-                */}
-              </Stack>
+                {selectedStudentIds.length} student
+                {selectedStudentIds.length !== 1 ? "s" : ""} selected
+              </Typography>
             )}
           </Stack>
-
-          <TextField
-            fullWidth
-            placeholder="Enter Exam title"
-            label="Exam Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "8px",
-                backgroundColor: "#fff",
-                "& fieldset": {
-                  borderColor: "var(--border-color)",
-                },
-                "&:hover fieldset": {
-                  borderColor: "var(--primary-color)",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "var(--primary-color)",
-                  borderWidth: "2px",
-                },
-              },
-              "& .MuiInputLabel-root": {
-                color: "var(--text3)",
-                "&.Mui-focused": {
-                  color: "var(--primary-color)",
-                },
-              },
-            }}
-          />
         </Stack>
       </CreateExamDialog>
     </Stack>

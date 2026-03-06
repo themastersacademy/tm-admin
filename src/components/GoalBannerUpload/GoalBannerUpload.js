@@ -101,7 +101,6 @@ export default function GoalBannerUpload({
         setIsLoading(false);
       });
     } catch (err) {
-      console.log(err);
       setIsLoading(false);
     }
   };

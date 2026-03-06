@@ -83,13 +83,10 @@ export async function updateCourseSubscription({
   subscription,
 }) {
   const { valid, errors } = validateSubscription(subscription);
-  console.log("valid", valid);
-  console.log("errors", errors);
   if (!valid) {
     throw new Error(errors.map((e) => e.message).join("\n"));
   }
   const plans = sortSubscriptionPlans(subscription.plans);
-  console.log("plans", plans);
   const updatedSubscription = {
     ...subscription,
     plans,

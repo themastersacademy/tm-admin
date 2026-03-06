@@ -1,11 +1,10 @@
-import { TrendingFlat, MenuBook, Article, School } from "@mui/icons-material";
-import { Button, Card, Chip, Stack, Typography } from "@mui/material";
+import { MenuBook, Article, School } from "@mui/icons-material";
+import { Card, Chip, Stack, Typography, Box } from "@mui/material";
 import Image from "next/image";
 
 export default function GoalCard({
   icon,
   title,
-  actionButton,
   onClick,
   isLive,
   coursesCount = 0,
@@ -13,7 +12,6 @@ export default function GoalCard({
   blogsCount = 0,
   updatedAt,
 }) {
-  // Format timestamp to relative time
   const getRelativeTime = (timestamp) => {
     if (!timestamp) return "Recently";
     const now = Date.now();
@@ -28,207 +26,146 @@ export default function GoalCard({
     return `${Math.floor(days / 365)} years ago`;
   };
 
-  const totalContent = coursesCount + subjectsCount + blogsCount;
+  const isLiveStatus = isLive === "Live";
 
   return (
     <Card
       sx={{
         width: "280px",
+        height: "170px",
         border: "1px solid var(--border-color)",
-        borderRadius: "12px",
+        borderRadius: "10px",
         backgroundColor: "var(--white)",
         overflow: "hidden",
-        transition: "all 0.2s ease",
+        transition: "all 0.15s ease",
         cursor: "pointer",
-        position: "relative",
+        borderTop: `3px solid ${isLiveStatus ? "var(--primary-color)" : "var(--border-color)"}`,
+        display: "flex",
+        flexDirection: "column",
         "&:hover": {
-          transform: "translateY(-2px)",
-          boxShadow: "0 8px 24px rgba(255, 152, 0, 0.12)",
-          borderColor: "#FF9800",
+          borderColor: "var(--primary-color)",
         },
       }}
       elevation={0}
       onClick={onClick}
     >
-      {/* Status Badge */}
-      {isLive && (
-        <Chip
-          size="small"
-          label={isLive}
-          sx={{
-            borderRadius: "0px 6px 0px 6px",
-            position: "absolute",
-            top: "0px",
-            right: "0px",
-            backgroundColor: isLive === "Live" ? "#4CAF50" : "#9E9E9E",
-            color: "var(--white)",
-            fontWeight: 600,
-            fontSize: "10px",
-            height: "18px",
-            zIndex: 2,
-          }}
-        />
-      )}
-
-      {/* Header Section */}
-      <Stack
-        padding="16px"
-        gap="8px"
-        sx={{
-          background: "linear-gradient(135deg, #FFF3E0 0%, #FFFFFF 100%)",
-          borderBottom: "1px solid rgba(255, 152, 0, 0.1)",
-        }}
-      >
-        <Stack direction="row" alignItems="center" gap="12px">
-          <Stack
+      <Stack padding="14px 16px" gap="8px" sx={{ height: "100%" }}>
+        <Stack direction="row" alignItems="flex-start" gap="10px" sx={{ minHeight: "42px" }}>
+          <Box
             sx={{
-              width: "42px",
-              height: "42px",
-              background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
-              borderRadius: "10px",
-              justifyContent: "center",
+              width: 36,
+              height: 36,
+              borderRadius: "8px",
+              backgroundColor: "var(--primary-color-acc-2)",
+              display: "flex",
               alignItems: "center",
-              boxShadow: "0 2px 8px rgba(255, 152, 0, 0.2)",
+              justifyContent: "center",
+              border: "1px solid rgba(24, 113, 99, 0.15)",
               flexShrink: 0,
             }}
           >
-            <Image src={icon} alt={title} width={22} height={24} />
-          </Stack>
-
-          <Stack flex={1} gap="2px">
+            {icon ? (
+              <Image src={icon} alt={title} width={18} height={20} />
+            ) : (
+              <School sx={{ fontSize: "18px", color: "var(--primary-color)" }} />
+            )}
+          </Box>
+          <Stack flex={1} gap="1px" sx={{ minWidth: 0 }}>
             <Typography
+              title={title}
               sx={{
-                fontFamily: "Lato",
-                fontSize: "15px",
+                fontSize: "14px",
                 fontWeight: 700,
                 color: "var(--text1)",
-                lineHeight: 1.3,
+                lineHeight: 1.2,
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
             >
               {title}
             </Typography>
-            <Typography
-              sx={{
-                fontSize: "11px",
-                color: "var(--text3)",
-                fontWeight: 500,
-              }}
-            >
+            <Typography sx={{ fontSize: "10px", color: "var(--text4)" }}>
               {getRelativeTime(updatedAt)}
             </Typography>
           </Stack>
-        </Stack>
-      </Stack>
-
-      {/* Content Section - Compact Stats */}
-      <Stack padding="16px" gap="12px">
-        {totalContent > 0 ? (
-          <Stack
-            direction="row"
-            gap="8px"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <StatBadge
-              icon={<School sx={{ fontSize: "14px" }} />}
-              value={coursesCount}
-              label="Courses"
-              color="#FF9800"
-            />
-            <StatBadge
-              icon={<MenuBook sx={{ fontSize: "14px" }} />}
-              value={subjectsCount}
-              label="Subjects"
-              color="#4CAF50"
-            />
-            <StatBadge
-              icon={<Article sx={{ fontSize: "14px" }} />}
-              value={blogsCount}
-              label="Blogs"
-              color="#2196F3"
-            />
-          </Stack>
-        ) : (
-          <Stack
-            alignItems="center"
-            padding="12px"
-            gap="4px"
+          <Chip
+            label={isLive}
+            size="small"
             sx={{
-              backgroundColor: "rgba(255, 152, 0, 0.04)",
-              borderRadius: "8px",
-              border: "1px dashed rgba(255, 152, 0, 0.2)",
+              height: "20px",
+              fontSize: "10px",
+              fontWeight: 700,
+              backgroundColor: isLiveStatus
+                ? "rgba(76, 175, 80, 0.08)"
+                : "rgba(0, 0, 0, 0.04)",
+              color: isLiveStatus ? "#4CAF50" : "#9E9E9E",
+              border: `1px solid ${isLiveStatus ? "#4caf5030" : "#00000015"}`,
+              "& .MuiChip-label": { padding: "0 6px" },
             }}
-          >
-            <Typography
-              sx={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "var(--text3)",
-              }}
-            >
-              No content yet
-            </Typography>
-          </Stack>
-        )}
+          />
+        </Stack>
 
-        {/* View Button */}
-        <Button
-          variant="outlined"
-          endIcon={<TrendingFlat sx={{ fontSize: "18px" }} />}
-          fullWidth
+        {/* Stats */}
+        <Stack
+          direction="row"
+          gap="8px"
           sx={{
-            borderColor: "#FF9800",
-            color: "#FF9800",
-            textTransform: "none",
-            borderRadius: "8px",
-            padding: "8px 16px",
-            fontFamily: "Lato",
-            fontSize: "13px",
-            fontWeight: 600,
-            "&:hover": {
-              borderColor: "#F57C00",
-              backgroundColor: "rgba(255, 152, 0, 0.04)",
-            },
+            borderTop: "1px solid var(--border-color)",
+            paddingTop: "10px",
+            marginTop: "auto",
           }}
         >
-          {actionButton}
-        </Button>
+          <StatBadge
+            icon={<School sx={{ fontSize: "13px" }} />}
+            value={coursesCount}
+            label="Courses"
+            color="var(--primary-color)"
+            bgColor="rgba(24, 113, 99, 0.06)"
+            borderColor="rgba(24, 113, 99, 0.12)"
+          />
+          <StatBadge
+            icon={<MenuBook sx={{ fontSize: "13px" }} />}
+            value={subjectsCount}
+            label="Subjects"
+            color="#4CAF50"
+            bgColor="rgba(76, 175, 80, 0.06)"
+            borderColor="rgba(76, 175, 80, 0.12)"
+          />
+          <StatBadge
+            icon={<Article sx={{ fontSize: "13px" }} />}
+            value={blogsCount}
+            label="Blogs"
+            color="#2196F3"
+            bgColor="rgba(33, 150, 243, 0.06)"
+            borderColor="rgba(33, 150, 243, 0.12)"
+          />
+        </Stack>
       </Stack>
     </Card>
   );
 }
 
-// Compact Stat Badge Component
-const StatBadge = ({ icon, value, label, color }) => (
+const StatBadge = ({ icon, value, label, color, bgColor, borderColor }) => (
   <Stack
     alignItems="center"
-    gap="4px"
+    gap="2px"
     flex={1}
     sx={{
-      padding: "8px 6px",
-      backgroundColor: `${color}08`,
-      borderRadius: "8px",
-      border: `1px solid ${color}20`,
+      padding: "6px 4px",
+      backgroundColor: bgColor,
+      borderRadius: "6px",
+      border: `1px solid ${borderColor}`,
     }}
   >
-    <Stack
-      sx={{
-        width: "24px",
-        height: "24px",
-        backgroundColor: "var(--white)",
-        borderRadius: "6px",
-        justifyContent: "center",
-        alignItems: "center",
-        color: color,
-      }}
-    >
-      {icon}
-    </Stack>
+    <Stack sx={{ color }}>{icon}</Stack>
     <Typography
       sx={{
-        fontSize: "16px",
+        fontSize: "14px",
         fontWeight: 800,
-        color: color,
+        color,
         fontFamily: "Lato",
         lineHeight: 1,
       }}
@@ -237,9 +174,9 @@ const StatBadge = ({ icon, value, label, color }) => (
     </Typography>
     <Typography
       sx={{
-        fontSize: "9px",
+        fontSize: "8px",
         fontWeight: 600,
-        color: "var(--text3)",
+        color: "var(--text4)",
         textTransform: "uppercase",
         letterSpacing: "0.3px",
       }}

@@ -261,7 +261,7 @@ export default function SubjectDetails() {
           <>
             <Button
               variant="outlined"
-              startIcon={<Edit />}
+              startIcon={<Edit sx={{ fontSize: "14px" }} />}
               onClick={() => {
                 const newTitle = prompt(
                   "Enter new subject title",
@@ -272,26 +272,36 @@ export default function SubjectDetails() {
               sx={{
                 textTransform: "none",
                 borderRadius: "8px",
-                borderColor: "var(--border-color)",
+                border: "1px solid var(--border-color)",
                 color: "var(--text2)",
-                backgroundColor: "white",
-                "&:hover": { backgroundColor: "#f5f5f5" },
+                padding: "5px 14px",
+                fontWeight: 600,
+                fontSize: "12px",
+                height: "34px",
+                "&:hover": {
+                  borderColor: "var(--primary-color)",
+                  backgroundColor: "rgba(24, 113, 99, 0.04)",
+                },
               }}
             >
               Rename
             </Button>
             <Button
               variant="outlined"
-              startIcon={<Delete />}
+              startIcon={<Delete sx={{ fontSize: "14px" }} />}
               onClick={handleDeleteSubject}
               disabled={isDeleteLoading}
               sx={{
                 textTransform: "none",
                 borderRadius: "8px",
-                borderColor: "var(--delete-color)",
+                border: "1px solid var(--delete-color)",
                 color: "var(--delete-color)",
+                padding: "5px 14px",
+                fontWeight: 600,
+                fontSize: "12px",
+                height: "34px",
                 "&:hover": {
-                  backgroundColor: "rgba(244, 67, 54, 0.08)",
+                  backgroundColor: "rgba(244, 67, 54, 0.04)",
                   borderColor: "var(--delete-color)",
                 },
               }}
@@ -300,7 +310,7 @@ export default function SubjectDetails() {
             </Button>
             <Button
               variant="contained"
-              startIcon={<Add />}
+              startIcon={<Add sx={{ fontSize: "16px" }} />}
               onClick={() =>
                 router.push(
                   `/dashboard/library/allQuestions/addQuestion?subjectID=${subjectID}`
@@ -310,7 +320,11 @@ export default function SubjectDetails() {
                 backgroundColor: "var(--primary-color)",
                 textTransform: "none",
                 borderRadius: "8px",
-                boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
+                padding: "5px 16px",
+                fontWeight: 600,
+                fontSize: "12px",
+                height: "34px",
+                "&:hover": { backgroundColor: "var(--primary-color-dark)" },
               }}
               disableElevation
             >

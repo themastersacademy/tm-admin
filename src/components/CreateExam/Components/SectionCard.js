@@ -5,6 +5,7 @@ import {
   AccordionDetails,
   AccordionSummary,
   Button,
+  Chip,
   IconButton,
   Stack,
   Typography,
@@ -112,18 +113,18 @@ function SectionCard({
         border: isOpen
           ? "1.5px solid var(--primary-color)"
           : "1px solid var(--border-color)",
-        borderRadius: "12px",
-        minHeight: "70px",
+        borderRadius: "10px",
+        minHeight: "52px",
         width: "100%",
         boxShadow: isOpen
-          ? "0 4px 16px rgba(255, 152, 0, 0.12)"
-          : "0 2px 8px rgba(0,0,0,0.04)",
-        transition: "all 0.25s ease",
+          ? "0 2px 8px rgba(24, 113, 99, 0.1)"
+          : "0 1px 4px rgba(0,0,0,0.03)",
+        transition: "all 0.2s ease",
         overflow: "hidden",
-        backgroundColor: isOpen ? "rgba(255, 152, 0, 0.02)" : "var(--white)",
+        backgroundColor: isOpen ? "rgba(24, 113, 99, 0.02)" : "var(--white)",
         "&:before": { display: "none" },
         "&:hover": {
-          boxShadow: "0 6px 20px rgba(0,0,0,0.1)",
+          boxShadow: "0 3px 12px rgba(0,0,0,0.08)",
           borderColor: "var(--primary-color)",
         },
       }}
@@ -133,28 +134,30 @@ function SectionCard({
         component="div"
         sx={{
           margin: "0px",
-          padding: "16px 24px",
+          padding: "10px 16px",
+          minHeight: "unset",
           "& .MuiAccordionSummary-content": { margin: 0 },
-          backgroundColor: isOpen ? "rgba(255, 152, 0, 0.04)" : "transparent",
-          borderBottom: isOpen ? "1px solid rgba(255, 152, 0, 0.15)" : "none",
+          backgroundColor: isOpen ? "rgba(24, 113, 99, 0.04)" : "transparent",
+          borderBottom: isOpen ? "1px solid rgba(24, 113, 99, 0.15)" : "none",
         }}
         expandIcon={
           <IconButton
+            size="small"
             sx={{
-              padding: "8px",
+              padding: "4px",
               backgroundColor: isOpen
-                ? "rgba(255, 152, 0, 0.1)"
+                ? "rgba(24, 113, 99, 0.1)"
                 : "var(--bg-color)",
               color: isOpen ? "var(--primary-color)" : "var(--text2)",
-              borderRadius: "8px",
+              borderRadius: "6px",
               transition: "all 0.2s ease",
               "&:hover": {
-                backgroundColor: "rgba(255, 152, 0, 0.15)",
+                backgroundColor: "rgba(24, 113, 99, 0.15)",
                 color: "var(--primary-color)",
               },
             }}
           >
-            <ExpandMore sx={{ fontSize: "22px" }} />
+            <ExpandMore sx={{ fontSize: "20px" }} />
           </IconButton>
         }
       >
@@ -162,21 +165,20 @@ function SectionCard({
           flexDirection="row"
           alignItems="center"
           justifyContent="space-between"
-          sx={{ width: "100%", gap: "24px" }}
+          sx={{ width: "100%", gap: "12px" }}
         >
-          <Stack flexDirection="row" alignItems="center" gap="20px" flex={1}>
+          <Stack flexDirection="row" alignItems="center" gap="10px" flex={1}>
             <Stack
               sx={{
-                minWidth: "48px",
-                height: "48px",
+                minWidth: "36px",
+                height: "36px",
                 background:
                   "linear-gradient(135deg, rgba(var(--primary-rgb), 0.12) 0%, rgba(var(--primary-rgb), 0.06) 100%)",
-                borderRadius: "10px",
+                borderRadius: "8px",
                 justifyContent: "center",
                 alignItems: "center",
                 color: "var(--primary-color)",
                 border: "1px solid rgba(var(--primary-rgb), 0.2)",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
               }}
             >
               {icon}
@@ -209,7 +211,7 @@ function SectionCard({
               disabled={isLive}
               sx={{
                 "& .MuiOutlinedInput-root": {
-                  fontSize: "17px",
+                  fontSize: "15px",
                   fontWeight: "700",
                   color: "var(--text1)",
                   padding: 0,
@@ -219,70 +221,47 @@ function SectionCard({
                     borderRadius: "6px",
                   },
                 },
-                "& .MuiInputBase-input": { padding: "8px 12px" },
+                "& .MuiInputBase-input": { padding: "6px 10px" },
               }}
             />
 
             {/* Question Count Badge */}
-            <Stack
-              direction="row"
-              alignItems="center"
-              gap="6px"
+            <Chip
+              label={`${questions.length} Qs`}
+              size="small"
               sx={{
-                padding: "6px 12px",
+                height: "24px",
+                fontSize: "12px",
+                fontWeight: "700",
                 backgroundColor:
                   questions.length > 0
                     ? "rgba(76, 175, 80, 0.1)"
                     : "rgba(158, 158, 158, 0.1)",
-                borderRadius: "8px",
+                color: questions.length > 0 ? "#2e7d32" : "var(--text3)",
                 border: `1px solid ${
                   questions.length > 0
                     ? "rgba(76, 175, 80, 0.3)"
                     : "rgba(158, 158, 158, 0.3)"
                 }`,
               }}
-            >
-              <Typography
-                sx={{
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  color: questions.length > 0 ? "#2e7d32" : "var(--text3)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                Questions:
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "15px",
-                  fontWeight: "800",
-                  color: questions.length > 0 ? "#2e7d32" : "var(--text3)",
-                  fontFamily: "Lato",
-                  minWidth: "20px",
-                  textAlign: "center",
-                }}
-              >
-                {questions.length}
-              </Typography>
-            </Stack>
+            />
           </Stack>
 
-          <Stack flexDirection="row" alignItems="center" gap="16px">
-            {/* Marks Section - Redesigned */}
+          <Stack flexDirection="row" alignItems="center" gap="10px">
+            {/* Marks Section */}
             <Stack
               flexDirection="row"
               alignItems="center"
-              gap="12px"
+              gap="8px"
               sx={{
                 backgroundColor: "var(--bg-color)",
-                padding: "8px 16px",
-                borderRadius: "8px",
+                padding: "4px 10px",
+                borderRadius: "6px",
                 border: "1px solid var(--border-color)",
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <Stack alignItems="center" gap="2px">
+              <Stack alignItems="center" gap="1px">
                 <Typography
                   sx={{
                     fontSize: "9px",
@@ -292,7 +271,7 @@ function SectionCard({
                     letterSpacing: "0.5px",
                   }}
                 >
-                  + Marks
+                  +
                 </Typography>
                 <StyledTextField
                   placeholder="0"
@@ -314,19 +293,19 @@ function SectionCard({
                   }}
                   onChange={(e) => {
                     const value = e.target.value;
-                    if (/^\d*$/.test(value)) {
+                    if (/^\d*\.?\d*$/.test(value)) {
                       setPositiveMarks(value);
                     }
                   }}
                   sx={{
-                    width: "60px",
+                    width: "50px",
                     "& .MuiOutlinedInput-root": {
                       color: "#2e7d32",
                       fontWeight: "700",
-                      fontSize: "15px",
+                      fontSize: "13px",
                       backgroundColor: "#e8f5e9",
                       borderRadius: "6px",
-                      height: "32px",
+                      height: "28px",
                       "& fieldset": { border: "none" },
                     },
                     "& input": { textAlign: "center", padding: "0" },
@@ -338,12 +317,12 @@ function SectionCard({
               <Stack
                 sx={{
                   width: "1px",
-                  height: "28px",
+                  height: "22px",
                   backgroundColor: "var(--border-color)",
                 }}
               />
 
-              <Stack alignItems="center" gap="2px">
+              <Stack alignItems="center" gap="1px">
                 <Typography
                   sx={{
                     fontSize: "9px",
@@ -353,7 +332,7 @@ function SectionCard({
                     letterSpacing: "0.5px",
                   }}
                 >
-                  - Marks
+                  -
                 </Typography>
                 <StyledTextField
                   placeholder="0"
@@ -375,19 +354,19 @@ function SectionCard({
                   }}
                   onChange={(e) => {
                     const value = e.target.value;
-                    if (/^\d*$/.test(value)) {
+                    if (/^\d*\.?\d*$/.test(value)) {
                       setNegativeMarks(value);
                     }
                   }}
                   sx={{
-                    width: "60px",
+                    width: "50px",
                     "& .MuiOutlinedInput-root": {
                       color: "#c62828",
                       fontWeight: "700",
-                      fontSize: "15px",
+                      fontSize: "13px",
                       backgroundColor: "#ffebee",
                       borderRadius: "6px",
-                      height: "32px",
+                      height: "28px",
                       "& fieldset": { border: "none" },
                     },
                     "& input": { textAlign: "center", padding: "0" },
@@ -397,10 +376,11 @@ function SectionCard({
               </Stack>
             </Stack>
 
-            <Stack flexDirection="row" gap="10px">
+            <Stack flexDirection="row" gap="6px">
               <Button
                 variant="contained"
-                startIcon={<Add />}
+                size="small"
+                startIcon={<Add sx={{ fontSize: "16px" }} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDialogOpen();
@@ -408,15 +388,16 @@ function SectionCard({
                 sx={{
                   backgroundColor: "var(--primary-color)",
                   textTransform: "none",
-                  borderRadius: "8px",
-                  padding: "8px 18px",
+                  borderRadius: "6px",
+                  padding: "4px 12px",
                   fontFamily: "Lato",
                   fontWeight: "600",
-                  fontSize: "13px",
-                  boxShadow: "0 2px 8px rgba(255, 152, 0, 0.2)",
+                  fontSize: "12px",
+                  minHeight: "30px",
+                  boxShadow: "none",
                   "&:hover": {
                     backgroundColor: "var(--primary-color-dark)",
-                    boxShadow: "0 4px 12px rgba(255, 152, 0, 0.3)",
+                    boxShadow: "0 2px 8px rgba(24, 113, 99, 0.2)",
                   },
                 }}
                 disabled={isLive}
@@ -425,6 +406,7 @@ function SectionCard({
                 {button}
               </Button>
               <IconButton
+                size="small"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (questions.length > 0) {
@@ -442,15 +424,14 @@ function SectionCard({
                 sx={{
                   color: "var(--delete-color)",
                   backgroundColor: "rgba(244, 67, 54, 0.08)",
-                  borderRadius: "8px",
-                  padding: "8px",
-                  transition: "all 0.2s",
+                  borderRadius: "6px",
+                  padding: "4px",
                   "&:hover": {
                     backgroundColor: "rgba(244, 67, 54, 0.15)",
                   },
                 }}
               >
-                <Delete fontSize="small" />
+                <Delete sx={{ fontSize: "18px" }} />
               </IconButton>
             </Stack>
           </Stack>
@@ -470,7 +451,7 @@ function SectionCard({
           />
         )}
       </AccordionSummary>
-      <AccordionDetails sx={{ padding: "0 24px 24px 24px" }}>
+      <AccordionDetails sx={{ padding: "0 16px 16px 16px" }}>
         <QuestionList
           questions={questions}
           previewDialogOpen={previewDialogOpen}

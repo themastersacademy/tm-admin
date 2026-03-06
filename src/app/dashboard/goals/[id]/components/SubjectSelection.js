@@ -1,12 +1,10 @@
 "use client";
 import { Search, CheckCircle } from "@mui/icons-material";
 import {
-  Box,
   InputAdornment,
   Stack,
   TextField,
   Typography,
-  Card,
 } from "@mui/material";
 import { useState, useMemo } from "react";
 
@@ -28,7 +26,7 @@ export default function SubjectSelection({
   }, [options, search, getLabel]);
 
   return (
-    <Stack gap="16px" sx={{ width: "100%", minHeight: "300px" }}>
+    <Stack gap="12px" sx={{ width: "100%" }}>
       <TextField
         placeholder="Search subjects..."
         size="small"
@@ -37,25 +35,25 @@ export default function SubjectSelection({
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <Search sx={{ color: "var(--text3)" }} />
+              <Search sx={{ fontSize: "18px", color: "var(--text4)" }} />
             </InputAdornment>
           ),
           sx: {
             borderRadius: "8px",
-            backgroundColor: "var(--bg-color)",
+            fontSize: "13px",
+            height: "36px",
+            backgroundColor: "var(--bg-color, #fafafa)",
             "& fieldset": { border: "none" },
           },
         }}
       />
 
-      <Box
+      <Stack
+        gap="6px"
         sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-          gap: "12px",
-          maxHeight: "400px",
+          maxHeight: "350px",
           overflowY: "auto",
-          padding: "4px",
+          padding: "2px",
         }}
       >
         {filteredOptions.length > 0 ? (
@@ -65,93 +63,66 @@ export default function SubjectSelection({
             const isAdded = alreadyAdded.includes(id);
 
             return (
-              <Card
+              <Stack
                 key={index}
-                elevation={0}
+                direction="row"
+                alignItems="center"
                 onClick={() => !isAdded && onChange({ target: { value: id } })}
                 sx={{
-                  border: "1px solid",
-                  borderColor: isSelected
-                    ? "var(--primary-color)"
-                    : "var(--border-color)",
-                  borderRadius: "10px",
-                  padding: "12px",
-                  cursor: isAdded ? "default" : "pointer",
+                  padding: "8px 12px",
+                  borderRadius: "8px",
+                  border: `1px solid ${isSelected ? "var(--primary-color)" : "var(--border-color)"}`,
                   backgroundColor: isSelected
-                    ? "var(--primary-color-acc-1)"
+                    ? "var(--primary-color-acc-2)"
                     : isAdded
-                    ? "var(--bg-color)"
+                    ? "var(--bg-color, #fafafa)"
                     : "var(--white)",
-                  opacity: isAdded ? 0.7 : 1,
-                  transition: "all 0.2s ease",
-                  position: "relative",
+                  cursor: isAdded ? "default" : "pointer",
+                  opacity: isAdded ? 0.6 : 1,
+                  transition: "all 0.15s ease",
                   "&:hover": {
-                    borderColor: !isAdded && "var(--primary-color)",
-                    transform: !isAdded && "translateY(-2px)",
-                    boxShadow: !isAdded && "0 4px 8px rgba(0,0,0,0.05)",
+                    borderColor: !isAdded ? "var(--primary-color)" : undefined,
                   },
                 }}
               >
-                {(isSelected || isAdded) && (
-                  <CheckCircle
-                    sx={{
-                      position: "absolute",
-                      top: "8px",
-                      right: "8px",
-                      fontSize: "16px",
-                      color: isAdded ? "var(--text3)" : "var(--primary-color)",
-                    }}
-                  />
-                )}
                 <Typography
                   sx={{
-                    fontFamily: "Lato",
+                    flex: 1,
+                    fontSize: "13px",
                     fontWeight: 600,
-                    fontSize: "14px",
                     color: isSelected
                       ? "var(--primary-color)"
                       : isAdded
-                      ? "var(--text3)"
+                      ? "var(--text4)"
                       : "var(--text1)",
-                    textAlign: "center",
-                    marginTop: "8px",
-                    marginBottom: "8px",
                   }}
                 >
                   {getLabel(option)}
                 </Typography>
-                {isAdded && (
-                  <Typography
+                {(isSelected || isAdded) && (
+                  <CheckCircle
                     sx={{
-                      fontFamily: "Lato",
-                      fontSize: "10px",
-                      color: "var(--text3)",
-                      textAlign: "center",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
+                      fontSize: "14px",
+                      color: isAdded ? "var(--text4)" : "var(--primary-color)",
                     }}
-                  >
-                    Added
-                  </Typography>
+                  />
                 )}
-              </Card>
+              </Stack>
             );
           })
         ) : (
           <Typography
             sx={{
-              gridColumn: "1 / -1",
               textAlign: "center",
-              color: "var(--text3)",
+              color: "var(--text4)",
               padding: "20px",
-              fontFamily: "Lato",
+              fontSize: "13px",
             }}
           >
             No subjects found
           </Typography>
         )}
-      </Box>
+      </Stack>
     </Stack>
   );
 }

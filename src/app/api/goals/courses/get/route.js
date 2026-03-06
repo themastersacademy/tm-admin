@@ -2,8 +2,6 @@ import getCourse from "@/src/util/courses/getCourse";
 
 export async function POST(request) {
   const { courseID, goalID } = await request.json();
-  console.log(courseID);
-  console.log(goalID);
   
   if (!courseID) {
     return Response.json({ message: "Course ID is required" }, { status: 400 });

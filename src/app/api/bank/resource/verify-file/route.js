@@ -1,11 +1,8 @@
 import { verifyFile } from "@/src/util/bank/uploadFile";
 
 export async function POST(request) {
-  console.log("request.json()");
 
   const { resourceID, path } = await request.json();
-  console.log("resourceID", resourceID);
-  console.log("path", path);
   
   if (!resourceID) {
     return Response.json({ error: "Missing required fields" }, { status: 400 });

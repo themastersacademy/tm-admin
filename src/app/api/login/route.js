@@ -23,13 +23,6 @@ const loginSchema = Joi.object({
 
 export async function POST(request) {
   try {
-    // 1. Rate Limiting
-    // In a real app, use request.ip or a header. Here we'll use a placeholder or extract if possible.
-    // Next.js App Router doesn't give easy access to IP in all environments without headers()
-    // For now, we'll try to use a header or fallback to a global limit if IP is missing (not ideal but better than nothing)
-    // const ip = request.headers.get("x-forwarded-for") || "global";
-    // actually, let's use the email as the key for rate limiting to prevent brute force on a specific account
-
     const body = await request.json();
     const { email, password } = body;
 
@@ -55,11 +48,8 @@ export async function POST(request) {
       );
     }
 
-    // NOTE: ScanCommand is O(n) — it reads the entire TMA-DEV-admin table to find the user.
-    // At small admin table sizes this is acceptable, but the correct fix is to add a GSI
-    // on the `email` attribute so this becomes an O(1) Query instead of a full Scan.
     const params = {
-      TableName: `TMA-DEV-admin`,
+      TableName: `TMA-DEV-admin `,
       FilterExpression: "email = :email",
       ExpressionAttributeValues: { ":email": email },
     };

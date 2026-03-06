@@ -1,5 +1,5 @@
 "use client";
-import { Box, Stack, Button, TextField, IconButton } from "@mui/material";
+import { Stack, TextField, IconButton } from "@mui/material";
 import { useEffect, useState, useCallback } from "react";
 import { useSnackbar } from "notistack";
 import TransactionDrawer from "./Components/TransactionDrawer";
@@ -155,7 +155,6 @@ export default function Transactions({ initialTransactions = [] }) {
         });
         if (result.data) {
           setSelectedUser(result.data);
-          // Update the transaction in the list as well
           setTransactions((prev) =>
             prev.map((t) => (t.id === result.data.id ? result.data : t))
           );
@@ -198,19 +197,26 @@ export default function Transactions({ initialTransactions = [] }) {
   }, [fetchTransactions, skipInitialFetch, startDate, endDate]);
 
   return (
-    <Stack gap="0px" padding="24px">
+    <Stack gap="0px" padding="16px">
       <PageHeader
         title="Transactions"
         action={
           <>
-            <Stack direction="row" gap={2}>
+            <Stack direction="row" gap="8px">
               <TextField
                 id="start-date"
                 type="date"
                 size="small"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                sx={{ width: 150 }}
+                sx={{
+                  width: 140,
+                  "& .MuiOutlinedInput-root": {
+                    height: "34px",
+                    fontSize: "12px",
+                    borderRadius: "8px",
+                  },
+                }}
               />
               <TextField
                 id="end-date"
@@ -218,7 +224,14 @@ export default function Transactions({ initialTransactions = [] }) {
                 size="small"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                sx={{ width: 150 }}
+                sx={{
+                  width: 140,
+                  "& .MuiOutlinedInput-root": {
+                    height: "34px",
+                    fontSize: "12px",
+                    borderRadius: "8px",
+                  },
+                }}
               />
             </Stack>
             <SearchBox id="search-box" />
@@ -226,14 +239,14 @@ export default function Transactions({ initialTransactions = [] }) {
               onClick={() => fetchTransactions()}
               disabled={loading}
               sx={{
-                width: "40px",
-                height: "40px",
+                width: "34px",
+                height: "34px",
                 border: "1px solid var(--border-color)",
                 borderRadius: "8px",
                 color: "var(--text2)",
                 "&:hover": {
                   borderColor: "var(--primary-color)",
-                  backgroundColor: "var(--bg-color)",
+                  backgroundColor: "var(--primary-color-acc-2)",
                   color: "var(--primary-color)",
                 },
                 "&.Mui-disabled": {
@@ -244,14 +257,11 @@ export default function Transactions({ initialTransactions = [] }) {
             >
               <RefreshIcon
                 sx={{
+                  fontSize: "18px",
                   animation: loading ? "spin 1s linear infinite" : "none",
                   "@keyframes spin": {
-                    "0%": {
-                      transform: "rotate(0deg)",
-                    },
-                    "100%": {
-                      transform: "rotate(360deg)",
-                    },
+                    "0%": { transform: "rotate(0deg)" },
+                    "100%": { transform: "rotate(360deg)" },
                   },
                 }}
               />
@@ -259,7 +269,7 @@ export default function Transactions({ initialTransactions = [] }) {
           </>
         }
       />
-      <Stack gap="15px">
+      <Stack gap="12px">
         <TransactionsTable
           transactions={transactions}
           page={page}

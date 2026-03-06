@@ -46,7 +46,6 @@ export default function QuestionStepper({
   const handleSave = useCallback(async () => {
     setIsLoading(true);
     const { question, subjectID } = questionData;
-    console.log(checkQuestionFormat({ question, subjectID }));
     if (!checkQuestionFormat({ question, subjectID })) {
       setIsLoading(false);
       return;
@@ -59,7 +58,6 @@ export default function QuestionStepper({
           body: JSON.stringify({ question, subjectID }),
         }
       );
-      console.log(data);
       if (data.success) {
         addNewQuestion
           ? setInitState()

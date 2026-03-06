@@ -20,11 +20,14 @@ export async function createVideo({ title, bankID }) {
     }
     videoCollectionID = bankResponse.Item.videoCollectionID;
     videoID = await createBunnyVideo({ title, videoCollectionID });
+    const resourceID = randomUUID();
     const resourceParams = {
       TableName: `${process.env.AWS_DB_NAME}content`,
       Item: {
-        pKey: `RESOURCE#${randomUUID()}`,
+        pKey: `RESOURCE#${resourceID}`,
         sKey: `RESOURCE@${bankID}`,
+        "GSI1-pKey": `RESOURCE@${bankID}`,
+        "GSI1-sKey": `RESOURCE#${resourceID}`,
         type: "VIDEO",
         thumbnail: "",
         name: title,
@@ -32,6 +35,7 @@ export async function createVideo({ title, bankID }) {
         url: "",
         isUploaded: false,
         linkedLessons: [],
+        createdAt: new Date().toISOString(),
       },
     };
     await dynamoDB.send(new PutCommand(resourceParams));
@@ -105,7 +109,6 @@ async function deleteBunnyVideo(videoID) {
       },
     }
   );
-  console.log(await response.json());
   return response.ok;
 }
 

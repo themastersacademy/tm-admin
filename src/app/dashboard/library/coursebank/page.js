@@ -4,17 +4,17 @@ import DeleteDialogBox from "@/src/components/DeleteDialogBox/DeleteDialogBox";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
 import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
 import { apiFetch } from "@/src/lib/apiFetch";
-import { Add, Close, CreateNewFolder, East } from "@mui/icons-material";
+import { CreateNewFolder } from "@mui/icons-material";
 import {
+  Box,
   Button,
   CircularProgress,
-  DialogContent,
-  IconButton,
+  Pagination,
   Stack,
   Typography,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CourseBankHeader from "./components/CourseBankHeader";
 import BankFolderCard from "./components/BankFolderCard";
 import CreateBankDialog from "./components/CreateBankDialog";
@@ -31,6 +31,10 @@ export default function Coursebank() {
   const [selectedBankID, setselectedBankID] = useState(null);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [selectedBank, setSelectedBank] = useState(null);
+  const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortValue, setSortValue] = useState("newest");
+  const ITEMS_PER_PAGE = 24;
 
   const dialogOpen = () => setIsDialogOpen(true);
   const dialogClose = () => setIsDialogOpen(false);
@@ -71,6 +75,49 @@ export default function Coursebank() {
     fetchCourse();
   }, []);
 
+  // Reset page when search or sort changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, sortValue]);
+
+  // Filter and sort
+  const processedBanks = useMemo(() => {
+    let result = [...courseList];
+
+    if (searchQuery) {
+      result = result.filter((bank) =>
+        bank.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    result.sort((a, b) => {
+      switch (sortValue) {
+        case "newest":
+          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+        case "oldest":
+          return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+        case "a-z":
+          return a.title.localeCompare(b.title);
+        case "z-a":
+          return b.title.localeCompare(a.title);
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [courseList, searchQuery, sortValue]);
+
+  const totalPages = Math.ceil(processedBanks.length / ITEMS_PER_PAGE);
+  const paginatedBanks = useMemo(
+    () =>
+      processedBanks.slice(
+        (page - 1) * ITEMS_PER_PAGE,
+        page * ITEMS_PER_PAGE
+      ),
+    [processedBanks, page]
+  );
+
   const bankDelete = () => {
     setIsLoading(true);
     apiFetch(
@@ -92,14 +139,20 @@ export default function Coursebank() {
       <CourseBankHeader
         title="Course Bank"
         totalCount={courseList.length}
+        search
+        searchValue={searchQuery}
+        onSearchChange={(e) => setSearchQuery(e.target.value)}
+        sortValue={sortValue}
+        onSortChange={(e) => setSortValue(e.target.value)}
         actions={[
           {
             label: "New Folder",
             icon: <CreateNewFolder />,
             onClick: dialogOpen,
             sx: {
-              background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
+              backgroundColor: "var(--primary-color)",
               color: "white",
+              "&:hover": { backgroundColor: "var(--primary-color-dark)" },
             },
           },
         ]}
@@ -127,41 +180,99 @@ export default function Coursebank() {
           minHeight: "75vh",
         }}
       >
-        <Typography
+        <Box
           sx={{
-            fontSize: "14px",
-            fontWeight: 700,
-            color: "var(--text2)",
-            mb: "20px",
-            textTransform: "uppercase",
-            letterSpacing: "0.5px",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+            gap: "20px",
+            width: "100%",
+            alignContent: "start",
           }}
         >
-          Folders ({courseList.length})
-        </Typography>
-
-        <Stack flexDirection="row" gap="24px" flexWrap="wrap">
           {!isLoading ? (
-            courseList.length > 0 ? (
-              courseList.map((item, index) => (
+            paginatedBanks.length > 0 ? (
+              paginatedBanks.map((item, index) => (
                 <BankFolderCard
-                  key={index}
+                  key={item.bankID || index}
                   bank={item}
                   onDelete={deleteDialogOpen}
                   onRename={renameDialogOpen}
                 />
               ))
             ) : (
-              <Stack width="100%" height="50vh">
-                <NoDataFound info="No folders created yet" />
-              </Stack>
+              <Box sx={{ gridColumn: "1 / -1", height: "50vh" }}>
+                <NoDataFound
+                  info={
+                    searchQuery
+                      ? "No folders found matching your search"
+                      : "No folders created yet"
+                  }
+                />
+              </Box>
             )
           ) : (
-            [...Array(4)].map((_, index) => (
-              <SecondaryCardSkeleton key={index} />
+            [...Array(8)].map((_, index) => (
+              <SecondaryCardSkeleton key={index} variant="folder" />
             ))
           )}
-        </Stack>
+        </Box>
+
+        {totalPages > 1 && (
+          <Stack
+            direction="row"
+            justifyContent="center"
+            alignItems="center"
+            gap={1.5}
+            mt={4}
+            pt={3}
+            borderTop="1px solid var(--border-color)"
+          >
+            <Typography
+              sx={{ fontSize: "13px", color: "var(--text3)", fontWeight: 500 }}
+            >
+              Page {page} of {totalPages}
+            </Typography>
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={(_, value) => {
+                setPage(value);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              shape="rounded"
+              sx={{
+                "& .MuiPaginationItem-root": {
+                  fontWeight: 600,
+                  fontSize: "14px",
+                  minWidth: "36px",
+                  height: "36px",
+                  borderRadius: "10px",
+                  color: "var(--text2)",
+                  border: "1px solid var(--border-color)",
+                  "&:hover": {
+                    backgroundColor: "rgba(24, 113, 99, 0.08)",
+                    borderColor: "var(--primary-color)",
+                  },
+                  "&.Mui-selected": {
+                    backgroundColor: "var(--primary-color)",
+                    color: "white",
+                    borderColor: "var(--primary-color)",
+                    "&:hover": {
+                      backgroundColor: "var(--primary-color-dark)",
+                    },
+                  },
+                },
+                "& .MuiPaginationItem-previousNext": {
+                  border: "1px solid var(--border-color)",
+                  "&:hover": {
+                    backgroundColor: "rgba(24, 113, 99, 0.08)",
+                    borderColor: "var(--primary-color)",
+                  },
+                },
+              }}
+            />
+          </Stack>
+        )}
       </Stack>
 
       <DeleteDialogBox

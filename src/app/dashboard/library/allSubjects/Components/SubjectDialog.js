@@ -1,17 +1,15 @@
 "use client";
-import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
-import { Close, East, Category } from "@mui/icons-material";
+import { Close, Category, InfoOutlined } from "@mui/icons-material";
 import {
   Button,
   CircularProgress,
-  DialogContent,
   IconButton,
   Stack,
   Typography,
-  InputAdornment,
-  Box,
+  TextField,
   Dialog,
-  Fade,
+  Grid,
+  Box,
 } from "@mui/material";
 
 export default function SubjectDialog({
@@ -23,180 +21,265 @@ export default function SubjectDialog({
   isLoading,
   isEdit,
 }) {
+  const MAX_LENGTH = 80;
+
   return (
     <Dialog
       open={isOpen}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="md"
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: "24px",
+          borderRadius: "20px",
           overflow: "hidden",
-          boxShadow: "0 24px 48px rgba(0,0,0,0.1)",
         },
       }}
-      TransitionComponent={Fade}
-      transitionDuration={400}
     >
-      {/* Header Section */}
-      <Box
+      {/* Header */}
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
         sx={{
-          background: "linear-gradient(135deg, #FFF3E0 0%, #FFFFFF 100%)",
-          padding: "32px 32px 24px",
-          borderBottom: "1px solid rgba(255, 152, 0, 0.1)",
-          position: "relative",
+          padding: "24px 28px",
+          backgroundColor: "var(--primary-color)",
+          color: "white",
         }}
       >
+        <Stack direction="row" alignItems="center" gap={1.5}>
+          <Category sx={{ fontSize: "28px" }} />
+          <Typography variant="h5" fontWeight={700} fontFamily="Lato">
+            {isEdit ? "Edit Subject" : "Create New Subject"}
+          </Typography>
+        </Stack>
         <IconButton
           onClick={onClose}
           sx={{
-            position: "absolute",
-            right: "24px",
-            top: "24px",
-            color: "var(--text3)",
-            "&:hover": { backgroundColor: "rgba(0,0,0,0.04)" },
+            color: "white",
+            "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" },
           }}
         >
           <Close />
         </IconButton>
+      </Stack>
 
-        <Stack direction="row" gap="20px" alignItems="center">
-          <Stack
-            sx={{
-              width: "64px",
-              height: "64px",
-              borderRadius: "20px",
-              background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              boxShadow: "0 8px 16px rgba(33, 150, 243, 0.2)",
-            }}
-          >
-            <Category sx={{ fontSize: "32px", color: "#fff" }} />
-          </Stack>
-          <Stack>
-            <Typography
-              sx={{
-                fontSize: "24px",
-                fontWeight: 800,
-                color: "var(--text1)",
-                fontFamily: "Lato",
-                mb: "4px",
-              }}
-            >
-              {isEdit ? "Edit Subject" : "Create New Subject"}
-            </Typography>
-            <Typography sx={{ fontSize: "14px", color: "var(--text3)" }}>
-              {isEdit
-                ? "Update subject details"
-                : "Add a new subject to the library"}
-            </Typography>
-          </Stack>
-        </Stack>
-      </Box>
-
-      <DialogContent sx={{ padding: "32px" }}>
-        <Stack gap="24px">
-          {/* Input Fields */}
-          <Stack gap="20px">
-            <Stack gap="8px">
-              <Typography
-                sx={{
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "var(--text2)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  ml: "4px",
-                }}
-              >
-                Subject Details
+      {/* Content */}
+      <Grid container>
+        {/* Left: Form */}
+        <Grid item xs={12} md={7} sx={{ padding: "32px" }}>
+          <Stack gap={3}>
+            <Stack gap={1}>
+              <Typography fontSize="14px" fontWeight={600} color="var(--text1)">
+                Subject Name
               </Typography>
-
-              <StyledTextField
-                fullWidth
-                placeholder="Subject Name"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
+              <TextField
                 autoFocus
+                fullWidth
+                placeholder="e.g., Mathematics, Physics, Chemistry"
+                value={title}
+                onChange={(e) => {
+                  if (e.target.value.length <= MAX_LENGTH) {
+                    setTitle(e.target.value);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !isLoading && title.trim()) {
+                    onSubmit();
+                  }
+                }}
                 InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Category sx={{ color: "var(--text3)" }} />
-                    </InputAdornment>
-                  ),
                   sx: {
                     borderRadius: "12px",
                     backgroundColor: "var(--bg-color)",
-                    "& fieldset": { border: "1px solid transparent" },
+                    fontSize: "15px",
+                    "& fieldset": {
+                      borderColor: "var(--border-color)",
+                    },
                     "&:hover fieldset": {
-                      border: "1px solid var(--primary-color) !important",
+                      borderColor: "var(--primary-color)",
                     },
                     "&.Mui-focused fieldset": {
-                      border: "1px solid var(--primary-color) !important",
+                      borderColor: "var(--primary-color)",
                     },
-                    transition: "all 0.2s ease",
                   },
                 }}
               />
+              <Stack direction="row" justifyContent="space-between">
+                <Typography fontSize="12px" color="var(--text3)">
+                  {title.length}/{MAX_LENGTH} characters
+                </Typography>
+                {title.trim().length > 0 && (
+                  <Typography fontSize="12px" color="var(--success-color)">
+                    Valid name
+                  </Typography>
+                )}
+              </Stack>
+            </Stack>
+
+            <Stack
+              gap={1.5}
+              sx={{
+                padding: "16px",
+                borderRadius: "12px",
+                backgroundColor: "rgba(24, 113, 99, 0.04)",
+                border: "1px solid rgba(24, 113, 99, 0.15)",
+              }}
+            >
+              <Stack direction="row" gap={1} alignItems="center">
+                <InfoOutlined
+                  sx={{ fontSize: "18px", color: "var(--primary-color)" }}
+                />
+                <Typography
+                  fontSize="14px"
+                  fontWeight={600}
+                  color="var(--primary-color)"
+                >
+                  {isEdit ? "About Editing" : "Tips"}
+                </Typography>
+              </Stack>
+              <Stack gap={0.5}>
+                {isEdit ? (
+                  <Typography fontSize="13px" color="var(--text2)">
+                    Renaming a subject will update it across all linked
+                    questions and tests.
+                  </Typography>
+                ) : (
+                  <>
+                    <Typography fontSize="13px" color="var(--text2)">
+                      Use descriptive names for easy identification
+                    </Typography>
+                    <Typography fontSize="13px" color="var(--text2)">
+                      Subjects help organize questions into categories
+                    </Typography>
+                    <Typography fontSize="13px" color="var(--text2)">
+                      You can add questions to subjects after creation
+                    </Typography>
+                  </>
+                )}
+              </Stack>
+            </Stack>
+
+            <Stack direction="row" gap={2} mt={1}>
+              <Button
+                onClick={onClose}
+                variant="outlined"
+                fullWidth
+                sx={{
+                  borderRadius: "10px",
+                  textTransform: "none",
+                  height: "44px",
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  color: "var(--text2)",
+                  borderColor: "var(--border-color)",
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={onSubmit}
+                variant="contained"
+                disabled={isLoading || !title.trim()}
+                fullWidth
+                sx={{
+                  borderRadius: "10px",
+                  textTransform: "none",
+                  height: "44px",
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  backgroundColor: "var(--primary-color)",
+                  boxShadow: "0 4px 15px rgba(24, 113, 99, 0.3)",
+                  "&:hover": {
+                    backgroundColor: "var(--primary-color-dark)",
+                    boxShadow: "0 6px 20px rgba(24, 113, 99, 0.4)",
+                  },
+                  "&.Mui-disabled": {
+                    background: "var(--border-color)",
+                    color: "var(--text3)",
+                  },
+                }}
+              >
+                {isLoading ? (
+                  <CircularProgress size={20} sx={{ color: "white" }} />
+                ) : isEdit ? (
+                  "Save Changes"
+                ) : (
+                  "Create Subject"
+                )}
+              </Button>
             </Stack>
           </Stack>
+        </Grid>
 
-          {/* Action Buttons */}
-          <Stack direction="row" gap="12px" pt="12px">
-            <Button
-              fullWidth
-              onClick={onClose}
+        {/* Right: Preview */}
+        <Grid
+          item
+          xs={12}
+          md={5}
+          sx={{
+            padding: "32px",
+            backgroundColor: "var(--bg-color)",
+            borderLeft: "1px solid var(--border-color)",
+          }}
+        >
+          <Stack gap={2}>
+            <Typography fontSize="14px" fontWeight={600} color="var(--text1)">
+              Preview
+            </Typography>
+
+            <Box
               sx={{
-                height: "52px",
-                borderRadius: "12px",
-                color: "var(--text2)",
-                fontWeight: 600,
-                fontSize: "15px",
-                textTransform: "none",
-                backgroundColor: "var(--bg-color)",
-                "&:hover": { backgroundColor: "var(--border-color)" },
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              fullWidth
-              variant="contained"
-              onClick={onSubmit}
-              disabled={isLoading || !title.trim()}
-              sx={{
-                height: "52px",
-                borderRadius: "12px",
-                background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
-                fontWeight: 700,
-                fontSize: "15px",
-                textTransform: "none",
-                boxShadow: "0 8px 20px rgba(255, 152, 0, 0.25)",
+                padding: "20px",
+                borderRadius: "16px",
+                border: "1px solid var(--border-color)",
+                backgroundColor: "white",
+                transition: "all 0.2s ease",
                 "&:hover": {
-                  background:
-                    "linear-gradient(135deg, #F57C00 0%, #E65100 100%)",
-                  boxShadow: "0 12px 24px rgba(255, 152, 0, 0.35)",
-                },
-                "&.Mui-disabled": {
-                  background: "#e0e0e0",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 8px 16px rgba(0,0,0,0.08)",
                 },
               }}
             >
-              {isLoading ? (
-                <CircularProgress size={24} sx={{ color: "var(--text2)" }} />
-              ) : (
-                <Stack direction="row" alignItems="center" gap="8px">
-                  <span>{isEdit ? "Save Changes" : "Create Subject"}</span>
-                  <East sx={{ fontSize: "20px" }} />
+              <Stack gap={2}>
+                <Stack direction="row" gap={2} alignItems="center">
+                  <Box
+                    sx={{
+                      width: "48px",
+                      height: "48px",
+                      borderRadius: "12px",
+                      backgroundColor: "var(--primary-color)",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      color: "white",
+                    }}
+                  >
+                    <Category sx={{ fontSize: "24px" }} />
+                  </Box>
+                  <Stack flex={1}>
+                    <Typography
+                      fontSize="15px"
+                      fontWeight={600}
+                      color="var(--text1)"
+                      sx={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {title || "Your Subject Name"}
+                    </Typography>
+                    <Typography fontSize="12px" color="var(--text3)">
+                      0 Questions
+                    </Typography>
+                  </Stack>
                 </Stack>
-              )}
-            </Button>
+              </Stack>
+            </Box>
           </Stack>
-        </Stack>
-      </DialogContent>
+        </Grid>
+      </Grid>
     </Dialog>
   );
 }

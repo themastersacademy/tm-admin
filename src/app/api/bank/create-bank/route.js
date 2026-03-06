@@ -12,7 +12,6 @@ export async function POST(request) {
     const result = await createBank({ title });
     return Response.json(result, { status: 201 });
   } catch (err) {
-    console.log(err);
     return Response.json(
       { success: false, message: "Internal server error" },
       { status: 500 }

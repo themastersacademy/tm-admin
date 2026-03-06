@@ -7,7 +7,7 @@ import {
   Typography,
   Button,
   IconButton,
-  Divider,
+  Box,
 } from "@mui/material";
 import gatecse_img from "@/public/Icons/gate_cse.svg";
 import placements_img from "@/public/Icons/placements.svg";
@@ -16,7 +16,7 @@ import { useState, useEffect } from "react";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/src/lib/apiFetch";
-import { Close, ArrowForward, Info } from "@mui/icons-material";
+import { Close, ArrowForward } from "@mui/icons-material";
 import Image from "next/image";
 import GoalBannerUpload from "@/src/components/GoalBannerUpload/GoalBannerUpload";
 
@@ -51,10 +51,6 @@ export default function GoalDialogBox({
     }
   }, [isOpen, isEdit, goalData]);
 
-  const onIconSelect = (value) => {
-    setIcon(value);
-  };
-
   function OnGoalCreate() {
     if (!title || !icon) {
       showSnackbar("Please fill in all fields", "error", "", "3000");
@@ -66,12 +62,7 @@ export default function GoalDialogBox({
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/goals/${goalData.goalID}/update`,
         {
           method: "POST",
-          body: JSON.stringify({
-            title,
-            icon,
-            tagline,
-            description,
-          }),
+          body: JSON.stringify({ title, icon, tagline, description }),
         },
         showSnackbar
       ).then((data) => {
@@ -88,18 +79,12 @@ export default function GoalDialogBox({
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/goals/create-goal`,
         {
           method: "POST",
-          body: JSON.stringify({
-            title,
-            icon,
-            tagline,
-            description,
-          }),
+          body: JSON.stringify({ title, icon, tagline, description }),
         },
         showSnackbar
       ).then((data) => {
         if (data.success) {
           showSnackbar(data.message, "success", "", "3000");
-          // Refresh goal list
           apiFetch(
             `${process.env.NEXT_PUBLIC_BASE_URL}/api/goals/get-all-goals`
           ).then((response) => {
@@ -120,13 +105,13 @@ export default function GoalDialogBox({
     <Dialog
       open={isOpen}
       onClose={onClose}
-      maxWidth="md"
+      maxWidth="xs"
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: "16px",
+          borderRadius: "12px",
           border: "1px solid var(--border-color)",
-          maxWidth: "700px",
+          maxWidth: "480px",
         },
       }}
     >
@@ -135,204 +120,124 @@ export default function GoalDialogBox({
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        padding="24px 24px 20px 24px"
+        padding="16px 20px"
+        sx={{ borderBottom: "1px solid var(--border-color)" }}
       >
-        <Stack gap="4px">
-          <Typography
-            sx={{
-              fontFamily: "Lato",
-              fontSize: "24px",
-              fontWeight: 700,
-              color: "var(--text1)",
-            }}
-          >
-            {isEdit ? "Edit Goal" : "Create New Goal"}
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: "13px",
-              color: "var(--text3)",
-            }}
-          >
-            {isEdit
-              ? "Update the details of this goal"
-              : "Set up a new learning objective for your students"}
-          </Typography>
-        </Stack>
-        <IconButton onClick={onClose} size="small">
-          <Close />
+        <Typography
+          sx={{
+            fontSize: "15px",
+            fontWeight: 700,
+            color: "var(--text1)",
+          }}
+        >
+          {isEdit ? "Edit Goal" : "Create New Goal"}
+        </Typography>
+        <IconButton onClick={onClose} size="small" sx={{ width: 28, height: 28 }}>
+          <Close sx={{ fontSize: "16px" }} />
         </IconButton>
       </Stack>
 
-      <Divider />
-
-      <DialogContent sx={{ padding: "32px" }}>
-        <Stack gap="32px">
-          {/* Info Banner */}
-          {!isEdit && (
-            <Stack
-              direction="row"
-              gap="12px"
-              padding="16px 20px"
-              sx={{
-                backgroundColor: "rgba(var(--primary-rgb), 0.05)",
-                borderRadius: "12px",
-                border: "1px solid rgba(var(--primary-rgb), 0.1)",
-              }}
-            >
-              <Info sx={{ color: "var(--primary-color)", fontSize: "20px" }} />
-              <Typography
-                sx={{
-                  fontSize: "13px",
-                  color: "var(--text2)",
-                  lineHeight: 1.6,
-                }}
-              >
-                Goals help organize your content. You can add courses, subjects,
-                and blogs to each goal after creation.
-              </Typography>
-            </Stack>
-          )}
-
-          {/* Title Input */}
-          <Stack gap="10px">
-            <Typography
-              sx={{
-                fontFamily: "Lato",
-                fontSize: "14px",
-                fontWeight: 700,
-                color: "var(--text1)",
-                letterSpacing: "0.3px",
-              }}
-            >
+      <DialogContent sx={{ padding: "20px" }}>
+        <Stack gap="16px">
+          {/* Title */}
+          <Stack gap="6px">
+            <Typography sx={{ fontSize: "12px", fontWeight: 600, color: "var(--text2)" }}>
               Goal Title *
             </Typography>
             <StyledTextField
-              placeholder="e.g., GATE CSE 2025, Banking Preparation, Placements Prep"
+              placeholder="e.g., GATE CSE 2025, Banking Prep"
               value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-              }}
+              onChange={(e) => setTitle(e.target.value)}
               sx={{
                 "& .MuiOutlinedInput-root": {
-                  fontSize: "15px",
-                  fontWeight: 500,
+                  fontSize: "13px",
+                  height: "38px",
+                  borderRadius: "8px",
                 },
               }}
             />
           </Stack>
 
-          {/* Tagline Input */}
-          <Stack gap="10px">
-            <Typography
-              sx={{
-                fontFamily: "Lato",
-                fontSize: "14px",
-                fontWeight: 700,
-                color: "var(--text1)",
-                letterSpacing: "0.3px",
-              }}
-            >
+          {/* Tagline */}
+          <Stack gap="6px">
+            <Typography sx={{ fontSize: "12px", fontWeight: 600, color: "var(--text2)" }}>
               Tagline
             </Typography>
             <StyledTextField
-              placeholder="A short catchy phrase (e.g., Master your path to GATE success)"
+              placeholder="A short catchy phrase"
               value={tagline}
-              onChange={(e) => {
-                setTagline(e.target.value);
-              }}
+              onChange={(e) => setTagline(e.target.value)}
               sx={{
                 "& .MuiOutlinedInput-root": {
-                  fontSize: "14px",
+                  fontSize: "13px",
+                  height: "38px",
+                  borderRadius: "8px",
                 },
               }}
             />
           </Stack>
 
-          {/* Description Input */}
-          <Stack gap="10px">
-            <Typography
-              sx={{
-                fontFamily: "Lato",
-                fontSize: "14px",
-                fontWeight: 700,
-                color: "var(--text1)",
-                letterSpacing: "0.3px",
-              }}
-            >
+          {/* Description */}
+          <Stack gap="6px">
+            <Typography sx={{ fontSize: "12px", fontWeight: 600, color: "var(--text2)" }}>
               Description
             </Typography>
             <StyledTextField
-              placeholder="Provide a detailed overview of what this goal covers, learning outcomes, and key features..."
+              placeholder="Overview of what this goal covers..."
               value={description}
               multiline
-              rows={4}
-              onChange={(e) => {
-                setDescription(e.target.value);
-              }}
+              rows={3}
+              onChange={(e) => setDescription(e.target.value)}
               sx={{
                 "& .MuiOutlinedInput-root": {
                   height: "auto",
-                  fontSize: "14px",
-                  lineHeight: 1.6,
+                  fontSize: "13px",
+                  lineHeight: 1.5,
                   alignItems: "flex-start",
-                  padding: "12px 14px",
+                  padding: "10px 12px",
+                  borderRadius: "8px",
                 },
               }}
             />
           </Stack>
 
-          {/* Banner Upload (Only in Edit Mode) */}
+          {/* Banner Upload (Edit Mode) */}
           {isEdit && goalData && (
             <GoalBannerUpload
               goalID={goalData.goalID}
               bannerImage={goalData.bannerImage}
               onBannerChange={(url) => {
-                // Optional: Update local state or trigger refresh if needed
                 if (onUpdateSuccess) onUpdateSuccess();
               }}
             />
           )}
 
           {/* Icon Selection */}
-          <Stack gap="12px">
-            <Typography
-              sx={{
-                fontFamily: "Lato",
-                fontSize: "14px",
-                fontWeight: 700,
-                color: "var(--text1)",
-                letterSpacing: "0.3px",
-              }}
-            >
+          <Stack gap="8px">
+            <Typography sx={{ fontSize: "12px", fontWeight: 600, color: "var(--text2)" }}>
               Select Icon *
             </Typography>
-            <Stack
-              direction="row"
-              gap="16px"
-              justifyContent="center"
-              flexWrap="wrap"
-            >
+            <Stack direction="row" gap="10px" justifyContent="center">
               <IconCard
                 iconSrc={gatecse_img.src}
                 icon={icon}
                 value="castle"
-                label="GATE / Engineering"
-                onIconSelect={onIconSelect}
+                label="Engineering"
+                onIconSelect={setIcon}
               />
               <IconCard
                 iconSrc={placements_img.src}
                 icon={icon}
                 value="org"
                 label="Placements"
-                onIconSelect={onIconSelect}
+                onIconSelect={setIcon}
               />
               <IconCard
                 iconSrc={banking_img.src}
                 icon={icon}
                 value="bank"
-                label="Banking / Finance"
-                onIconSelect={onIconSelect}
+                label="Banking"
+                onIconSelect={setIcon}
               />
             </Stack>
           </Stack>
@@ -340,12 +245,12 @@ export default function GoalDialogBox({
       </DialogContent>
 
       {/* Footer */}
-      <Divider />
       <Stack
         direction="row"
         justifyContent="flex-end"
-        gap="12px"
-        padding="20px 24px"
+        gap="8px"
+        padding="12px 20px 16px"
+        sx={{ borderTop: "1px solid var(--border-color)" }}
       >
         <Button
           variant="outlined"
@@ -353,14 +258,12 @@ export default function GoalDialogBox({
           sx={{
             textTransform: "none",
             borderRadius: "8px",
-            padding: "8px 24px",
+            padding: "6px 16px",
             fontWeight: 600,
+            fontSize: "12px",
+            height: "34px",
             borderColor: "var(--border-color)",
             color: "var(--text2)",
-            "&:hover": {
-              borderColor: "var(--text3)",
-              backgroundColor: "transparent",
-            },
           }}
         >
           Cancel
@@ -368,18 +271,19 @@ export default function GoalDialogBox({
         <Button
           variant="contained"
           onClick={OnGoalCreate}
-          endIcon={<ArrowForward />}
+          endIcon={<ArrowForward sx={{ fontSize: "14px" }} />}
           disabled={!title || !icon}
+          disableElevation
           sx={{
             textTransform: "none",
             borderRadius: "8px",
-            padding: "8px 24px",
+            padding: "6px 16px",
             fontWeight: 600,
+            fontSize: "12px",
+            height: "34px",
             backgroundColor: "var(--primary-color)",
-            boxShadow: "none",
             "&:hover": {
               backgroundColor: "var(--primary-color-dark)",
-              boxShadow: "0 4px 12px rgba(var(--primary-rgb), 0.3)",
             },
             "&:disabled": {
               backgroundColor: "var(--text3)",
@@ -400,56 +304,52 @@ const IconCard = ({ iconSrc, onIconSelect, icon, value, label }) => {
   return (
     <Stack
       onClick={() => onIconSelect(value)}
-      gap="8px"
+      gap="6px"
       alignItems="center"
       sx={{
-        width: "140px",
-        padding: "20px 16px",
+        width: "120px",
+        padding: "14px 12px",
         backgroundColor: isActive
-          ? "rgba(var(--primary-rgb), 0.08)"
-          : "var(--bg-color)",
-        borderRadius: "16px",
-        border: `2px solid ${
-          isActive ? "var(--primary-color)" : "var(--border-color)"
-        }`,
+          ? "var(--primary-color-acc-2)"
+          : "var(--bg-color, #fafafa)",
+        borderRadius: "10px",
+        border: `2px solid ${isActive ? "var(--primary-color)" : "var(--border-color)"}`,
         cursor: "pointer",
-        transition: "all 0.2s ease",
+        transition: "all 0.15s ease",
         "&:hover": {
           borderColor: "var(--primary-color)",
-          backgroundColor: "rgba(var(--primary-rgb), 0.05)",
-          transform: "translateY(-2px)",
         },
       }}
     >
-      <Stack
-        width="60px"
-        height="60px"
-        justifyContent="center"
-        alignItems="center"
+      <Box
         sx={{
+          width: 44,
+          height: 44,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
           backgroundColor: isActive
             ? "var(--primary-color)"
-            : "rgba(var(--primary-rgb), 0.1)",
-          borderRadius: "16px",
-          transition: "all 0.2s ease",
+            : "var(--primary-color-acc-2)",
+          borderRadius: "10px",
+          transition: "all 0.15s ease",
         }}
       >
         <Image
           src={iconSrc}
           alt={label}
-          width={28}
-          height={32}
+          width={22}
+          height={24}
           style={{
             filter: isActive ? "brightness(0) invert(1)" : "none",
           }}
         />
-      </Stack>
+      </Box>
       <Typography
         sx={{
-          fontFamily: "Lato",
-          fontSize: "12px",
+          fontSize: "11px",
           fontWeight: 600,
-          color: isActive ? "var(--primary-color)" : "var(--text2)",
+          color: isActive ? "var(--primary-color)" : "var(--text3)",
           textAlign: "center",
         }}
       >

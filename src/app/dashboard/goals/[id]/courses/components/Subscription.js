@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
 import { apiFetch } from "@/src/lib/apiFetch";
 import {
@@ -19,8 +19,6 @@ import {
   Edit,
   MoreVert,
   CheckCircle,
-  Star,
-  WorkspacePremium,
   Lock,
   Public,
   Diamond,
@@ -40,7 +38,6 @@ export default function Subscription({ course, setCourse }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuIndex, setMenuIndex] = useState(null);
 
-  // Access Mode State: "PAID", "FREE", "PRO"
   const [accessMode, setAccessMode] = useState("PAID");
 
   useEffect(() => {
@@ -59,12 +56,7 @@ export default function Subscription({ course, setCourse }) {
 
   const handleSubscription = useCallback(
     async (updatedSubscription) => {
-      showSnackbar(
-        "Syncing...",
-        "success",
-        <CircularProgress size={20} sx={{ color: "var(--primary-color)" }} />,
-        ""
-      );
+      showSnackbar("Syncing...", "loading", "", "");
       const updatedSub = { ...course.subscription, ...updatedSubscription };
       const updatedCourse = { ...course, subscription: updatedSub };
       setIsLoading(true);
@@ -101,16 +93,13 @@ export default function Subscription({ course, setCourse }) {
     (mode) => {
       setAccessMode(mode);
       let updatePayload = {};
-
       if (mode === "FREE") {
         updatePayload = { isFree: true, isPro: false };
       } else if (mode === "PRO") {
         updatePayload = { isFree: false, isPro: true };
       } else {
-        // PAID
         updatePayload = { isFree: false, isPro: false };
       }
-
       handleSubscription(updatePayload);
     },
     [handleSubscription]
@@ -145,167 +134,142 @@ export default function Subscription({ course, setCourse }) {
         onClick={() => handleAccessChange(mode)}
         sx={{
           flex: 1,
-          padding: "20px",
-          borderRadius: "12px",
-          border: `2px solid ${
+          padding: "12px 16px",
+          borderRadius: "8px",
+          border: `1.5px solid ${
             isSelected ? "var(--primary-color)" : "var(--border-color)"
           }`,
           backgroundColor: isSelected
-            ? "rgba(var(--primary-rgb), 0.04)"
+            ? "rgba(24, 113, 99, 0.04)"
             : "var(--white)",
           cursor: "pointer",
-          transition: "all 0.2s ease",
-          position: "relative",
+          transition: "all 0.15s ease",
           "&:hover": {
-            borderColor: isSelected ? "var(--primary-color)" : "var(--text3)",
-            transform: "translateY(-2px)",
+            borderColor: isSelected ? "var(--primary-color)" : "var(--text4)",
           },
         }}
       >
-        {isSelected && (
-          <CheckCircle
-            sx={{
-              position: "absolute",
-              top: "12px",
-              right: "12px",
-              color: "var(--primary-color)",
-              fontSize: "20px",
-            }}
-          />
-        )}
-        <Stack gap="12px" alignItems="center" textAlign="center">
+        <Stack direction="row" alignItems="center" gap="10px">
           <Stack
             justifyContent="center"
             alignItems="center"
             sx={{
-              width: "48px",
-              height: "48px",
-              borderRadius: "50%",
+              width: "32px",
+              height: "32px",
+              borderRadius: "8px",
               backgroundColor: isSelected
                 ? "var(--primary-color)"
                 : "var(--bg-color)",
               color: isSelected ? "var(--white)" : "var(--text3)",
-              marginBottom: "8px",
+              flexShrink: 0,
             }}
           >
-            {icon}
+            {React.cloneElement(icon, { sx: { fontSize: "16px" } })}
           </Stack>
-          <Typography
-            sx={{
-              fontFamily: "Lato",
-              fontSize: "16px",
-              fontWeight: 700,
-              color: isSelected ? "var(--primary-color)" : "var(--text1)",
-            }}
-          >
-            {title}
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: "13px",
-              color: "var(--text3)",
-              lineHeight: 1.4,
-            }}
-          >
-            {description}
-          </Typography>
+          <Stack flex={1}>
+            <Typography
+              sx={{
+                fontSize: "13px",
+                fontWeight: 700,
+                color: isSelected ? "var(--primary-color)" : "var(--text1)",
+              }}
+            >
+              {title}
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: "11px",
+                color: "var(--text4)",
+                lineHeight: 1.3,
+              }}
+            >
+              {description}
+            </Typography>
+          </Stack>
+          {isSelected && (
+            <CheckCircle
+              sx={{
+                color: "var(--primary-color)",
+                fontSize: "16px",
+                flexShrink: 0,
+              }}
+            />
+          )}
         </Stack>
       </Stack>
     );
   };
 
   return (
-    <Stack marginTop="20px" gap="40px">
-      {/* Access Control Section */}
-      <Stack gap="16px">
+    <Stack marginTop="12px" gap="20px">
+      {/* Access Control */}
+      <Stack gap="10px">
         <Typography
           sx={{
-            fontFamily: "Lato",
-            fontSize: "18px",
+            fontSize: "14px",
             fontWeight: 700,
             color: "var(--text1)",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
           }}
         >
-          <Star sx={{ color: "var(--primary-color)" }} /> Access Control
+          Access Control
         </Typography>
         <Stack
           direction={{ xs: "column", md: "row" }}
-          gap="20px"
+          gap="10px"
           alignItems="stretch"
         >
           <AccessCard
             mode="PAID"
             icon={<Lock />}
             title="Paid Course"
-            description="Users must purchase a subscription plan to access this course."
+            description="Users must purchase a plan"
           />
           <AccessCard
             mode="FREE"
             icon={<Public />}
             title="Free for Everyone"
-            description="Open to all registered users. No payment required."
+            description="Open to all registered users"
           />
           <AccessCard
             mode="PRO"
             icon={<Diamond />}
             title="Pro Members Only"
-            description="Exclusive to Pro subscribers. Individual purchase is disabled."
+            description="Exclusive to Pro subscribers"
           />
         </Stack>
       </Stack>
 
-      {/* Paid Plans Section - Only visible if PAID mode is selected */}
+      {/* Paid Plans */}
       {accessMode === "PAID" && (
-        <Stack gap="24px">
+        <Stack gap="12px">
           <Stack
             flexDirection="row"
             justifyContent="space-between"
             alignItems="center"
           >
-            <Stack gap="4px">
-              <Typography
-                sx={{
-                  fontFamily: "Lato",
-                  fontSize: "18px",
-                  fontWeight: 700,
-                  color: "var(--text1)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
-              >
-                <WorkspacePremium sx={{ color: "var(--primary-color)" }} />{" "}
-                Subscription Plans
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: "Lato",
-                  fontSize: "14px",
-                  color: "var(--text3)",
-                }}
-              >
-                Create paid plans for users who don&apos;t have free access
-              </Typography>
-            </Stack>
+            <Typography
+              sx={{
+                fontSize: "14px",
+                fontWeight: 700,
+                color: "var(--text1)",
+              }}
+            >
+              Subscription Plans
+            </Typography>
             <Button
               variant="contained"
-              startIcon={<Add />}
+              startIcon={<Add sx={{ fontSize: "16px" }} />}
               onClick={() => setIsDialogOpen(true)}
+              disableElevation
               sx={{
                 backgroundColor: "var(--primary-color)",
                 textTransform: "none",
                 borderRadius: "8px",
-                padding: "8px 24px",
+                padding: "5px 16px",
                 fontWeight: 600,
-                fontFamily: "Lato",
-                boxShadow: "none",
-                "&:hover": {
-                  backgroundColor: "var(--primary-color-dark)",
-                  boxShadow: "none",
-                },
+                fontSize: "12px",
+                height: "32px",
+                "&:hover": { backgroundColor: "var(--primary-color-dark)" },
               }}
             >
               Create Plan
@@ -326,7 +290,7 @@ export default function Subscription({ course, setCourse }) {
           <Stack
             flexDirection="row"
             flexWrap="wrap"
-            gap="24px"
+            gap="12px"
             alignItems="flex-start"
           >
             {!isLoading ? (
@@ -344,57 +308,38 @@ export default function Subscription({ course, setCourse }) {
                       key={index}
                       sx={{
                         width: "100%",
-                        maxWidth: "340px",
+                        maxWidth: "280px",
                         backgroundColor: "var(--white)",
-                        borderRadius: "16px",
+                        borderRadius: "10px",
                         border: "1px solid var(--border-color)",
                         overflow: "hidden",
-                        transition: "all 0.2s ease",
+                        transition: "all 0.15s ease",
                         "&:hover": {
-                          transform: "translateY(-4px)",
-                          boxShadow: "0 12px 24px rgba(0,0,0,0.08)",
                           borderColor: "var(--primary-color)",
                         },
                       }}
                     >
                       {/* Card Header */}
                       <Stack
-                        padding="20px"
-                        gap="8px"
+                        padding="12px 16px"
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
                         sx={{
-                          background:
-                            "linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-dark) 100%)",
-                          color: "var(--white)",
-                          position: "relative",
+                          borderBottom: "2px solid var(--primary-color)",
                         }}
                       >
-                        <IconButton
-                          onClick={(e) => handleMenuOpen(e, index)}
-                          size="small"
-                          sx={{
-                            position: "absolute",
-                            top: "12px",
-                            right: "12px",
-                            color: "rgba(255,255,255,0.8)",
-                            "&:hover": {
-                              color: "white",
-                              backgroundColor: "rgba(255,255,255,0.1)",
-                            },
-                          }}
-                        >
-                          <MoreVert />
-                        </IconButton>
-
-                        <Stack direction="row" gap="8px" alignItems="center">
+                        <Stack direction="row" gap="6px" alignItems="center">
                           <Chip
                             label={plan.type}
                             size="small"
                             sx={{
-                              backgroundColor: "rgba(255,255,255,0.2)",
-                              color: "white",
+                              backgroundColor: "rgba(24, 113, 99, 0.08)",
+                              color: "var(--primary-color)",
                               fontWeight: 700,
                               fontSize: "10px",
                               height: "20px",
+                              "& .MuiChip-label": { padding: "0 6px" },
                             }}
                           />
                           {plan.discountInPercent > 0 && (
@@ -402,85 +347,66 @@ export default function Subscription({ course, setCourse }) {
                               label={`${plan.discountInPercent}% OFF`}
                               size="small"
                               sx={{
-                                backgroundColor: "var(--white)",
-                                color: "var(--primary-color)",
-                                fontWeight: 800,
+                                backgroundColor: "rgba(76, 175, 80, 0.08)",
+                                color: "#4CAF50",
+                                fontWeight: 700,
                                 fontSize: "10px",
                                 height: "20px",
+                                "& .MuiChip-label": { padding: "0 6px" },
                               }}
                             />
                           )}
                         </Stack>
+                        <IconButton
+                          onClick={(e) => handleMenuOpen(e, index)}
+                          size="small"
+                          sx={{
+                            width: 24,
+                            height: 24,
+                            color: "var(--text4)",
+                          }}
+                        >
+                          <MoreVert sx={{ fontSize: "16px" }} />
+                        </IconButton>
+                      </Stack>
+
+                      {/* Card Body */}
+                      <Stack padding="12px 16px" gap="6px">
                         <Typography
                           sx={{
-                            fontFamily: "Lato",
-                            fontSize: "24px",
-                            fontWeight: 800,
+                            fontSize: "13px",
+                            fontWeight: 600,
+                            color: "var(--text2)",
                           }}
                         >
                           {plan.duration}{" "}
                           {plan.type === "MONTHLY" ? "Months" : "Years"}
                         </Typography>
-                      </Stack>
-
-                      {/* Card Body */}
-                      <Stack padding="20px" gap="16px">
-                        <Stack gap="4px">
+                        <Stack
+                          direction="row"
+                          alignItems="baseline"
+                          gap="6px"
+                        >
                           <Typography
                             sx={{
-                              fontSize: "12px",
-                              color: "var(--text3)",
-                              fontWeight: 600,
+                              fontSize: "22px",
+                              fontWeight: 800,
+                              color: "var(--text1)",
                             }}
                           >
-                            TOTAL PRICE
+                            ₹{discountedPrice}
                           </Typography>
-                          <Stack
-                            direction="row"
-                            alignItems="baseline"
-                            gap="8px"
-                          >
+                          {plan.discountInPercent > 0 && (
                             <Typography
                               sx={{
-                                fontSize: "32px",
-                                fontWeight: 800,
-                                color: "var(--text1)",
-                                fontFamily: "Lato",
+                                fontSize: "13px",
+                                color: "var(--text4)",
+                                textDecoration: "line-through",
                               }}
                             >
-                              ₹{discountedPrice}
+                              ₹{plan.priceWithTax}
                             </Typography>
-                            {plan.discountInPercent > 0 && (
-                              <Typography
-                                sx={{
-                                  fontSize: "16px",
-                                  color: "var(--text3)",
-                                  textDecoration: "line-through",
-                                  fontWeight: 500,
-                                }}
-                              >
-                                ₹{plan.priceWithTax}
-                              </Typography>
-                            )}
-                          </Stack>
-                        </Stack>
-
-                        <Divider />
-
-                        <Stack gap="12px">
-                          <Stack direction="row" gap="12px" alignItems="center">
-                            <CheckCircle
-                              sx={{
-                                fontSize: "18px",
-                                color: "var(--success-color)",
-                              }}
-                            />
-                            <Typography
-                              sx={{ fontSize: "14px", color: "var(--text2)" }}
-                            >
-                              Full Course Access
-                            </Typography>
-                          </Stack>
+                          )}
                         </Stack>
                       </Stack>
                     </Stack>
@@ -507,9 +433,9 @@ export default function Subscription({ course, setCourse }) {
         onClose={handleMenuClose}
         PaperProps={{
           sx: {
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
             borderRadius: "8px",
-            minWidth: "140px",
+            minWidth: "120px",
           },
         }}
       >
@@ -519,9 +445,9 @@ export default function Subscription({ course, setCourse }) {
             setIsDialogOpen(true);
             handleMenuClose();
           }}
-          sx={{ fontSize: "14px", gap: "8px", fontWeight: 500 }}
+          sx={{ fontSize: "12px", gap: "6px", fontWeight: 600 }}
         >
-          <Edit fontSize="small" /> Edit Plan
+          <Edit sx={{ fontSize: "14px" }} /> Edit
         </MenuItem>
         <MenuItem
           onClick={() => {
@@ -530,13 +456,13 @@ export default function Subscription({ course, setCourse }) {
             handleMenuClose();
           }}
           sx={{
-            fontSize: "14px",
-            gap: "8px",
-            fontWeight: 500,
-            color: "var(--delete-color)",
+            fontSize: "12px",
+            gap: "6px",
+            fontWeight: 600,
+            color: "#f44336",
           }}
         >
-          <Delete fontSize="small" /> Delete Plan
+          <Delete sx={{ fontSize: "14px" }} /> Delete
         </MenuItem>
       </Menu>
 
@@ -557,7 +483,7 @@ const DeleteSubscription = ({ isOpen, onClose, deleteIndex, handleDelete }) => (
       <Stack
         flexDirection="row"
         justifyContent="center"
-        sx={{ gap: "20px", width: "100%" }}
+        sx={{ gap: "12px", width: "100%" }}
       >
         <Button
           variant="contained"
@@ -568,23 +494,28 @@ const DeleteSubscription = ({ isOpen, onClose, deleteIndex, handleDelete }) => (
           sx={{
             textTransform: "none",
             backgroundColor: "var(--delete-color)",
-            borderRadius: "5px",
-            width: "130px",
+            borderRadius: "8px",
+            width: "100px",
+            fontWeight: 600,
+            fontSize: "12px",
+            height: "34px",
           }}
           disableElevation
         >
           Delete
         </Button>
         <Button
-          variant="contained"
+          variant="outlined"
           onClick={onClose}
           sx={{
             textTransform: "none",
-            borderRadius: "5px",
-            backgroundColor: "white",
+            borderRadius: "8px",
+            borderColor: "var(--border-color)",
             color: "var(--text2)",
-            border: "1px solid var(--border-color)",
-            width: "130px",
+            width: "100px",
+            fontWeight: 600,
+            fontSize: "12px",
+            height: "34px",
           }}
           disableElevation
         >

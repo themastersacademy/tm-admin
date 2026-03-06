@@ -3,16 +3,20 @@ import { PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 
 export default async function createSubject({ title }) {
+  const subjectID = randomUUID();
+  const pKey = `SUBJECT#${subjectID}`;
   const params = {
     TableName: `${process.env.AWS_DB_NAME}content`,
     Item: {
-      pKey: `SUBJECT#${randomUUID()}`,
+      pKey,
       sKey: "METADATA",
+      "GSI1-pKey": "SUBJECTS",
+      "GSI1-sKey": pKey,
       title,
       titleLower: title.toLowerCase(),
       totalQuestions: 0,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     },
   };
   try {
@@ -57,7 +61,6 @@ export async function updateSubject({ subjectID, totalQuestions, title }) {
     };
   }
   if (title) {
-    console.log(title);
     params.UpdateExpression += " title = :title, titleLower = :titleLower";
     params.ExpressionAttributeValues = {
       ...params.ExpressionAttributeValues,
@@ -73,7 +76,6 @@ export async function updateSubject({ subjectID, totalQuestions, title }) {
   };
 
   try {
-    console.log(params);
     await dynamoDB.send(new UpdateCommand(params));
     return {
       success: true,

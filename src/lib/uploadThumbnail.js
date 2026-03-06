@@ -29,12 +29,10 @@ export async function uploadThumbnailToS3({
   setThumbnailPreview,
 }) {
   setProgressVariant("determinate");
-  console.log(fileData.data.url);
 
   await axios.put(fileData.data.url, file, {
     headers: { "Content-Type": file.type },
     onUploadProgress: (progressEvent) => {
-      console.log("Uploading thumbnail...");
 
       const percent = (
         (progressEvent.loaded / progressEvent.total) *

@@ -102,12 +102,10 @@ export default function ThumbnailUpload({ course, setCourse }) {
           setCourse((prev) => ({ ...prev, thumbnail: null }));
           setThumbnailPreview(defaultThumbnail);
         } else {
-          console.log("Not delete");
         }
         setIsLoading(false);
       });
     } catch (err) {
-      console.log(err);
     }
   };
 

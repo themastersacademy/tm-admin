@@ -31,8 +31,10 @@ import {
   Card,
   InputAdornment,
   Dialog,
+  DialogActions,
   Fade,
   Box,
+  Skeleton,
 } from "@mui/material";
 import { useParams } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
@@ -152,89 +154,112 @@ export default function BatchStudents({ setStudentCount, batch }) {
   );
 
   return (
-    <Stack gap="20px" marginTop="20px">
-      <Stack
-        sx={{
-          border: "1px solid var(--border-color)",
-          borderRadius: "10px",
-          padding: "20px",
-          backgroundColor: "var(--white)",
-          minHeight: "80vh",
-          gap: "20px",
-        }}
-      >
+    <Stack gap="10px" sx={{ padding: "14px 16px", minHeight: "60vh" }}>
+      <Stack gap="10px">
         <Stack
-          flexDirection="row"
+          direction="row"
           justifyContent="space-between"
           alignItems="center"
           flexWrap="wrap"
-          gap="15px"
+          gap="10px"
         >
-          <Typography sx={{ fontSize: "20px", fontWeight: "700" }}>
-            Students
-          </Typography>
-          <Stack direction="row" gap="15px">
+          <Stack direction="row" alignItems="center" gap="8px">
+            <People sx={{ fontSize: "18px", color: "var(--primary-color)" }} />
+            <Typography sx={{ fontSize: "15px", fontWeight: 700, color: "var(--text1)" }}>
+              Students
+            </Typography>
+            <Typography sx={{ fontSize: "12px", color: "var(--text4)", fontWeight: 600 }}>
+              ({filteredStudents.length})
+            </Typography>
+          </Stack>
+          <Stack direction="row" gap="8px" alignItems="center">
             <StyledTextField
-              placeholder="Search students..."
+              placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Search sx={{ color: "var(--text3)" }} />
+                    <Search sx={{ fontSize: "18px", color: "var(--text3)" }} />
                   </InputAdornment>
                 ),
               }}
-              sx={{ width: "250px", backgroundColor: "var(--white)" }}
+              sx={{
+                width: "200px",
+                "& .MuiOutlinedInput-root": { height: "34px", fontSize: "13px" },
+              }}
             />
             <Button
               variant="contained"
-              startIcon={<Add />}
+              startIcon={<Add sx={{ fontSize: "16px" }} />}
               onClick={studentDialogOpen}
+              disableElevation
               sx={{
                 backgroundColor: "var(--primary-color)",
                 textTransform: "none",
-                fontFamily: "Lato",
-                height: "40px",
+                fontWeight: 600,
+                fontSize: "12px",
+                height: "34px",
+                borderRadius: "8px",
+                padding: "0 14px",
+                boxShadow: "none",
+                "&:hover": { backgroundColor: "var(--primary-color-dark)" },
               }}
-              disableElevation
             >
-              Add Student
+              Add
             </Button>
             <Button
               variant="outlined"
-              startIcon={<UploadFile />}
+              startIcon={<UploadFile sx={{ fontSize: "14px" }} />}
               onClick={() => setBulkImportDialog(true)}
               sx={{
-                borderColor: "var(--primary-color)",
+                borderColor: "var(--border-color)",
                 color: "var(--primary-color)",
                 textTransform: "none",
-                fontFamily: "Lato",
-                height: "40px",
+                fontWeight: 600,
+                fontSize: "12px",
+                height: "34px",
+                borderRadius: "8px",
+                padding: "0 14px",
+                "&:hover": { borderColor: "var(--primary-color)", backgroundColor: "var(--primary-color-acc-2)" },
               }}
             >
-              Bulk Upload
+              Import
             </Button>
           </Stack>
         </Stack>
+        {/* Table Header */}
         <Stack
-          flexDirection="row"
-          flexWrap="wrap"
-          rowGap="15px"
-          columnGap="30px"
+          direction="row"
+          alignItems="center"
+          sx={{
+            padding: "6px 12px",
+            gap: "12px",
+            borderBottom: "1px solid var(--border-color)",
+          }}
         >
+          <Typography sx={{ fontSize: "10px", fontWeight: 700, color: "var(--text4)", textTransform: "uppercase", minWidth: "24px", textAlign: "center" }}>#</Typography>
+          <Typography sx={{ fontSize: "10px", fontWeight: 700, color: "var(--text4)", textTransform: "uppercase", minWidth: "180px", flex: 1 }}>Student</Typography>
+          <Typography sx={{ fontSize: "10px", fontWeight: 700, color: "var(--text4)", textTransform: "uppercase", minWidth: "70px", textAlign: "center", display: { xs: "none", md: "block" } }}>Roll No</Typography>
+          <Typography sx={{ fontSize: "10px", fontWeight: 700, color: "var(--text4)", textTransform: "uppercase", minWidth: "80px", textAlign: "center", display: { xs: "none", md: "block" } }}>Tag</Typography>
+          <Typography sx={{ fontSize: "10px", fontWeight: 700, color: "var(--text4)", textTransform: "uppercase", minWidth: "65px", textAlign: "center", display: { xs: "none", lg: "block" } }}>Joined</Typography>
+          <Box sx={{ minWidth: "56px" }} />
+        </Stack>
+
+        <Stack>
           {!isLoading ? (
             filteredStudents.length > 0 ? (
               filteredStudents.map((student, index) => (
                 <BatchStudentCard
                   key={index}
+                  index={index}
                   student={student}
                   onRemove={confirmDelete}
                   onEdit={handleEditClick}
                 />
               ))
             ) : (
-              <Stack width="100%" minHeight="60vh">
+              <Stack width="100%" minHeight="30vh">
                 <NoDataFound
                   info={
                     searchQuery
@@ -245,7 +270,16 @@ export default function BatchStudents({ setStudentCount, batch }) {
               </Stack>
             )
           ) : (
-            <SecondaryCardSkeleton />
+            Array.from({ length: 6 }).map((_, i) => (
+              <Stack key={i} direction="row" alignItems="center" gap="12px" sx={{ padding: "7px 12px" }}>
+                <Skeleton variant="text" width={24} height={16} />
+                <Skeleton variant="rounded" width={30} height={30} sx={{ borderRadius: "8px" }} />
+                <Stack gap="2px" flex={1}>
+                  <Skeleton variant="text" width={120} height={14} />
+                  <Skeleton variant="text" width={150} height={10} />
+                </Stack>
+              </Stack>
+            ))
           )}
         </Stack>
         <StudentsDialog
@@ -677,37 +711,57 @@ const StudentsDialog = ({
   };
 
   return (
-    <DialogBox
-      title="Add Students"
-      isOpen={studentDialog}
-      icon={
-        <IconButton
-          onClick={studentDialogClose}
-          sx={{ padding: "4px", borderRadius: "8px" }}
-        >
-          <Close />
-        </IconButton>
-      }
-      actionButton={
-        <Button
-          variant="text"
-          endIcon={<East />}
-          onClick={addStudents}
-          disabled={!selectedStudent}
-          sx={{ textTransform: "none", color: "var(--primary-color)" }}
-        >
-          Add
-        </Button>
-      }
+    <Dialog
+      open={studentDialog}
+      onClose={studentDialogClose}
+      disableScrollLock
+      maxWidth="xs"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: "12px",
+          border: "1px solid var(--border-color)",
+        },
+      }}
     >
-      <DialogContent sx={{ minHeight: "unset", paddingBottom: "20px" }}>
-        <Stack gap="10px">
-          <Typography variant="body2" color="text.secondary">
+      {/* Header */}
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ padding: "14px 20px", borderBottom: "1px solid var(--border-color)" }}
+      >
+        <Stack direction="row" alignItems="center" gap="10px">
+          <Box
+            sx={{
+              width: 30,
+              height: 30,
+              borderRadius: "8px",
+              backgroundColor: "var(--primary-color-acc-2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <People sx={{ fontSize: "16px", color: "var(--primary-color)" }} />
+          </Box>
+          <Typography sx={{ fontSize: "14px", fontWeight: 700, color: "var(--text1)" }}>
+            Add Student
+          </Typography>
+        </Stack>
+        <IconButton onClick={studentDialogClose} size="small" sx={{ width: 28, height: 28 }}>
+          <Close sx={{ fontSize: "16px", color: "var(--text3)" }} />
+        </IconButton>
+      </Stack>
+
+      <DialogContent sx={{ padding: "16px 20px" }}>
+        <Stack gap="12px">
+          <Typography sx={{ fontSize: "12px", color: "var(--text4)" }}>
             Search by name or email to add a student
           </Typography>
           <Autocomplete
             getOptionLabel={(option) => option.name || ""}
-            filterOptions={(x) => x} // Disable built-in filtering to rely on backend
+            filterOptions={(x) => x}
             options={options}
             autoComplete
             includeInputInList
@@ -728,36 +782,32 @@ const StudentsDialog = ({
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Search Student"
+                placeholder="Search student..."
                 fullWidth
+                size="small"
                 sx={{
                   "& .MuiOutlinedInput-root": {
-                    "& fieldset": {
-                      borderColor: "var(--border-color)",
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "var(--primary-color)",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "var(--primary-color)",
-                    },
-                  },
-                  "& .MuiInputLabel-root": {
-                    color: "var(--text3)",
-                    "&.Mui-focused": {
-                      color: "var(--primary-color)",
-                    },
+                    borderRadius: "8px",
+                    fontSize: "13px",
+                    "& fieldset": { borderColor: "var(--border-color)" },
+                    "&:hover fieldset": { borderColor: "var(--primary-color)" },
+                    "&.Mui-focused fieldset": { borderColor: "var(--primary-color)" },
                   },
                 }}
                 InputProps={{
                   ...params.InputProps,
+                  startAdornment: (
+                    <>
+                      <InputAdornment position="start">
+                        <Search sx={{ fontSize: "18px", color: "var(--text3)" }} />
+                      </InputAdornment>
+                      {params.InputProps.startAdornment}
+                    </>
+                  ),
                   endAdornment: (
                     <>
                       {loading ? (
-                        <CircularProgress
-                          size={20}
-                          sx={{ color: "var(--primary-color)" }}
-                        />
+                        <CircularProgress size={16} sx={{ color: "var(--primary-color)" }} />
                       ) : null}
                       {params.InputProps.endAdornment}
                     </>
@@ -769,17 +819,26 @@ const StudentsDialog = ({
               const { key, ...optionProps } = props;
               return (
                 <li key={key} {...optionProps}>
-                  <Stack flexDirection="row" gap="10px" alignItems="center">
+                  <Stack direction="row" gap="10px" alignItems="center" sx={{ padding: "2px 0" }}>
                     <Avatar
                       src={option.image}
                       alt={option.name}
-                      sx={{ width: 32, height: 32 }}
-                    />
+                      sx={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "8px",
+                        backgroundColor: "var(--primary-color-acc-2)",
+                        color: "var(--primary-color)",
+                        fontSize: "12px",
+                      }}
+                    >
+                      {!option.image && <Person sx={{ fontSize: "14px" }} />}
+                    </Avatar>
                     <Stack>
-                      <Typography variant="body1" fontWeight={500}>
+                      <Typography sx={{ fontSize: "12px", fontWeight: 600, color: "var(--text1)" }}>
                         {option.name}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography sx={{ fontSize: "10px", color: "var(--text4)" }}>
                         {option.email}
                       </Typography>
                     </Stack>
@@ -790,6 +849,38 @@ const StudentsDialog = ({
           />
         </Stack>
       </DialogContent>
-    </DialogBox>
+
+      <DialogActions sx={{ padding: "10px 20px", borderTop: "1px solid var(--border-color)" }}>
+        <Button
+          onClick={studentDialogClose}
+          sx={{
+            textTransform: "none",
+            fontSize: "12px",
+            fontWeight: 600,
+            color: "var(--text3)",
+            borderRadius: "8px",
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          onClick={addStudents}
+          disabled={!selectedStudent}
+          disableElevation
+          sx={{
+            backgroundColor: "var(--primary-color)",
+            textTransform: "none",
+            borderRadius: "8px",
+            fontSize: "12px",
+            fontWeight: 600,
+            padding: "6px 20px",
+            "&:hover": { backgroundColor: "var(--primary-color-dark)" },
+          }}
+        >
+          Add Student
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };

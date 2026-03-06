@@ -444,10 +444,6 @@ export async function searchAllQuestions(searchTerm) {
     lek = response.LastEvaluatedKey;
   } while (lek);
 
-  console.log(
-    `[Global Search] Term: "${searchTerm}" | Items Scanned: ${allItems.length} | Total Consumed Capacity: ${totalConsumedCapacity} RCUs`,
-  );
-
   return allItems.map((it) => ({
     id: it.sKey.split("#")[1],
     subjectID: it.pKey.split("#")[1],

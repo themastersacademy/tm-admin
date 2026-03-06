@@ -12,7 +12,6 @@ export default async function getGoal({ goalID }) {
   };
   try {
     const response = await dynamoDB.send(new GetCommand(params));
-    console.log(response);
 
     if (!response.Item) {
       return {

@@ -1,15 +1,20 @@
 // import { createHash } from "crypto";
 import getAllBank from "@/src/util/bank/getAllBank";
 
-export async function GET() {
+export async function GET(request) {
   try {
-    const result = await getAllBank();
+    const { searchParams } = new URL(request.url);
+    const limit = searchParams.get("limit")
+      ? parseInt(searchParams.get("limit"), 10)
+      : undefined;
+    const cursor = searchParams.get("cursor") || undefined;
+
+    const result = await getAllBank({ limit, cursor });
     if (!result.success) {
       return Response.json(result, { status: 500 });
     }
     return Response.json(result, { status: 200 });
   } catch (err) {
-    console.log(err);
     return Response.json(
       { success: false, message: "Internal server error" },
       { status: 500 }

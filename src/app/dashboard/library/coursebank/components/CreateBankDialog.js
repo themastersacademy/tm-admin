@@ -91,7 +91,7 @@ export default function CreateBankDialog({ open, onClose, fetchCourse }) {
         alignItems="center"
         sx={{
           padding: "24px 28px",
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          backgroundColor: "var(--primary-color)",
           color: "white",
         }}
       >
@@ -143,10 +143,10 @@ export default function CreateBankDialog({ open, onClose, fetchCourse }) {
                       borderColor: "var(--border-color)",
                     },
                     "&:hover fieldset": {
-                      borderColor: "#667eea",
+                      borderColor: "var(--primary-color)",
                     },
                     "&.Mui-focused fieldset": {
-                      borderColor: "#667eea",
+                      borderColor: "var(--primary-color)",
                     },
                   },
                 }}
@@ -168,13 +168,19 @@ export default function CreateBankDialog({ open, onClose, fetchCourse }) {
               sx={{
                 padding: "16px",
                 borderRadius: "12px",
-                backgroundColor: "rgba(102, 126, 234, 0.05)",
-                border: "1px solid rgba(102, 126, 234, 0.2)",
+                backgroundColor: "rgba(24, 113, 99, 0.04)",
+                border: "1px solid rgba(24, 113, 99, 0.15)",
               }}
             >
               <Stack direction="row" gap={1} alignItems="center">
-                <InfoOutlined sx={{ fontSize: "18px", color: "#667eea" }} />
-                <Typography fontSize="14px" fontWeight={600} color="#667eea">
+                <InfoOutlined
+                  sx={{ fontSize: "18px", color: "var(--primary-color)" }}
+                />
+                <Typography
+                  fontSize="14px"
+                  fontWeight={600}
+                  color="var(--primary-color)"
+                >
                   Tips
                 </Typography>
               </Stack>
@@ -219,13 +225,11 @@ export default function CreateBankDialog({ open, onClose, fetchCourse }) {
                   height: "44px",
                   fontSize: "15px",
                   fontWeight: 600,
-                  background:
-                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                  boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)",
+                  backgroundColor: "var(--primary-color)",
+                  boxShadow: "0 4px 15px rgba(24, 113, 99, 0.3)",
                   "&:hover": {
-                    background:
-                      "linear-gradient(135deg, #5568d3 0%, #6a3f91 100%)",
-                    boxShadow: "0 6px 20px rgba(102, 126, 234, 0.5)",
+                    backgroundColor: "var(--primary-color-dark)",
+                    boxShadow: "0 6px 20px rgba(24, 113, 99, 0.4)",
                   },
                   "&.Mui-disabled": {
                     background: "var(--border-color)",
@@ -250,7 +254,7 @@ export default function CreateBankDialog({ open, onClose, fetchCourse }) {
           md={5}
           sx={{
             padding: "32px",
-            backgroundColor: "#f8f9ff",
+            backgroundColor: "var(--bg-color)",
             borderLeft: "1px solid var(--border-color)",
           }}
         >
@@ -277,18 +281,17 @@ export default function CreateBankDialog({ open, onClose, fetchCourse }) {
                 <Stack direction="row" gap={2} alignItems="center">
                   <Box
                     sx={{
-                      width: "56px",
-                      height: "56px",
-                      borderRadius: "14px",
-                      background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                      width: "48px",
+                      height: "48px",
+                      borderRadius: "12px",
+                      backgroundColor: "var(--primary-color)",
                       display: "flex",
                       justifyContent: "center",
                       alignItems: "center",
                       color: "white",
                     }}
                   >
-                    <FolderOutlined sx={{ fontSize: "28px" }} />
+                    <FolderOutlined sx={{ fontSize: "24px" }} />
                   </Box>
                   <Stack flex={1}>
                     <Typography
@@ -315,8 +318,8 @@ export default function CreateBankDialog({ open, onClose, fetchCourse }) {
                     sx={{
                       height: "24px",
                       fontSize: "11px",
-                      backgroundColor: "rgba(102, 126, 234, 0.1)",
-                      color: "#667eea",
+                      backgroundColor: "rgba(24, 113, 99, 0.06)",
+                      color: "var(--primary-color)",
                       fontWeight: 600,
                     }}
                   />

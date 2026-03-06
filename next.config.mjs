@@ -11,9 +11,17 @@ const nextConfig = {
     ];
   },
   images: {
-    domains: [
-      "tma-dev-resource.s3.ap-south-1.amazonaws.com",
-      "lh3.googleusercontent.com",
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "tma-dev-resource.s3.ap-south-1.amazonaws.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        pathname: "/**",
+      },
     ],
   },
 };

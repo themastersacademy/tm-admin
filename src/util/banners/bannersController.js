@@ -55,20 +55,23 @@ export async function getAllBanners() {
       lastKey = result.LastEvaluatedKey;
     } while (lastKey);
 
-    // Backward compatibility for legacy records missing GSI attributes.
-    if (items.length === 0) {
-      let legacyLastKey;
-      do {
-        const result = await dynamoDB.send(
-          new ScanCommand({
-            ...fallbackScanParams,
-            ...(legacyLastKey && { ExclusiveStartKey: legacyLastKey }),
-          })
-        );
-        items.push(...(result.Items || []));
-        legacyLastKey = result.LastEvaluatedKey;
-      } while (legacyLastKey);
-    }
+    // Merge with legacy scan fallback (deduplicated)
+    const foundKeys = new Set(items.map((item) => item.pKey));
+    let legacyLastKey;
+    do {
+      const result = await dynamoDB.send(
+        new ScanCommand({
+          ...fallbackScanParams,
+          ...(legacyLastKey && { ExclusiveStartKey: legacyLastKey }),
+        })
+      );
+      for (const item of result.Items || []) {
+        if (!foundKeys.has(item.pKey)) {
+          items.push(item);
+        }
+      }
+      legacyLastKey = result.LastEvaluatedKey;
+    } while (legacyLastKey);
 
     return {
       success: true,
@@ -103,7 +106,6 @@ export async function createBanner({ fileName, fileType, title }) {
 
   const params = {
     TableName: TableName,
-    IndexName: INDEX_NAME,
     Item: {
       pKey: `BANNER#${bannerID}`,
       sKey: `BANNERS`,

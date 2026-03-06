@@ -46,12 +46,10 @@ export default function QuestionStepper({
   }, [allSubjects, questionData.subjectID]);
 
   const handleSave = useCallback(async () => {
-    console.log(questionData);
     setIsLoading(true);
     // Validate entire questionData shape
     if (!checkQuestionFormat(questionData)) {
       setIsLoading(false);
-      console.log("format");
       return;
     }
 

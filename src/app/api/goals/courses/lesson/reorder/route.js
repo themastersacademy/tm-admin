@@ -1,7 +1,7 @@
 import { reorderLesson } from "@/src/util/courses/reorderLesson";
 
 export async function POST(request) {
-  const { courseID, goalID, lessonIDs } = await request.json();
+  const { courseID, goalID, lessonIDs, sections } = await request.json();
   if (!courseID || !lessonIDs) {
     return Response.json(
       { success: false, message: "Missing courseID or lessonIDs" },
@@ -9,7 +9,7 @@ export async function POST(request) {
     );
   }
   try {
-    const result = await reorderLesson({ courseID, goalID, lessonIDs });
+    const result = await reorderLesson({ courseID, goalID, lessonIDs, sections });
     return Response.json(result);
   } catch (error) {
     console.error("Error in reorderLesson route:", error);

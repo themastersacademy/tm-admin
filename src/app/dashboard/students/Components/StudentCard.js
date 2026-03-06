@@ -3,24 +3,15 @@ import {
   Avatar,
   Stack,
   Typography,
-  IconButton,
   Chip,
-  Tooltip,
 } from "@mui/material";
 import {
-  Phone,
   Person,
-  CalendarToday,
-  ArrowForward,
-  CheckCircle,
-  Cancel,
   VerifiedUser,
-  ContentCopy,
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
-import React from "react";
 
-export default function StudentCard({ user }) {
+export default function StudentCard({ user, index = 0 }) {
   const router = useRouter();
   const {
     name,
@@ -35,252 +26,181 @@ export default function StudentCard({ user }) {
     createdAt,
   } = user;
 
-  const handleCopyEmail = (e) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(email);
-  };
+  const isEven = index % 2 === 0;
 
   const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
-      year: "numeric",
+      year: "2-digit",
     });
   };
 
   return (
     <Stack
       onClick={() => router.push(`/dashboard/students/${id}`)}
+      direction="row"
+      alignItems="center"
       sx={{
-        backgroundColor: "var(--white)",
-        borderRadius: "16px",
-        border: "1px solid var(--border-color)",
-        overflow: "hidden",
-        cursor: "pointer",
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-        position: "relative",
         width: "100%",
-        maxWidth: "350px",
-        flex: "1 1 300px",
+        backgroundColor: isEven ? "var(--white)" : "var(--bg-color, #fafafa)",
+        borderRadius: "6px",
+        padding: "7px 12px",
+        cursor: "pointer",
+        transition: "all 0.15s ease",
+        gap: "12px",
+        borderLeft: status === "active"
+          ? "3px solid #4caf50"
+          : "3px solid #f44336",
         "&:hover": {
-          transform: "translateY(-4px)",
-          boxShadow: "0 12px 24px -4px rgba(0, 0, 0, 0.12)",
-          borderColor: "var(--primary-color)",
-          "& .action-btn": {
-            opacity: 1,
-            transform: "translateX(0)",
-          },
+          backgroundColor: "rgba(24, 113, 99, 0.04)",
         },
       }}
     >
-      {/* Top Gradient Line */}
-      <Stack
+      {/* # */}
+      <Typography
         sx={{
-          height: "6px",
-          background:
-            status === "active"
-              ? "linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%)"
-              : "linear-gradient(90deg, #F44336 0%, #FF9800 100%)",
+          fontSize: "11px",
+          fontWeight: 600,
+          color: "var(--text4)",
+          minWidth: "24px",
+          textAlign: "center",
         }}
-      />
+      >
+        {index + 1}
+      </Typography>
 
-      <Stack padding="20px" gap="20px">
-        {/* Header: Avatar & Basic Info */}
-        <Stack direction="row" gap="16px" alignItems="center">
-          <Avatar
-            src={image}
-            sx={{
-              width: 56,
-              height: 56,
-              border: "2px solid var(--white)",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-              fontSize: "24px",
-              fontWeight: 700,
-              bgcolor: "var(--primary-color)",
-            }}
-          >
-            {name?.charAt(0)?.toUpperCase()}
-          </Avatar>
-          <Stack overflow="hidden">
-            <Typography
-              sx={{
-                fontSize: "16px",
-                fontWeight: 700,
-                color: "var(--text1)",
-                fontFamily: "Lato",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              {name || "Unknown Student"}
-            </Typography>
-            <Stack direction="row" alignItems="center" gap="4px">
-              <Typography
-                sx={{
-                  fontSize: "13px",
-                  color: "var(--text3)",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  maxWidth: "160px",
-                }}
-              >
-                {email}
-              </Typography>
-              <Tooltip title="Copy Email">
-                <IconButton
-                  size="small"
-                  onClick={handleCopyEmail}
-                  sx={{ padding: "2px" }}
-                >
-                  <ContentCopy
-                    sx={{ fontSize: "12px", color: "var(--text4)" }}
-                  />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-          </Stack>
-        </Stack>
-
-        {/* Info Grid */}
-        <Stack
-          direction="row"
-          flexWrap="wrap"
-          gap="12px"
+      {/* Avatar + Name */}
+      <Stack direction="row" alignItems="center" gap="8px" sx={{ minWidth: "200px", flex: 1.2 }}>
+        <Avatar
+          src={image}
           sx={{
-            padding: "12px",
-            backgroundColor: "var(--bg-color)",
-            borderRadius: "12px",
+            width: 30,
+            height: 30,
+            borderRadius: "8px",
+            backgroundColor: "var(--primary-color-acc-2)",
+            color: "var(--primary-color)",
+            fontSize: "12px",
+            fontWeight: 700,
           }}
         >
-          <InfoItem
-            icon={<Phone sx={{ fontSize: "14px" }} />}
-            label={phoneNumber || "N/A"}
-          />
-          <InfoItem
-            icon={<Person sx={{ fontSize: "14px" }} />}
-            label={gender || "N/A"}
-          />
-          <InfoItem
-            icon={<CalendarToday sx={{ fontSize: "14px" }} />}
-            label={formatDate(createdAt)}
-          />
-        </Stack>
-
-        {/* Footer: Badges & Action */}
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <Stack direction="row" gap="8px">
-            <Chip
-              label={status === "active" ? "Active" : "Blocked"}
-              size="small"
-              icon={
-                status === "active" ? (
-                  <CheckCircle sx={{ fontSize: "14px !important" }} />
-                ) : (
-                  <Cancel sx={{ fontSize: "14px !important" }} />
-                )
-              }
-              sx={{
-                height: "24px",
-                fontSize: "11px",
-                fontWeight: 700,
-                backgroundColor:
-                  status === "active"
-                    ? "rgba(76, 175, 80, 0.1)"
-                    : "rgba(244, 67, 54, 0.1)",
-                color: status === "active" ? "#4CAF50" : "#F44336",
-                "& .MuiChip-icon": {
-                  color: "inherit",
-                },
-              }}
-            />
-            {emailVerified && (
-              <Chip
-                label="Verified"
-                size="small"
-                icon={<VerifiedUser sx={{ fontSize: "14px !important" }} />}
-                sx={{
-                  height: "24px",
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  backgroundColor: "rgba(33, 150, 243, 0.1)",
-                  color: "#2196F3",
-                  "& .MuiChip-icon": {
-                    color: "inherit",
-                  },
-                }}
-              />
-            )}
-            <Chip
-              label={accountType || "FREE"}
-              size="small"
-              sx={{
-                height: "24px",
-                fontSize: "11px",
-                fontWeight: 700,
-                backgroundColor:
-                  accountType === "FREE"
-                    ? "rgba(33, 150, 243, 0.1)"
-                    : "rgba(156, 39, 176, 0.1)",
-                color: accountType === "FREE" ? "#2196F3" : "#9C27B0",
-                border: `1px solid ${
-                  accountType === "FREE" ? "#2196F3" : "#9C27B0"
-                }30`,
-              }}
-            />
-          </Stack>
-
-          <IconButton
-            className="action-btn"
+          {!image && (name?.charAt(0)?.toUpperCase() || <Person sx={{ fontSize: "16px" }} />)}
+        </Avatar>
+        <Stack sx={{ minWidth: 0 }}>
+          <Typography
+            title={name}
             sx={{
-              backgroundColor: "var(--primary-color)",
-              color: "#fff",
-              width: "32px",
-              height: "32px",
-              opacity: 0,
-              transform: "translateX(-10px)",
-              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              "&:hover": {
-                backgroundColor: "var(--primary-color-dark)",
-              },
+              fontSize: "12px",
+              fontWeight: 600,
+              color: "var(--text1)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              maxWidth: "160px",
             }}
           >
-            <ArrowForward sx={{ fontSize: "18px" }} />
-          </IconButton>
+            {name || "Unknown"}
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: "10px",
+              color: "var(--text4)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              maxWidth: "160px",
+            }}
+          >
+            {email}
+          </Typography>
         </Stack>
+      </Stack>
+
+      {/* Phone */}
+      <Typography
+        sx={{
+          fontSize: "11px",
+          fontWeight: 500,
+          color: "var(--text2)",
+          minWidth: "100px",
+          display: { xs: "none", md: "block" },
+        }}
+      >
+        {phoneNumber || "-"}
+      </Typography>
+
+      {/* Gender */}
+      <Typography
+        sx={{
+          fontSize: "11px",
+          color: "var(--text3)",
+          minWidth: "50px",
+          textAlign: "center",
+          display: { xs: "none", lg: "block" },
+        }}
+      >
+        {gender || "-"}
+      </Typography>
+
+      {/* Joined */}
+      <Typography
+        sx={{
+          fontSize: "10px",
+          color: "var(--text4)",
+          minWidth: "60px",
+          textAlign: "center",
+          display: { xs: "none", lg: "block" },
+        }}
+      >
+        {formatDate(createdAt)}
+      </Typography>
+
+      {/* Status Badges */}
+      <Stack direction="row" gap="4px" sx={{ minWidth: "140px", justifyContent: "flex-end" }}>
+        <Chip
+          label={status === "active" ? "Active" : "Blocked"}
+          size="small"
+          sx={{
+            height: "20px",
+            fontSize: "10px",
+            fontWeight: 600,
+            backgroundColor: status === "active" ? "rgba(76, 175, 80, 0.08)" : "rgba(244, 67, 54, 0.08)",
+            color: status === "active" ? "#4caf50" : "#f44336",
+            border: `1px solid ${status === "active" ? "#4caf5030" : "#f4433630"}`,
+            "& .MuiChip-label": { padding: "0 6px" },
+          }}
+        />
+        {emailVerified && (
+          <Chip
+            icon={<VerifiedUser sx={{ fontSize: "11px !important" }} />}
+            label="Verified"
+            size="small"
+            sx={{
+              height: "20px",
+              fontSize: "10px",
+              fontWeight: 600,
+              backgroundColor: "rgba(33, 150, 243, 0.08)",
+              color: "#2196F3",
+              border: "1px solid #2196F330",
+              "& .MuiChip-icon": { color: "#2196F3", ml: "4px" },
+              "& .MuiChip-label": { padding: "0 6px" },
+            }}
+          />
+        )}
+        <Chip
+          label={accountType || "FREE"}
+          size="small"
+          sx={{
+            height: "20px",
+            fontSize: "10px",
+            fontWeight: 600,
+            backgroundColor: accountType === "FREE" ? "rgba(33, 150, 243, 0.08)" : "rgba(156, 39, 176, 0.08)",
+            color: accountType === "FREE" ? "#2196F3" : "#9C27B0",
+            border: `1px solid ${accountType === "FREE" ? "#2196F3" : "#9C27B0"}30`,
+            "& .MuiChip-label": { padding: "0 6px" },
+          }}
+        />
       </Stack>
     </Stack>
   );
 }
-
-const InfoItem = ({ icon, label }) => (
-  <Stack direction="row" alignItems="center" gap="6px" minWidth="45%">
-    <Stack
-      sx={{
-        color: "var(--text3)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      {icon}
-    </Stack>
-    <Typography
-      sx={{
-        fontSize: "12px",
-        color: "var(--text2)",
-        fontWeight: 500,
-        whiteSpace: "nowrap",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-      }}
-    >
-      {label}
-    </Typography>
-  </Stack>
-);

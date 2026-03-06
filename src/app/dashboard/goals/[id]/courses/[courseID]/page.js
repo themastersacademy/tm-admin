@@ -8,9 +8,9 @@ import {
   Breadcrumbs,
   Link,
   Chip,
-  Box,
+  IconButton,
 } from "@mui/material";
-import { NavigateNext, Circle } from "@mui/icons-material";
+import { ArrowBack, Home } from "@mui/icons-material";
 import CustomTabs from "@/src/components/CustomTabs/CustomTabs";
 import Basic from "../components/Basic";
 import Videos from "../components/Videos";
@@ -44,7 +44,6 @@ export default function CourseID() {
         setGoal(data.data);
       }
     } catch (error) {
-      console.log(error);
     }
     setIsGoalLoading(false);
   };
@@ -64,7 +63,6 @@ export default function CourseID() {
         setCourse(data.data);
       }
     } catch (error) {
-      console.log(error);
     }
     setIsLoading(false);
   };
@@ -87,7 +85,6 @@ export default function CourseID() {
         showSnackbar(data.message, "error", "", "3000");
       }
     } catch (error) {
-      console.log(error);
       setIsLoading(false);
     }
   };
@@ -109,130 +106,169 @@ export default function CourseID() {
 
   return (
     <Stack
-      padding="24px"
-      gap="24px"
+      padding="16px"
+      gap="12px"
       sx={{ backgroundColor: "var(--bg-color)", minHeight: "100vh" }}
     >
-      {/* Custom Header */}
+      {/* Breadcrumb Bar */}
       <Stack
         direction="row"
         justifyContent="space-between"
         alignItems="center"
         sx={{
           backgroundColor: "var(--white)",
-          padding: "20px 24px",
-          borderRadius: "16px",
+          padding: "10px 16px",
+          borderRadius: "10px",
           border: "1px solid var(--border-color)",
         }}
       >
-        <Stack gap="8px">
-          {/* Breadcrumbs */}
+        <Stack direction="row" alignItems="center" gap="10px">
+          <IconButton
+            onClick={() => router.push(`/dashboard/goals/${id}`)}
+            sx={{
+              width: 28,
+              height: 28,
+              border: "1px solid var(--border-color)",
+              borderRadius: "7px",
+              "&:hover": {
+                backgroundColor: "var(--primary-color)",
+                borderColor: "var(--primary-color)",
+                "& svg": { color: "#fff" },
+              },
+            }}
+          >
+            <ArrowBack sx={{ fontSize: "14px", color: "var(--text2)", transition: "color 0.15s" }} />
+          </IconButton>
           <Breadcrumbs
-            separator={<NavigateNext fontSize="small" />}
-            aria-label="breadcrumb"
+            separator="›"
+            sx={{
+              fontSize: "12px",
+              "& .MuiBreadcrumbs-separator": { color: "var(--text4)" },
+            }}
           >
             <Link
               underline="hover"
               color="inherit"
               onClick={() => router.push(`/dashboard/goals/${id}`)}
-              sx={{ cursor: "pointer", fontFamily: "Lato", fontSize: "14px" }}
-            >
-              {isGoalLoading ? <Skeleton width={60} /> : goal.title || "Goal"}
-            </Link>
-            <Typography
-              color="text.primary"
-              sx={{ fontFamily: "Lato", fontSize: "14px", fontWeight: 600 }}
-            >
-              {isLoading ? <Skeleton width={100} /> : course.title || "Course"}
-            </Typography>
-          </Breadcrumbs>
-
-          {/* Title & Status */}
-          <Stack direction="row" alignItems="center" gap="16px">
-            <Typography
               sx={{
-                fontFamily: "Lato",
-                fontSize: "24px",
-                fontWeight: 800,
-                color: "var(--text1)",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                color: "var(--text4)",
+                fontSize: "12px",
+                cursor: "pointer",
+                "&:hover": { color: "var(--primary-color)" },
               }}
             >
-              {isLoading ? <Skeleton width={200} /> : course.title}
+              {isGoalLoading ? <Skeleton width={80} height={16} /> : goal.title || "Goal"}
+            </Link>
+            <Typography sx={{ fontSize: "12px", color: "var(--text1)", fontWeight: 600 }}>
+              {isLoading ? <Skeleton width={100} height={16} /> : course.title || "Course"}
             </Typography>
-            {!isLoading && (
-              <Chip
-                icon={
-                  <Circle
-                    sx={{
-                      fontSize: "10px !important",
-                      color: course.isLive ? "#2e7d32" : "#ed6c02",
-                    }}
-                  />
-                }
-                label={course.isLive ? "Published" : "Draft"}
-                size="small"
-                sx={{
-                  backgroundColor: course.isLive
-                    ? "rgba(46, 125, 50, 0.1)"
-                    : "rgba(237, 108, 2, 0.1)",
-                  color: course.isLive ? "#2e7d32" : "#ed6c02",
-                  fontWeight: 700,
-                  fontFamily: "Lato",
-                  border: "1px solid",
-                  borderColor: course.isLive
-                    ? "rgba(46, 125, 50, 0.2)"
-                    : "rgba(237, 108, 2, 0.2)",
-                }}
-              />
-            )}
-          </Stack>
+          </Breadcrumbs>
         </Stack>
 
-        {/* Actions */}
         <Button
           variant="contained"
           onClick={handlePublish}
           disabled={isLoading}
           disableElevation
           sx={{
-            backgroundColor: course.isLive
-              ? "var(--white)"
-              : "var(--primary-color)",
-            color: course.isLive ? "var(--text1)" : "var(--white)",
-            border: course.isLive ? "1px solid var(--border-color)" : "none",
             textTransform: "none",
+            backgroundColor: course.isLive ? "#FF9800" : "#4CAF50",
+            color: "#fff",
+            borderRadius: "8px",
+            padding: "5px 16px",
             fontWeight: 600,
-            fontFamily: "Lato",
-            padding: "8px 24px",
+            fontSize: "12px",
+            height: "32px",
             "&:hover": {
-              backgroundColor: course.isLive
-                ? "var(--bg-color)"
-                : "var(--primary-color-dark)",
+              backgroundColor: course.isLive ? "#F57C00" : "#388E3C",
+            },
+            "&:disabled": {
+              backgroundColor: "#9E9E9E",
+              color: "#fff",
             },
           }}
         >
           {isLoading ? (
-            <CircularProgress size={20} color="inherit" />
+            <CircularProgress size={14} sx={{ color: "white" }} />
           ) : course.isLive ? (
-            "Unpublish Course"
+            "Unpublish"
           ) : (
             "Publish Course"
           )}
         </Button>
       </Stack>
 
-      {/* Tabs Content */}
+      {/* Title Row */}
       <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
         sx={{
-          padding: "24px",
-          border: "1px solid var(--border-color)",
-          borderRadius: "16px",
           backgroundColor: "var(--white)",
-          minHeight: "60vh",
+          padding: "12px 16px",
+          borderRadius: "10px",
+          border: "1px solid var(--border-color)",
         }}
       >
-        <CustomTabs tabs={tabs} fetchCourse={fetchCourse} />
+        <Stack direction="row" alignItems="center" gap="10px">
+          {isLoading ? (
+            <Skeleton width={200} height={22} />
+          ) : (
+            <>
+              <Typography
+                sx={{
+                  fontSize: "16px",
+                  fontWeight: 700,
+                  color: "var(--text1)",
+                }}
+              >
+                {course.title}
+              </Typography>
+              <Chip
+                label={course.isLive ? "Published" : "Draft"}
+                size="small"
+                sx={{
+                  height: "20px",
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  backgroundColor: course.isLive
+                    ? "rgba(76, 175, 80, 0.08)"
+                    : "rgba(0, 0, 0, 0.04)",
+                  color: course.isLive ? "#4CAF50" : "#9E9E9E",
+                  border: `1px solid ${course.isLive ? "#4caf5030" : "#00000015"}`,
+                  "& .MuiChip-label": { padding: "0 6px" },
+                }}
+              />
+            </>
+          )}
+        </Stack>
+        {course.language?.length > 0 && (
+          <Stack direction="row" gap="4px">
+            {course.language.map((lang, i) => (
+              <Chip
+                key={i}
+                label={lang}
+                size="small"
+                sx={{
+                  height: "20px",
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  backgroundColor: "rgba(24, 113, 99, 0.06)",
+                  color: "var(--primary-color)",
+                  border: "1px solid rgba(24, 113, 99, 0.12)",
+                  "& .MuiChip-label": { padding: "0 6px" },
+                }}
+              />
+            ))}
+          </Stack>
+        )}
       </Stack>
+
+      {/* Tabs Content */}
+      <CustomTabs tabs={tabs} fetchCourse={fetchCourse} />
     </Stack>
   );
 }

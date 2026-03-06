@@ -79,7 +79,7 @@ export async function getExamsByBatchID(batchID) {
         // Fetch batch metadata
         const batchKeys = batchList.map((id) => ({
           pKey: `BATCH#${id}`,
-          sKey: `BATCH#${id}`,
+          sKey: "BATCHES",
         }));
 
         const batchGetParams = {

@@ -1,13 +1,12 @@
 "use client";
 import {
   Card,
+  CardActionArea,
   Stack,
   Typography,
   Chip,
   Box,
-  Divider,
   IconButton,
-  Tooltip,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -20,11 +19,11 @@ import {
   Quiz,
   Timer,
   Grading,
-  Edit,
-  Visibility,
   CheckCircle,
   Cancel,
   Close,
+  Groups,
+  East,
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -51,27 +50,6 @@ export default function ScheduledExamCard({
     batchMeta,
   } = exam;
 
-  // Color themes for variety
-  const colorThemes = [
-    { main: "#187163", light: "#e0f2f0", icon: "#187163" }, // Primary Green
-    { main: "#1976d2", light: "#e3f2fd", icon: "#1565c0" }, // Blue
-    { main: "#7b1fa2", light: "#f3e5f5", icon: "#6a1b9a" }, // Purple
-    { main: "#d32f2f", light: "#ffebee", icon: "#c62828" }, // Red
-    { main: "#ed6c02", light: "#fff4e5", icon: "#e65100" }, // Orange
-    { main: "#0288d1", light: "#e1f5fe", icon: "#01579b" }, // Cyan
-  ];
-
-  // Select color based on exam ID hash
-  const getColorTheme = () => {
-    if (!id) return colorThemes[0];
-    const hash = id
-      .split("")
-      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return colorThemes[hash % colorThemes.length];
-  };
-
-  const colorTheme = getColorTheme();
-
   const formatDateTime = (timestamp) => {
     if (!timestamp) return "Not Set";
     const date = new Date(timestamp);
@@ -85,12 +63,10 @@ export default function ScheduledExamCard({
   };
 
   const formatDuration = (minutes) => {
-    if (!minutes) return "Not Set";
+    if (!minutes) return "N/A";
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    if (hours > 0) {
-      return `${hours}h ${mins}m`;
-    }
+    if (hours > 0) return `${hours}h ${mins}m`;
     return `${mins}m`;
   };
 
@@ -98,359 +74,295 @@ export default function ScheduledExamCard({
   const isEnded = !isLifeTime && endTimeStamp && endTimeStamp < Date.now();
   const isOngoing = isLive && !isEnded;
 
-  const getStatusColor = () => {
-    if (isOngoing) return { bg: "#e8f5e9", text: "#2e7d32" };
-    if (isEnded) return { bg: "#ffebee", text: "#c62828" };
-    if (isUpcoming) return { bg: "#e3f2fd", text: "#1565c0" };
-    return { bg: "#f5f5f5", text: "#757575" };
+  const getStatus = () => {
+    if (isOngoing)
+      return {
+        label: "Live",
+        color: "#2e7d32",
+        bg: "#e8f5e9",
+        icon: <CheckCircle sx={{ fontSize: "14px" }} />,
+      };
+    if (isEnded)
+      return {
+        label: "Ended",
+        color: "#c62828",
+        bg: "#ffebee",
+        icon: <Cancel sx={{ fontSize: "14px" }} />,
+      };
+    if (isUpcoming)
+      return {
+        label: "Scheduled",
+        color: "#1565c0",
+        bg: "#e3f2fd",
+        icon: <Schedule sx={{ fontSize: "14px" }} />,
+      };
+    return { label: "Draft", color: "#757575", bg: "#f5f5f5", icon: null };
   };
 
-  const getStatusLabel = () => {
-    if (isOngoing) return "Live";
-    if (isEnded) return "Ended";
-    if (isUpcoming) return "Scheduled";
-    return "Draft";
-  };
+  const status = getStatus();
 
-  const statusColor = getStatusColor();
+  const handleNavigate = () => {
+    if (onClick) onClick();
+    else if (viewPath) router.push(viewPath);
+    else router.push(`/dashboard/scheduleTest/${id}`);
+  };
 
   return (
     <>
       <Card
         elevation={0}
         sx={{
-          width: "350px",
+          width: "100%",
           border: "1px solid var(--border-color)",
-          borderRadius: "12px",
-          transition: "all 0.2s ease-in-out",
-          cursor: "pointer",
+          borderRadius: "14px",
+          overflow: "hidden",
+          transition: "all 0.2s ease",
           "&:hover": {
-            transform: "translateY(-4px)",
-            boxShadow: "0 12px 24px -10px rgba(0, 0, 0, 0.1)",
+            transform: "translateY(-3px)",
+            boxShadow: "0 8px 24px -8px rgba(0,0,0,0.12)",
             borderColor: "var(--primary-color)",
           },
         }}
-        onClick={() => {
-          if (onClick) {
-            onClick();
-          } else if (viewPath) {
-            router.push(viewPath);
-          } else {
-            router.push(`/dashboard/scheduleTest/${id}`);
-          }
-        }}
       >
-        <Box sx={{ padding: "20px" }}>
-          <Stack gap="16px">
-            {/* Header */}
+        <CardActionArea onClick={handleNavigate} sx={{ padding: "18px" }}>
+          <Stack gap="14px">
+            {/* Top: Status + Batch chips */}
             <Stack
-              flexDirection="row"
+              direction="row"
               justifyContent="space-between"
-              alignItems="flex-start"
+              alignItems="center"
             >
-              <Stack
+              <Chip
+                icon={status.icon}
+                label={status.label}
+                size="small"
                 sx={{
-                  width: "48px",
-                  height: "48px",
-                  borderRadius: "50%",
-                  backgroundColor: colorTheme.light,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
+                  height: "24px",
+                  backgroundColor: status.bg,
+                  color: status.color,
+                  fontWeight: 600,
+                  fontSize: "11px",
+                  "& .MuiChip-icon": { color: "inherit" },
                 }}
-              >
-                <Quiz sx={{ color: colorTheme.icon, fontSize: 24 }} />
-              </Stack>
-              <Stack direction="row" gap="6px">
-                {batchList && batchList.length > 0 && (
-                  <Chip
-                    label={`${batchList.length} ${
-                      batchList.length === 1 ? "Batch" : "Batches"
-                    }`}
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowBatchDialog(true);
-                    }}
-                    sx={{
-                      backgroundColor: colorTheme.light,
-                      color: colorTheme.main,
-                      fontWeight: 700,
-                      fontSize: "11px",
-                      height: "24px",
-                      border: `1px solid ${colorTheme.main}`,
-                      cursor: "pointer",
-                      "&:hover": {
-                        backgroundColor: colorTheme.main,
-                        color: "#fff",
-                      },
-                    }}
-                  />
-                )}
+              />
+              {batchList && batchList.length > 0 && (
                 <Chip
-                  icon={
-                    isOngoing ? (
-                      <CheckCircle fontSize="small" />
-                    ) : isEnded ? (
-                      <Cancel fontSize="small" />
-                    ) : isUpcoming ? (
-                      <Schedule fontSize="small" />
-                    ) : null
-                  }
-                  label={getStatusLabel()}
+                  icon={<Groups sx={{ fontSize: "14px !important" }} />}
+                  label={`${batchList.length} ${batchList.length === 1 ? "Batch" : "Batches"}`}
                   size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowBatchDialog(true);
+                  }}
                   sx={{
-                    backgroundColor: statusColor.bg,
-                    color: statusColor.text,
+                    height: "24px",
+                    backgroundColor: "rgba(24, 113, 99, 0.08)",
+                    color: "var(--primary-color)",
                     fontWeight: 600,
                     fontSize: "11px",
-                    height: "24px",
-                    "& .MuiChip-icon": {
-                      color: "inherit",
+                    border: "1px solid rgba(24, 113, 99, 0.2)",
+                    "& .MuiChip-icon": { color: "var(--primary-color)" },
+                    "&:hover": {
+                      backgroundColor: "var(--primary-color)",
+                      color: "#fff",
+                      "& .MuiChip-icon": { color: "#fff" },
                     },
                   }}
                 />
+              )}
+            </Stack>
+
+            {/* Title + Icon row */}
+            <Stack direction="row" alignItems="flex-start" gap="12px">
+              <Stack
+                sx={{
+                  width: "42px",
+                  height: "42px",
+                  borderRadius: "10px",
+                  backgroundColor: "rgba(24, 113, 99, 0.08)",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <Quiz sx={{ color: "var(--primary-color)", fontSize: 22 }} />
+              </Stack>
+              <Stack flex={1} minWidth={0}>
+                <Typography
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: "15px",
+                    color: "var(--text1)",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    lineHeight: 1.4,
+                    minHeight: "21px",
+                  }}
+                >
+                  {title || "Untitled Exam"}
+                </Typography>
+                {startTimeStamp && (
+                  <Typography
+                    sx={{
+                      fontSize: "12px",
+                      color: "var(--text3)",
+                      mt: "4px",
+                    }}
+                  >
+                    {formatDateTime(startTimeStamp)}
+                  </Typography>
+                )}
               </Stack>
             </Stack>
 
-            {/* Title */}
-            <Box>
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 700,
-                  fontSize: "18px",
-                  color: "var(--text1)",
-                  mb: 0.5,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  display: "-webkit-box",
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: "vertical",
-                  minHeight: "48px",
-                }}
-              >
-                {title || "Untitled Exam"}
-              </Typography>
-            </Box>
-
-            <Divider sx={{ borderStyle: "dashed" }} />
-
-            {/* Exam Details */}
-            <Stack gap="12px">
-              {/* Start Time */}
+            {/* Stats row */}
+            <Stack
+              direction="row"
+              sx={{
+                backgroundColor: "var(--bg-color)",
+                borderRadius: "10px",
+                padding: "10px 14px",
+              }}
+            >
               <Stack
-                flexDirection="row"
+                direction="row"
                 alignItems="center"
-                gap="8px"
-                justifyContent="space-between"
+                gap="6px"
+                flex={1}
+                justifyContent="center"
               >
-                <Stack flexDirection="row" alignItems="center" gap="8px">
-                  <Schedule sx={{ fontSize: 18, color: "var(--text3)" }} />
+                <Timer sx={{ fontSize: 16, color: "var(--text3)" }} />
+                <Stack>
                   <Typography
-                    variant="body2"
-                    color="var(--text3)"
-                    fontSize="12px"
-                  >
-                    Start Time
-                  </Typography>
-                </Stack>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: 600,
-                    fontSize: "12px",
-                    color: "var(--text2)",
-                  }}
-                >
-                  {formatDateTime(startTimeStamp)}
-                </Typography>
-              </Stack>
-
-              {/* End Time */}
-              {endTimeStamp && (
-                <Stack
-                  flexDirection="row"
-                  alignItems="center"
-                  gap="8px"
-                  justifyContent="space-between"
-                >
-                  <Stack flexDirection="row" alignItems="center" gap="8px">
-                    <Schedule sx={{ fontSize: 18, color: "var(--text3)" }} />
-                    <Typography
-                      variant="body2"
-                      color="var(--text3)"
-                      fontSize="12px"
-                    >
-                      End Time
-                    </Typography>
-                  </Stack>
-                  <Typography
-                    variant="body2"
                     sx={{
-                      fontWeight: 600,
-                      fontSize: "12px",
-                      color: "var(--text2)",
+                      fontSize: "10px",
+                      color: "var(--text3)",
+                      lineHeight: 1.2,
                     }}
                   >
-                    {formatDateTime(endTimeStamp)}
+                    Duration
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "var(--text1)",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {formatDuration(duration)}
                   </Typography>
                 </Stack>
-              )}
-
-              {/* Duration & Marks */}
+              </Stack>
+              <Box
+                sx={{ width: "1px", backgroundColor: "var(--border-color)" }}
+              />
               <Stack
-                flexDirection="row"
+                direction="row"
                 alignItems="center"
-                gap="16px"
-                sx={{
-                  backgroundColor: colorTheme.light,
-                  padding: "10px 12px",
-                  borderRadius: "8px",
-                }}
+                gap="6px"
+                flex={1}
+                justifyContent="center"
               >
-                <Stack
-                  flexDirection="row"
-                  alignItems="center"
-                  gap="6px"
-                  flex={1}
-                >
-                  <Timer sx={{ fontSize: 18, color: colorTheme.icon }} />
-                  <Stack>
-                    <Typography
-                      variant="caption"
-                      color="var(--text3)"
-                      fontSize="10px"
-                    >
-                      Duration
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      fontWeight="600"
-                      fontSize="13px"
-                      color="var(--text1)"
-                    >
-                      {formatDuration(duration)}
-                    </Typography>
-                  </Stack>
-                </Stack>
-                <Divider orientation="vertical" flexItem />
-                <Stack
-                  flexDirection="row"
-                  alignItems="center"
-                  gap="6px"
-                  flex={1}
-                >
-                  <Grading sx={{ fontSize: 18, color: colorTheme.icon }} />
-                  <Stack>
-                    <Typography
-                      variant="caption"
-                      color="var(--text3)"
-                      fontSize="10px"
-                    >
-                      Marks
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      fontWeight="600"
-                      fontSize="13px"
-                      color="var(--text1)"
-                    >
-                      {totalMarks || 0}
-                    </Typography>
-                  </Stack>
+                <Grading sx={{ fontSize: 16, color: "var(--text3)" }} />
+                <Stack>
+                  <Typography
+                    sx={{
+                      fontSize: "10px",
+                      color: "var(--text3)",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    Marks
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "var(--text1)",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {totalMarks || 0}
+                  </Typography>
                 </Stack>
               </Stack>
-
-              {/* Questions Count */}
+              <Box
+                sx={{ width: "1px", backgroundColor: "var(--border-color)" }}
+              />
               <Stack
-                flexDirection="row"
+                direction="row"
                 alignItems="center"
-                gap="8px"
-                justifyContent="space-between"
+                gap="6px"
+                flex={1}
+                justifyContent="center"
               >
-                <Stack flexDirection="row" alignItems="center" gap="8px">
-                  <Quiz sx={{ fontSize: 18, color: "var(--text3)" }} />
+                <Quiz sx={{ fontSize: 16, color: "var(--text3)" }} />
+                <Stack>
                   <Typography
-                    variant="body2"
-                    color="var(--text3)"
-                    fontSize="12px"
+                    sx={{
+                      fontSize: "10px",
+                      color: "var(--text3)",
+                      lineHeight: 1.2,
+                    }}
                   >
                     Questions
                   </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "var(--text1)",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {totalQuestions || 0}
+                  </Typography>
                 </Stack>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: 600,
-                    fontSize: "12px",
-                    color: "var(--text2)",
-                  }}
-                >
-                  {totalQuestions || 0}
-                </Typography>
               </Stack>
             </Stack>
 
-            {/* Action Buttons */}
+            {/* Bottom: End time + View button */}
             <Stack
-              flexDirection="row"
-              gap="8px"
-              pt="8px"
-              onClick={(e) => e.stopPropagation()}
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
             >
-              <Tooltip title="View Details" arrow>
-                <IconButton
-                  size="small"
-                  onClick={() => {
-                    if (viewPath) {
-                      router.push(viewPath);
-                    } else {
-                      router.push(`/dashboard/scheduleTest/${id}`);
-                    }
-                  }}
+              {endTimeStamp ? (
+                <Typography sx={{ fontSize: "11px", color: "var(--text3)" }}>
+                  Ends: {formatDateTime(endTimeStamp)}
+                </Typography>
+              ) : (
+                <Box />
+              )}
+              <Stack
+                direction="row"
+                alignItems="center"
+                gap="4px"
+                sx={{
+                  color: "var(--primary-color)",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                }}
+              >
+                <Typography
                   sx={{
-                    flex: 1,
-                    borderRadius: "8px",
-                    border: "1px solid var(--border-color)",
+                    fontSize: "12px",
+                    fontWeight: 600,
                     color: "var(--primary-color)",
-                    "&:hover": {
-                      backgroundColor: "var(--primary-color-acc-2)",
-                      borderColor: "var(--primary-color)",
-                    },
                   }}
                 >
-                  <Visibility fontSize="small" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Edit Exam" arrow>
-                <IconButton
-                  size="small"
-                  onClick={() => {
-                    if (editPath) {
-                      router.push(editPath);
-                    } else {
-                      router.push(`/dashboard/scheduleTest/${id}`);
-                    }
-                  }}
-                  sx={{
-                    flex: 1,
-                    borderRadius: "8px",
-                    border: "1px solid var(--border-color)",
-                    color: "var(--text2)",
-                    "&:hover": {
-                      backgroundColor: "var(--bg-color)",
-                      borderColor: "var(--primary-color)",
-                      color: "var(--primary-color)",
-                    },
-                  }}
-                >
-                  <Edit fontSize="small" />
-                </IconButton>
-              </Tooltip>
+                  View Details
+                </Typography>
+                <East sx={{ fontSize: 14 }} />
+              </Stack>
             </Stack>
           </Stack>
-        </Box>
+        </CardActionArea>
       </Card>
 
       {/* Batch List Dialog */}
@@ -459,16 +371,17 @@ export default function ScheduledExamCard({
         onClose={() => setShowBatchDialog(false)}
         maxWidth="xs"
         fullWidth
+        PaperProps={{ sx: { borderRadius: "16px" } }}
       >
         <DialogTitle
           sx={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            paddingBottom: "12px",
+            pb: "12px",
           }}
         >
-          <Typography variant="h6" fontWeight="700">
+          <Typography variant="h6" fontWeight="700" fontSize="16px">
             Scheduled Batches
           </Typography>
           <IconButton
@@ -487,22 +400,42 @@ export default function ScheduledExamCard({
                   key={batch.id}
                   sx={{
                     borderRadius: "8px",
-                    marginBottom: index < batchMeta.length - 1 ? "8px" : 0,
+                    marginBottom: index < batchMeta.length - 1 ? "6px" : 0,
                     backgroundColor: "var(--bg-color)",
                     "&:hover": {
-                      backgroundColor: colorTheme.light,
+                      backgroundColor: "rgba(24, 113, 99, 0.06)",
                     },
                   }}
                 >
                   <ListItemText
                     primary={batch.title}
-                    secondary={`ID: ${batch.id.slice(0, 8)}...`}
+                    primaryTypographyProps={{
+                      fontWeight: 600,
+                      fontSize: "14px",
+                    }}
+                  />
+                </ListItem>
+              ))
+            ) : batchList && batchList.length > 0 ? (
+              batchList.map((batchId, index) => (
+                <ListItem
+                  key={batchId}
+                  sx={{
+                    borderRadius: "8px",
+                    marginBottom: index < batchList.length - 1 ? "6px" : 0,
+                    backgroundColor: "var(--bg-color)",
+                  }}
+                >
+                  <ListItemText
+                    primary={`Batch ${index + 1}`}
+                    secondary={batchId}
                     primaryTypographyProps={{
                       fontWeight: 600,
                       fontSize: "14px",
                     }}
                     secondaryTypographyProps={{
-                      fontSize: "12px",
+                      fontSize: "11px",
+                      color: "var(--text3)",
                     }}
                   />
                 </ListItem>
@@ -512,6 +445,7 @@ export default function ScheduledExamCard({
                 color="var(--text3)"
                 textAlign="center"
                 padding="20px"
+                fontSize="14px"
               >
                 No batches scheduled
               </Typography>

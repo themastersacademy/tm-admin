@@ -199,7 +199,6 @@ export function validateSubscription(subscription) {
  * @returns {Array}  a newly sorted array of plans
  */
 export function sortSubscriptionPlans(plans) {
-  console.log("plans", plans);
   // Define the order for known types:
   const typeOrder = {
     MONTHLY: 0,

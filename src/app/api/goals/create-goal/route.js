@@ -12,7 +12,6 @@ export async function POST(request) {
     const response = await createGoals({ title, icon });
     return Response.json(response, { status: 201 });
   } catch (error) {
-    console.log(error);
     return Response.json(
       { success: false, message: "Internal server error" },
       { status: 500 }

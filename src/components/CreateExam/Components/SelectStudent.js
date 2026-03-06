@@ -167,45 +167,48 @@ export default function SelectStudent({
   };
 
   return (
-    <Stack gap="10px">
-      {/* Display Batch Students Summary */}
+    <Stack gap="8px">
+      {/* Batch Students Summary */}
       {exam.batchList && exam.batchList.length > 0 && (
-        <Box
+        <Stack
+          flexDirection="row"
+          alignItems="center"
+          gap="8px"
           sx={{
-            padding: "12px",
+            padding: "8px 12px",
             backgroundColor: "var(--primary-color-acc-2)",
             borderRadius: "8px",
-            border: "1px solid var(--primary-color)",
+            border: "1px solid rgba(24, 113, 99, 0.2)",
           }}
         >
-          <Stack flexDirection="row" alignItems="center" gap="10px">
-            {fetchingBatchStudents ? (
-              <CircularProgress
-                size={20}
-                sx={{ color: "var(--primary-color)" }}
-              />
-            ) : (
-              <CheckCircle
-                sx={{ color: "var(--primary-color)", fontSize: "20px" }}
-              />
-            )}
-            <Typography
-              sx={{
-                fontSize: "14px",
-                fontWeight: 600,
-                color: "var(--primary-color)",
-              }}
-            >
-              {fetchingBatchStudents
-                ? "Loading students from batches..."
-                : `${batchStudents.length} students included from selected batches`}
-            </Typography>
-          </Stack>
-        </Box>
+          {fetchingBatchStudents ? (
+            <CircularProgress
+              size={16}
+              sx={{ color: "var(--primary-color)" }}
+            />
+          ) : (
+            <CheckCircle
+              sx={{ color: "var(--primary-color)", fontSize: "18px" }}
+            />
+          )}
+          <Typography
+            sx={{
+              fontSize: "13px",
+              fontWeight: 600,
+              color: "var(--primary-color)",
+              fontFamily: "Lato",
+            }}
+          >
+            {fetchingBatchStudents
+              ? "Loading batch students..."
+              : `${batchStudents.length} students from batches`}
+          </Typography>
+        </Stack>
       )}
 
       <Autocomplete
         multiple
+        size="small"
         id="student-select"
         open={open}
         onOpen={() => setOpen(true)}
@@ -221,17 +224,68 @@ export default function SelectStudent({
         onChange={handleChange}
         value={selectedStudents}
         disabled={isLive}
+        ListboxProps={{
+          sx: {
+            maxHeight: 220,
+            "& .MuiAutocomplete-option": {
+              padding: "6px 10px",
+              borderRadius: "4px",
+              mx: "4px",
+              my: "2px",
+              "&:hover": {
+                backgroundColor: "rgba(24, 113, 99, 0.06)",
+              },
+              '&[aria-selected="true"]': {
+                backgroundColor: "var(--primary-color-acc-2)",
+              },
+            },
+          },
+        }}
+        componentsProps={{
+          paper: {
+            sx: {
+              borderRadius: "8px",
+              mt: "4px",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+            },
+          },
+        }}
         renderInput={(params) => (
           <TextField
             {...params}
             label="Search and Select Additional Students"
             placeholder="Type name or email..."
+            size="small"
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "8px",
+                fontSize: "13px",
+                "& fieldset": {
+                  borderColor: "var(--border-color)",
+                },
+                "&:hover fieldset": {
+                  borderColor: "var(--primary-color)",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "var(--primary-color)",
+                },
+              },
+              "& .MuiInputLabel-root": {
+                fontSize: "13px",
+                "&.Mui-focused": {
+                  color: "var(--primary-color)",
+                },
+              },
+            }}
             InputProps={{
               ...params.InputProps,
               endAdornment: (
                 <>
                   {loading ? (
-                    <CircularProgress color="inherit" size={20} />
+                    <CircularProgress
+                      size={16}
+                      sx={{ color: "var(--primary-color)" }}
+                    />
                   ) : null}
                   {params.InputProps.endAdornment}
                 </>
@@ -245,20 +299,45 @@ export default function SelectStudent({
             <li key={key} {...otherProps}>
               <Stack
                 direction="row"
-                gap="10px"
+                gap="8px"
                 alignItems="center"
                 sx={{ opacity: option.disabled ? 0.5 : 1 }}
               >
                 <Avatar
                   src={option.image}
                   alt={option.name}
-                  sx={{ width: 24, height: 24 }}
+                  sx={{ width: 24, height: 24, fontSize: "12px" }}
                 />
                 <Stack>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {option.name} {option.disabled && "(Already in Batch)"}
+                  <Typography
+                    sx={{
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      fontFamily: "Lato",
+                      color: "var(--text1)",
+                    }}
+                  >
+                    {option.name}{" "}
+                    {option.disabled && (
+                      <Typography
+                        component="span"
+                        sx={{
+                          fontSize: "11px",
+                          color: "var(--text3)",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        (in batch)
+                      </Typography>
+                    )}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    sx={{
+                      fontSize: "11px",
+                      color: "var(--text3)",
+                      fontFamily: "Lato",
+                    }}
+                  >
                     {option.email}
                   </Typography>
                 </Stack>
@@ -273,8 +352,33 @@ export default function SelectStudent({
               <Chip
                 key={option.id}
                 label={option.name}
+                size="small"
                 {...tagProps}
-                avatar={<Avatar src={option.image} />}
+                avatar={
+                  <Avatar
+                    src={option.image}
+                    sx={{ width: 20, height: 20 }}
+                  />
+                }
+                sx={{
+                  height: "26px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  backgroundColor: "var(--primary-color-acc-2)",
+                  color: "var(--primary-color)",
+                  border: "1px solid rgba(24, 113, 99, 0.2)",
+                  "& .MuiChip-deleteIcon": {
+                    color: "rgba(24, 113, 99, 0.5)",
+                    fontSize: "16px",
+                    "&:hover": {
+                      color: "var(--primary-color)",
+                    },
+                  },
+                  "& .MuiChip-avatar": {
+                    width: 20,
+                    height: 20,
+                  },
+                }}
               />
             );
           })

@@ -318,29 +318,23 @@ export default function AllQuestions() {
           <>
             <Button
               key="Import"
-              variant="contained"
+              variant="outlined"
               endIcon={<ExpandMore />}
               sx={{
-                background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
-                color: "#FFFFFF",
+                border: "1px solid var(--border-color)",
+                color: "var(--text2)",
                 textTransform: "none",
-                borderRadius: "10px",
-                padding: "10px 20px",
-                fontWeight: 700,
-                fontSize: "14px",
-                boxShadow: "0 4px 12px rgba(255, 152, 0, 0.25)",
-                minWidth: "120px",
-                height: "48px",
-                transition: "all 0.2s ease",
+                borderRadius: "8px",
+                padding: "5px 14px",
+                fontWeight: 600,
+                fontSize: "12px",
+                height: "34px",
                 "&:hover": {
-                  background:
-                    "linear-gradient(135deg, #F57C00 0%, #E65100 100%)",
-                  boxShadow: "0 6px 16px rgba(255, 152, 0, 0.35)",
-                  transform: "translateY(-1px)",
+                  borderColor: "var(--primary-color)",
+                  backgroundColor: "rgba(24, 113, 99, 0.04)",
                 },
               }}
               onClick={importDialogOpen}
-              disableElevation
             >
               Import
             </Button>
@@ -350,23 +344,14 @@ export default function AllQuestions() {
               startIcon={<Add />}
               onClick={createDialogOpen}
               sx={{
-                background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
-                color: "#FFFFFF",
+                backgroundColor: "var(--primary-color)",
                 textTransform: "none",
-                borderRadius: "10px",
-                padding: "10px 24px",
-                fontWeight: 700,
-                fontSize: "14px",
-                boxShadow: "0 4px 12px rgba(255, 152, 0, 0.25)",
-                minWidth: "160px",
-                height: "48px",
-                "&:hover": {
-                  background:
-                    "linear-gradient(135deg, #F57C00 0%, #E65100 100%)",
-                  boxShadow: "0 6px 16px rgba(255, 152, 0, 0.35)",
-                  transform: "translateY(-1px)",
-                },
-                transition: "all 0.2s ease",
+                borderRadius: "8px",
+                padding: "5px 16px",
+                fontWeight: 600,
+                fontSize: "12px",
+                height: "34px",
+                "&:hover": { backgroundColor: "var(--primary-color-dark)" },
               }}
               disableElevation
             >

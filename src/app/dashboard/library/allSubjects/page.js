@@ -5,7 +5,7 @@ import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
 import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
 import { apiFetch } from "@/src/lib/apiFetch";
 import { Add } from "@mui/icons-material";
-import { Button, Stack, Box, Pagination } from "@mui/material";
+import { Button, Stack, Box, Pagination, Typography } from "@mui/material";
 import { useEffect, useState, useCallback, useContext, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { enqueueSnackbar } from "notistack";
@@ -218,18 +218,9 @@ export default function AllSubjects() {
             icon: <Add />,
             onClick: dialogOpen,
             sx: {
-              background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
+              backgroundColor: "var(--primary-color)",
               color: "white",
-              textTransform: "none",
-              borderRadius: "10px",
-              padding: "10px 24px",
-              fontWeight: 600,
-              minWidth: "160px",
-              boxShadow: "0 4px 12px rgba(255, 152, 0, 0.3)",
-              "&:hover": {
-                background: "linear-gradient(135deg, #F57C00 0%, #E65100 100%)",
-                boxShadow: "0 6px 16px rgba(255, 152, 0, 0.4)",
-              },
+              "&:hover": { backgroundColor: "var(--primary-color-dark)" },
             },
           },
         ]}
@@ -267,8 +258,8 @@ export default function AllSubjects() {
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-            gap: "24px",
+            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+            gap: "20px",
             width: "100%",
             alignContent: "start",
           }}
@@ -301,23 +292,60 @@ export default function AllSubjects() {
             )
           ) : (
             Array.from({ length: 6 }).map((_, index) => (
-              <SecondaryCardSkeleton key={index} />
+              <SecondaryCardSkeleton key={index} variant="folder" />
             ))
           )}
         </Box>
 
         {/* Pagination */}
         {!isLoading && totalPages > 1 && (
-          <Stack alignItems="center" mt={4}>
+          <Stack
+            direction="row"
+            justifyContent="center"
+            alignItems="center"
+            gap={1.5}
+            mt={4}
+            pt={3}
+            borderTop="1px solid var(--border-color)"
+          >
+            <Typography
+              sx={{ fontSize: "13px", color: "var(--text3)", fontWeight: 500 }}
+            >
+              Page {page} of {totalPages}
+            </Typography>
             <Pagination
               count={totalPages}
               page={page}
               onChange={handlePageChange}
-              color="primary"
               shape="rounded"
               sx={{
                 "& .MuiPaginationItem-root": {
                   fontWeight: 600,
+                  fontSize: "14px",
+                  minWidth: "36px",
+                  height: "36px",
+                  borderRadius: "10px",
+                  color: "var(--text2)",
+                  border: "1px solid var(--border-color)",
+                  "&:hover": {
+                    backgroundColor: "rgba(24, 113, 99, 0.08)",
+                    borderColor: "var(--primary-color)",
+                  },
+                  "&.Mui-selected": {
+                    backgroundColor: "var(--primary-color)",
+                    color: "white",
+                    borderColor: "var(--primary-color)",
+                    "&:hover": {
+                      backgroundColor: "var(--primary-color-dark)",
+                    },
+                  },
+                },
+                "& .MuiPaginationItem-previousNext": {
+                  border: "1px solid var(--border-color)",
+                  "&:hover": {
+                    backgroundColor: "rgba(24, 113, 99, 0.08)",
+                    borderColor: "var(--primary-color)",
+                  },
                 },
               }}
             />

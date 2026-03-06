@@ -1,15 +1,7 @@
 "use client";
-import { Stack, Typography, Button, Chip } from "@mui/material";
-import {
-  Add,
-  FilterAlt,
-  Group,
-  VerifiedUser,
-  CheckCircle,
-  Close,
-} from "@mui/icons-material";
+import { Stack, Typography, Button, Chip, Box } from "@mui/material";
+import { Add, FilterAlt, Group, Close } from "@mui/icons-material";
 import SearchBox from "@/src/components/SearchBox/SearchBox";
-import React from "react";
 
 export default function StudentsHeader({
   searchQuery,
@@ -23,49 +15,40 @@ export default function StudentsHeader({
 }) {
   return (
     <Stack
+      direction="row"
+      justifyContent="space-between"
+      alignItems="center"
       sx={{
         backgroundColor: "var(--white)",
         border: "1px solid var(--border-color)",
         borderRadius: "12px",
-        overflow: "hidden",
+        padding: "16px 20px",
       }}
     >
-      {/* Top Bar */}
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        padding="20px 24px"
-        sx={{
-          borderBottom: "1px solid var(--border-color)",
-          background: "linear-gradient(135deg, #F8F9FA 0%, #FFFFFF 100%)",
-        }}
-      >
-        {/* Left: Title & Icon */}
-        <Stack direction="row" alignItems="center" gap="16px">
-          <Stack
+      {/* Left */}
+      <Stack direction="row" alignItems="center" gap="16px">
+        <Stack direction="row" alignItems="center" gap="12px">
+          <Box
             sx={{
-              width: "52px",
-              height: "52px",
-              background:
-                "linear-gradient(135deg, rgba(var(--primary-rgb), 0.12) 0%, rgba(var(--primary-rgb), 0.06) 100%)",
-              borderRadius: "14px",
+              width: 40,
+              height: 40,
+              borderRadius: "10px",
+              backgroundColor: "var(--primary-color-acc-2)",
               display: "flex",
-              justifyContent: "center",
               alignItems: "center",
-              border: `1.5px solid rgba(var(--primary-rgb), 0.25)`,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              justifyContent: "center",
+              border: "1px solid rgba(24, 113, 99, 0.15)",
+              flexShrink: 0,
             }}
           >
-            <Group sx={{ fontSize: "26px", color: "var(--primary-color)" }} />
-          </Stack>
-
-          <Stack gap="6px">
-            <Stack direction="row" alignItems="center" gap="12px">
+            <Group sx={{ fontSize: "20px", color: "var(--primary-color)" }} />
+          </Box>
+          <Stack>
+            <Stack direction="row" alignItems="center" gap="8px">
               <Typography
                 sx={{
                   fontFamily: "Lato",
-                  fontSize: "22px",
+                  fontSize: "18px",
                   fontWeight: 700,
                   color: "var(--text1)",
                 }}
@@ -73,265 +56,101 @@ export default function StudentsHeader({
                 Students
               </Typography>
               <Chip
-                label={`${stats.total || 0} Total`}
+                label={stats.total || 0}
                 size="small"
                 sx={{
-                  backgroundColor: "rgba(255, 152, 0, 0.1)",
-                  color: "#F57C00",
+                  backgroundColor: "var(--primary-color-acc-2)",
+                  color: "var(--primary-color)",
                   fontWeight: 700,
                   fontSize: "11px",
-                  height: "24px",
-                  border: "1px solid rgba(255, 152, 0, 0.2)",
+                  height: "22px",
+                  minWidth: "28px",
+                  border: "1px solid rgba(24, 113, 99, 0.2)",
                 }}
               />
             </Stack>
-            <Typography
-              sx={{ fontSize: "13px", color: "var(--text3)", lineHeight: 1.4 }}
-            >
-              Manage student accounts, verify identities, and monitor activity
-            </Typography>
-          </Stack>
-        </Stack>
-
-        {/* Right: Actions */}
-        <Stack direction="row" gap="12px" alignItems="center">
-          <Stack sx={{ position: "relative", width: "240px" }}>
-            <SearchBox value={searchQuery} onChange={onSearchChange} />
-          </Stack>
-
-          <Stack
-            onClick={onFilterClick}
-            sx={{
-              border: `1.5px solid ${
-                hasActiveFilters ? "#2196F3" : "var(--border-color)"
-              }`,
-              borderRadius: "10px",
-              backgroundColor: hasActiveFilters
-                ? "rgba(33, 150, 243, 0.08)"
-                : "var(--white)",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-              padding: "8px 12px",
-              minWidth: "100px",
-              height: "48px",
-              "&:hover": {
-                borderColor: "#2196F3",
-                backgroundColor: "rgba(33, 150, 243, 0.08)",
-                transform: "translateY(-1px)",
-                boxShadow: "0 2px 8px rgba(33, 150, 243, 0.15)",
-              },
-            }}
-          >
-            <Stack direction="row" alignItems="center" gap="8px">
-              <Stack
-                sx={{
-                  width: "32px",
-                  height: "32px",
-                  backgroundColor: hasActiveFilters
-                    ? "rgba(33, 150, 243, 0.15)"
-                    : "var(--bg-color)",
-                  borderRadius: "8px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <FilterAlt
-                  sx={{
-                    fontSize: "18px",
-                    color: hasActiveFilters ? "#2196F3" : "var(--text2)",
-                  }}
-                />
-              </Stack>
-              <Typography
-                sx={{
-                  fontSize: "13px",
-                  color: hasActiveFilters ? "#2196F3" : "var(--text1)",
-                  fontWeight: 700,
-                }}
-              >
-                Filter
+            <Stack direction="row" alignItems="center" gap="12px">
+              <Typography sx={{ fontSize: "12px", color: "var(--text4)" }}>
+                {stats.verified || 0} verified
+              </Typography>
+              <Typography sx={{ fontSize: "12px", color: "var(--text4)" }}>
+                {stats.active || 0} active
               </Typography>
             </Stack>
           </Stack>
-
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={onAddClick}
-            sx={{
-              background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
-              color: "#FFFFFF",
-              textTransform: "none",
-              borderRadius: "10px",
-              padding: "10px 24px",
-              fontWeight: 700,
-              fontSize: "14px",
-              boxShadow: "0 4px 12px rgba(255, 152, 0, 0.25)",
-              minWidth: "140px",
-              height: "48px",
-              "&:hover": {
-                background: "linear-gradient(135deg, #F57C00 0%, #E65100 100%)",
-                boxShadow: "0 6px 16px rgba(255, 152, 0, 0.35)",
-                transform: "translateY(-1px)",
-              },
-            }}
-            disableElevation
-          >
-            Add Student
-          </Button>
         </Stack>
+
+        {hasActiveFilters && (
+          <Chip
+            label="Filters active"
+            size="small"
+            onDelete={onClearFilters}
+            deleteIcon={<Close sx={{ fontSize: "14px !important" }} />}
+            sx={{
+              height: "24px",
+              fontSize: "11px",
+              fontWeight: 600,
+              backgroundColor: "rgba(33, 150, 243, 0.08)",
+              color: "#2196F3",
+              border: "1px solid rgba(33, 150, 243, 0.2)",
+              "& .MuiChip-deleteIcon": { color: "#2196F3" },
+            }}
+          />
+        )}
       </Stack>
 
-      {/* Stats Section */}
-      <Stack padding="24px" gap="20px">
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Stack direction="row" alignItems="center" gap="10px">
-            <Typography
-              sx={{
-                fontSize: "14px",
-                fontWeight: 700,
-                color: "var(--text1)",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-              }}
-            >
-              Student Overview
-            </Typography>
-            <Stack
-              sx={{
-                width: "32px",
-                height: "2px",
-                background:
-                  "linear-gradient(90deg, #FF9800 0%, transparent 100%)",
-              }}
-            />
-          </Stack>
-          {hasActiveFilters && (
-            <Stack
-              direction="row"
-              alignItems="center"
-              gap="6px"
-              padding="6px 12px"
-              sx={{
-                backgroundColor: "rgba(33, 150, 243, 0.1)",
-                borderRadius: "20px",
-                border: "1px solid rgba(33, 150, 243, 0.3)",
-              }}
-            >
-              <Typography
-                sx={{ fontSize: "11px", color: "#2196F3", fontWeight: 600 }}
-              >
-                Filters Active
-              </Typography>
-              <Close
-                sx={{
-                  fontSize: "14px",
-                  color: "#2196F3",
-                  cursor: "pointer",
-                }}
-                onClick={onClearFilters}
-              />
-            </Stack>
-          )}
+      {/* Right */}
+      <Stack direction="row" gap="8px" alignItems="center">
+        <Stack sx={{ width: "200px" }}>
+          <SearchBox value={searchQuery} onChange={onSearchChange} />
         </Stack>
 
-        {/* Stats Cards */}
-        <Stack direction="row" gap="16px" flexWrap="wrap">
-          <ModernStatCard
-            icon={<Group />}
-            label="Total Students"
-            value={stats.total}
-            color="#4CAF50"
-            bgColor="rgba(76, 175, 80, 0.08)"
-            isLoading={isLoading}
-          />
-          <ModernStatCard
-            icon={<VerifiedUser />}
-            label="Verified Students"
-            value={stats.verified}
-            color="#2196F3"
-            bgColor="rgba(33, 150, 243, 0.08)"
-            isLoading={isLoading}
-          />
-          <ModernStatCard
-            icon={<CheckCircle />}
-            label="Active Students"
-            value={stats.active}
-            color="#FF9800"
-            bgColor="rgba(255, 152, 0, 0.08)"
-            isLoading={isLoading}
-          />
-        </Stack>
+        <Button
+          variant="outlined"
+          startIcon={<FilterAlt sx={{ fontSize: "16px" }} />}
+          onClick={onFilterClick}
+          sx={{
+            borderColor: hasActiveFilters ? "#2196F3" : "var(--border-color)",
+            color: hasActiveFilters ? "#2196F3" : "var(--text2)",
+            backgroundColor: hasActiveFilters ? "rgba(33, 150, 243, 0.04)" : "transparent",
+            textTransform: "none",
+            borderRadius: "8px",
+            padding: "6px 14px",
+            fontWeight: 600,
+            fontSize: "13px",
+            height: "36px",
+            "&:hover": {
+              borderColor: "#2196F3",
+              backgroundColor: "rgba(33, 150, 243, 0.04)",
+            },
+          }}
+        >
+          Filter
+        </Button>
+
+        <Button
+          variant="contained"
+          startIcon={<Add sx={{ fontSize: "18px" }} />}
+          onClick={onAddClick}
+          disableElevation
+          sx={{
+            backgroundColor: "var(--primary-color)",
+            color: "#fff",
+            textTransform: "none",
+            borderRadius: "8px",
+            padding: "6px 18px",
+            fontWeight: 600,
+            fontSize: "13px",
+            height: "36px",
+            boxShadow: "none",
+            "&:hover": {
+              backgroundColor: "var(--primary-color-dark)",
+            },
+          }}
+        >
+          Add Student
+        </Button>
       </Stack>
     </Stack>
   );
 }
-
-const ModernStatCard = ({ icon, label, value, color, bgColor, isLoading }) => (
-  <Stack
-    direction="row"
-    alignItems="center"
-    gap="12px"
-    padding="16px 20px"
-    sx={{
-      backgroundColor: bgColor || "var(--bg-color)",
-      borderRadius: "12px",
-      border: "1px solid var(--border-color)",
-      minWidth: "220px",
-      flex: 1,
-    }}
-  >
-    <Stack
-      sx={{
-        width: "44px",
-        height: "44px",
-        backgroundColor: "var(--white)",
-        borderRadius: "10px",
-        justifyContent: "center",
-        alignItems: "center",
-        border: `1.5px solid ${color}30`,
-        flexShrink: 0,
-      }}
-    >
-      {icon &&
-        React.cloneElement(icon, {
-          sx: { fontSize: "22px", color: color },
-        })}
-    </Stack>
-    <Stack gap="4px" flex={1}>
-      <Typography
-        sx={{
-          fontSize: "12px",
-          color: "var(--text3)",
-          fontWeight: 600,
-          textTransform: "uppercase",
-          letterSpacing: "0.5px",
-        }}
-      >
-        {label}
-      </Typography>
-      {isLoading ? (
-        <Typography sx={{ fontSize: "24px", color: "var(--text3)" }}>
-          -
-        </Typography>
-      ) : (
-        <Typography
-          sx={{
-            fontSize: "26px",
-            fontWeight: 800,
-            color: color,
-            fontFamily: "Lato",
-            lineHeight: 1,
-          }}
-        >
-          {value}
-        </Typography>
-      )}
-    </Stack>
-  </Stack>
-);

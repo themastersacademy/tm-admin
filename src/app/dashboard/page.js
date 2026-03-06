@@ -1,12 +1,11 @@
 "use client";
 import GoalCard from "@/src/components/GoalCard/GoalCard";
 import { Add } from "@mui/icons-material";
-import { Button, Stack } from "@mui/material";
+import { Button, Stack, Skeleton } from "@mui/material";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import GoalDialogBox from "./goals/[id]/components/GoalDialogBox/GoalDialogBox";
 import { apiFetch } from "@/src/lib/apiFetch";
-import PrimaryCardSkeleton from "@/src/components/PrimaryCardSkeleton/PrimaryCardSkeleton";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
 import GoalsHeader from "@/src/components/GoalsHeader/GoalsHeader";
 import gate_cse from "@/public/Icons/gate_cse.svg";
@@ -48,7 +47,6 @@ export default function Home() {
     return () => controller.abort();
   }, [fetchGoals]);
 
-  // Calculate statistics
   const statistics = useMemo(() => {
     const total = goalList.length;
     const live = goalList.filter((g) => g.isLive).length;
@@ -56,42 +54,30 @@ export default function Home() {
     return { total, live, draft };
   }, [goalList]);
 
-  const dialogOpen = () => {
-    setIsDialogOpen(true);
-  };
-
-  const dialogClose = () => {
-    setIsDialogOpen(false);
-  };
-
   return (
-    <Stack padding="20px" gap="24px">
+    <Stack padding="20px" gap="16px">
       <GoalsHeader
         totalCount={goalList.length}
         stats={statistics}
         actions={
           <Button
             variant="contained"
-            onClick={dialogOpen}
-            startIcon={<Add />}
+            onClick={() => setIsDialogOpen(true)}
+            startIcon={<Add sx={{ fontSize: "16px" }} />}
+            disableElevation
             sx={{
-              background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
-              color: "white",
+              backgroundColor: "var(--primary-color)",
+              color: "#fff",
               textTransform: "none",
-              borderRadius: "10px",
-              padding: "10px 24px",
-              fontWeight: 700,
-              fontSize: "14px",
-              minWidth: "140px",
-              height: "48px",
-              boxShadow: "0 4px 12px rgba(255, 152, 0, 0.25)",
+              borderRadius: "8px",
+              padding: "6px 16px",
+              fontWeight: 600,
+              fontSize: "12px",
+              height: "34px",
               "&:hover": {
-                background: "linear-gradient(135deg, #F57C00 0%, #E65100 100%)",
-                boxShadow: "0 6px 16px rgba(255, 152, 0, 0.35)",
-                transform: "translateY(-1px)",
+                backgroundColor: "var(--primary-color-dark)",
               },
             }}
-            disableElevation
           >
             Create Goal
           </Button>
@@ -100,21 +86,16 @@ export default function Home() {
 
       <GoalDialogBox
         isOpen={isDialogOpen}
-        onClose={dialogClose}
+        onClose={() => setIsDialogOpen(false)}
         setGoalList={setGoalList}
       />
 
       <Stack
-        flexDirection="row"
-        gap="24px"
+        direction="row"
+        gap="16px"
         flexWrap="wrap"
         alignItems="flex-start"
-        sx={{
-          border: "1px solid var(--border-color)",
-          backgroundColor: "var(--white)",
-          borderRadius: "12px",
-          padding: "24px",
-        }}
+        sx={{ minHeight: "60vh" }}
       >
         {!isLoading ? (
           goalList.length > 0 ? (
@@ -131,9 +112,8 @@ export default function Home() {
                     : ""
                 }
                 title={item.title}
-                actionButton="View Details"
                 onClick={() => {
-                  router.push(`dashboard/goals/${item.goalID}`);
+                  router.push(`/dashboard/goals/${item.goalID}`);
                 }}
                 isLive={item.isLive === true ? "Live" : "Draft"}
                 coursesCount={item.coursesCount}
@@ -145,7 +125,7 @@ export default function Home() {
           ) : (
             <Stack
               width="100%"
-              minHeight="60vh"
+              minHeight="50vh"
               justifyContent="center"
               alignItems="center"
             >
@@ -156,7 +136,15 @@ export default function Home() {
             </Stack>
           )
         ) : (
-          [...Array(4)].map((_, index) => <PrimaryCardSkeleton key={index} />)
+          Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton
+              key={i}
+              variant="rounded"
+              width={280}
+              height={140}
+              sx={{ borderRadius: "10px" }}
+            />
+          ))
         )}
       </Stack>
     </Stack>

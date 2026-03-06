@@ -470,23 +470,32 @@ export async function removeStudentFromBatch(userID, batchID) {
  * Fetch all student‐batch join records for a given batch.
  */
 export async function getStudentsForBatch(batchID) {
-  const params = {
-    TableName: MASTER_TABLE,
-    IndexName: MASTER_TABLE_INDEX,
-    KeyConditionExpression: "#gsi1pk = :pk AND #gsi1sk = :sk",
-    ExpressionAttributeNames: {
-      "#gsi1pk": "GSI1-pKey",
-      "#gsi1sk": "GSI1-sKey",
-    },
-    ExpressionAttributeValues: {
-      ":pk": "STUDENT_BATCHES",
-      ":sk": `STUDENT_BATCH@${batchID}`,
-    },
-  };
+  const allItems = [];
+  let ExclusiveStartKey;
 
   try {
-    const result = await dynamoDB.send(new QueryCommand(params));
-    const data = result.Items.map((item) => ({
+    do {
+      const params = {
+        TableName: MASTER_TABLE,
+        IndexName: MASTER_TABLE_INDEX,
+        KeyConditionExpression: "#gsi1pk = :pk AND #gsi1sk = :sk",
+        ExpressionAttributeNames: {
+          "#gsi1pk": "GSI1-pKey",
+          "#gsi1sk": "GSI1-sKey",
+        },
+        ExpressionAttributeValues: {
+          ":pk": "STUDENT_BATCHES",
+          ":sk": `STUDENT_BATCH@${batchID}`,
+        },
+        ExclusiveStartKey,
+      };
+
+      const result = await dynamoDB.send(new QueryCommand(params));
+      allItems.push(...result.Items);
+      ExclusiveStartKey = result.LastEvaluatedKey;
+    } while (ExclusiveStartKey);
+
+    const data = allItems.map((item) => ({
       id: item.pKey.split("#")[1], // studentID
       userID: item.userID,
       batchID: item.batchID,

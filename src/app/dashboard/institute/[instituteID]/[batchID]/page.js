@@ -3,23 +3,29 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import {
   Button,
+  Dialog,
   DialogContent,
   IconButton,
-  Skeleton,
   Stack,
   Typography,
+  Box,
+  Tooltip,
 } from "@mui/material";
-import { Close, East, FileCopy, Settings } from "@mui/icons-material";
-import Header from "@/src/components/Header/Header";
+import {
+  Close,
+  FileCopy,
+  Settings,
+  Lock,
+  LockOpen,
+  ContentCopy,
+  GroupAdd,
+} from "@mui/icons-material";
 import BatchHeader from "./Components/BatchHeader";
 import { apiFetch } from "@/src/lib/apiFetch";
 import CustomTabs from "@/src/components/CustomTabs/CustomTabs";
-import BatchCourse from "./Components/Courses";
 import BatchStudents from "./Components/Students";
-import BatchHistory from "./Components/History";
 import ScheduledExams from "./Components/ScheduledExams";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
-import DialogBox from "@/src/components/DialogBox/DialogBox";
 import StyledSwitch from "@/src/components/StyledSwitch/StyledSwitch";
 import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
 import { enqueueSnackbar } from "notistack";
@@ -37,18 +43,10 @@ export default function BatchPage() {
         <BatchStudents setStudentCount={setStudentCount} batch={batch} />
       ),
     },
-    // {
-    //   label: "Courses",
-    //   content: <BatchCourse setCourseCount={setCourseCount} />,
-    // },
     {
       label: "Scheduled Exams",
       content: <ScheduledExams />,
     },
-    // {
-    //   label: "History",
-    //   content: <BatchHistory />,
-    // },
   ];
 
   const fetchBatch = useCallback(() => {
@@ -57,7 +55,6 @@ export default function BatchPage() {
     ).then((data) => {
       if (data.success) {
         setBatch(data.data);
-        // Fetch student count
         apiFetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/institute/${params.instituteID}/${params.batchID}/get-all-students`
         ).then((studentsData) => {
@@ -100,23 +97,58 @@ export default function BatchPage() {
       />
 
       <CustomTabs tabs={tabs} />
-      <DialogBox
-        isOpen={openDialog}
-        title="Batch Settings"
-        icon={
-          <IconButton sx={{ borderRadius: "8px", padding: "4px" }}>
-            <Close onClick={() => setOpenDialog(false)} />
-          </IconButton>
-        }
+
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        disableScrollLock
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: "12px",
+            border: "1px solid var(--border-color)",
+          },
+        }}
       >
-        <DialogContent sx={{ minHeight: "unset", paddingBottom: "20px" }}>
+        {/* Header */}
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ padding: "14px 20px", borderBottom: "1px solid var(--border-color)" }}
+        >
+          <Stack direction="row" alignItems="center" gap="10px">
+            <Box
+              sx={{
+                width: 30,
+                height: 30,
+                borderRadius: "8px",
+                backgroundColor: "var(--primary-color-acc-2)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Settings sx={{ fontSize: "16px", color: "var(--primary-color)" }} />
+            </Box>
+            <Typography sx={{ fontSize: "14px", fontWeight: 700, color: "var(--text1)" }}>
+              Batch Settings
+            </Typography>
+          </Stack>
+          <IconButton onClick={() => setOpenDialog(false)} size="small" sx={{ width: 28, height: 28 }}>
+            <Close sx={{ fontSize: "16px", color: "var(--text3)" }} />
+          </IconButton>
+        </Stack>
+
+        <DialogContent sx={{ padding: "16px 20px" }}>
           <BatchSettings
             batch={batch}
             handleCopy={handleCopy}
             fetchBatch={fetchBatch}
           />
         </DialogContent>
-      </DialogBox>
+      </Dialog>
     </Stack>
   );
 }
@@ -124,6 +156,7 @@ export default function BatchPage() {
 function BatchSettings({ batch, handleCopy, fetchBatch }) {
   const [shouldLock, setShouldLock] = useState(batch.status === "LOCKED");
   const [capacity, setCapacity] = useState(batch.capacity);
+  const [codeCopied, setCodeCopied] = useState(false);
   const params = useParams();
 
   useEffect(() => {
@@ -131,27 +164,52 @@ function BatchSettings({ batch, handleCopy, fetchBatch }) {
     setCapacity(batch.capacity);
   }, [batch]);
 
+  const handleCopyCode = () => {
+    handleCopy();
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
+  };
+
   return (
-    <Stack gap="25px" padding="10px 0">
-      {/* Batch Status */}
+    <Stack gap="16px">
+      {/* Lock Batch */}
       <Stack
         direction="row"
         alignItems="center"
         justifyContent="space-between"
         sx={{
-          padding: "15px",
+          padding: "12px 14px",
           border: "1px solid var(--border-color)",
-          borderRadius: "8px",
-          backgroundColor: "var(--bg-color)",
+          borderRadius: "10px",
+          backgroundColor: "var(--bg-color, #fafafa)",
         }}
       >
-        <Stack>
-          <Typography fontSize="16px" fontWeight="600" color="var(--text1)">
-            Lock Batch
-          </Typography>
-          <Typography fontSize="12px" color="var(--text3)">
-            Prevent new students from enrolling
-          </Typography>
+        <Stack direction="row" alignItems="center" gap="10px">
+          <Box
+            sx={{
+              width: 28,
+              height: 28,
+              borderRadius: "8px",
+              backgroundColor: shouldLock ? "rgba(244, 67, 54, 0.08)" : "var(--primary-color-acc-2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {shouldLock ? (
+              <Lock sx={{ fontSize: "14px", color: "#f44336" }} />
+            ) : (
+              <LockOpen sx={{ fontSize: "14px", color: "var(--primary-color)" }} />
+            )}
+          </Box>
+          <Stack>
+            <Typography sx={{ fontSize: "13px", fontWeight: 600, color: "var(--text1)" }}>
+              Lock Batch
+            </Typography>
+            <Typography sx={{ fontSize: "10px", color: "var(--text4)" }}>
+              Prevent new students from enrolling
+            </Typography>
+          </Stack>
         </Stack>
         <StyledSwitch
           checked={shouldLock}
@@ -175,84 +233,111 @@ function BatchSettings({ batch, handleCopy, fetchBatch }) {
       </Stack>
 
       {/* Capacity */}
-      <Stack gap="8px">
-        <Typography fontSize="14px" fontWeight="600" color="var(--text2)">
+      <Stack gap="6px">
+        <Typography sx={{ fontSize: "12px", fontWeight: 600, color: "var(--text2)" }}>
           Batch Capacity
         </Typography>
-        <StyledTextField
-          placeholder="Enter Capacity"
-          value={capacity}
-          onChange={(e) => setCapacity(e.target.value)}
-          onBlur={() => {
-            if (capacity !== batch.capacity) {
-              apiFetch(
-                `${process.env.NEXT_PUBLIC_BASE_URL}/api/institute/${params.instituteID}/${params.batchID}/update-capacity`,
-                {
-                  method: "POST",
-                  body: JSON.stringify({
-                    capacity: Number(capacity),
-                  }),
-                }
-              ).then((data) => {
-                if (data.success) {
-                  enqueueSnackbar("Capacity Updated", {
-                    variant: "success",
-                  });
-                  fetchBatch();
-                }
-              });
-            }
-          }}
-          type="number"
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              backgroundColor: "var(--white)",
-            },
-          }}
-        />
-        <Typography fontSize="12px" color="var(--text3)">
-          Maximum number of students allowed in this batch
+        <Stack direction="row" alignItems="center" gap="8px">
+          <Box
+            sx={{
+              width: 28,
+              height: 28,
+              borderRadius: "8px",
+              backgroundColor: "var(--primary-color-acc-2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <GroupAdd sx={{ fontSize: "14px", color: "var(--primary-color)" }} />
+          </Box>
+          <StyledTextField
+            placeholder="Enter Capacity"
+            value={capacity}
+            onChange={(e) => setCapacity(e.target.value)}
+            onBlur={() => {
+              if (capacity !== batch.capacity) {
+                apiFetch(
+                  `${process.env.NEXT_PUBLIC_BASE_URL}/api/institute/${params.instituteID}/${params.batchID}/update-capacity`,
+                  {
+                    method: "POST",
+                    body: JSON.stringify({
+                      capacity: Number(capacity),
+                    }),
+                  }
+                ).then((data) => {
+                  if (data.success) {
+                    enqueueSnackbar("Capacity Updated", {
+                      variant: "success",
+                    });
+                    fetchBatch();
+                  }
+                });
+              }
+            }}
+            type="number"
+            sx={{
+              flex: 1,
+              "& .MuiOutlinedInput-root": {
+                height: "36px",
+                fontSize: "13px",
+                borderRadius: "8px",
+                backgroundColor: "var(--white)",
+              },
+            }}
+          />
+        </Stack>
+        <Typography sx={{ fontSize: "10px", color: "var(--text4)", ml: "36px" }}>
+          Maximum students allowed in this batch
         </Typography>
       </Stack>
 
       {/* Batch Code */}
-      <Stack gap="8px">
-        <Typography fontSize="14px" fontWeight="600" color="var(--text2)">
+      <Stack gap="6px">
+        <Typography sx={{ fontSize: "12px", fontWeight: 600, color: "var(--text2)" }}>
           Batch Code
         </Typography>
-        <Stack
-          direction="row"
-          alignItems="center"
-          sx={{
-            border: "1px solid var(--border-color)",
-            borderRadius: "5px",
-            padding: "0 5px 0 15px",
-            height: "45px",
-            backgroundColor: "var(--white)",
-            justifyContent: "space-between",
-          }}
-        >
-          <Typography
-            fontSize="16px"
-            fontWeight="500"
-            color="var(--text1)"
-            sx={{ letterSpacing: "1px" }}
-          >
-            {batch.batchCode}
-          </Typography>
-          <Button
-            onClick={handleCopy}
-            startIcon={<FileCopy />}
+        <Tooltip title={codeCopied ? "Copied!" : "Click to copy"} arrow>
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            onClick={handleCopyCode}
             sx={{
-              textTransform: "none",
-              color: "var(--primary-color)",
-              fontWeight: "600",
+              border: "1px solid var(--border-color)",
+              borderRadius: "8px",
+              padding: "8px 12px",
+              backgroundColor: "var(--bg-color, #fafafa)",
+              cursor: "pointer",
+              transition: "all 0.2s",
+              "&:hover": {
+                borderColor: "var(--primary-color)",
+                backgroundColor: "var(--primary-color-acc-2)",
+              },
             }}
           >
-            Copy
-          </Button>
-        </Stack>
-        <Typography fontSize="12px" color="var(--text3)">
+            <Typography
+              sx={{
+                fontSize: "14px",
+                fontWeight: 700,
+                fontFamily: "monospace",
+                color: "var(--text1)",
+                letterSpacing: "2px",
+              }}
+            >
+              {batch.batchCode}
+            </Typography>
+            <ContentCopy
+              sx={{
+                fontSize: "14px",
+                color: codeCopied ? "#4caf50" : "var(--text3)",
+                transition: "color 0.2s",
+              }}
+            />
+          </Stack>
+        </Tooltip>
+        <Typography sx={{ fontSize: "10px", color: "var(--text4)" }}>
           Share this code with students to join the batch
         </Typography>
       </Stack>

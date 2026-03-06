@@ -1,36 +1,60 @@
 import { dynamoDB } from "../awsAgent";
-import { ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { QueryCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 export default async function getAllGoals() {
-  const params = {
-    TableName: `${process.env.AWS_DB_NAME}master`,
-    FilterExpression: "sKey = :sKey",
-    ExpressionAttributeValues: {
-      ":sKey": "GOALS",
-    },
-    ProjectionExpression:
-      "pKey, title, icon, isLive, coursesList, subjectList, blogList, updatedAt",
-  };
+  const TABLE = `${process.env.AWS_DB_NAME}master`;
+
   try {
-    const items = [];
+    // Step 1: Query via GSI
+    const gsiItems = [];
     let lastKey;
 
     do {
       const response = await dynamoDB.send(
-        new ScanCommand({
-          ...params,
+        new QueryCommand({
+          TableName: TABLE,
+          IndexName: "masterTableIndex",
+          KeyConditionExpression: "#gsi1pk = :gsi1pk",
+          ExpressionAttributeNames: {
+            "#gsi1pk": "GSI1-pKey",
+          },
+          ExpressionAttributeValues: {
+            ":gsi1pk": "GOALS",
+          },
           ...(lastKey && { ExclusiveStartKey: lastKey }),
         })
       );
-      items.push(...(response.Items || []));
+      gsiItems.push(...(response.Items || []));
       lastKey = response.LastEvaluatedKey;
     } while (lastKey);
+
+    // Step 2: Merge with legacy scan fallback
+    const foundKeys = new Set(gsiItems.map((item) => item.pKey));
+    let legacyLastKey;
+    do {
+      const response = await dynamoDB.send(
+        new ScanCommand({
+          TableName: TABLE,
+          FilterExpression: "sKey = :sKey",
+          ExpressionAttributeValues: {
+            ":sKey": "GOALS",
+          },
+          ...(legacyLastKey && { ExclusiveStartKey: legacyLastKey }),
+        })
+      );
+      for (const item of response.Items || []) {
+        if (!foundKeys.has(item.pKey)) {
+          gsiItems.push(item);
+        }
+      }
+      legacyLastKey = response.LastEvaluatedKey;
+    } while (legacyLastKey);
 
     return {
       success: true,
       message: "All goals fetched successfully",
       data: {
-        goals: items.map((goal) => {
+        goals: gsiItems.map((goal) => {
           const {
             pKey,
             title,

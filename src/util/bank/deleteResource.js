@@ -12,7 +12,6 @@ export async function deleteResource({ resourceID, bankID }) {
   };
   try {
     const response = await dynamoDB.send(new GetCommand(params));
-    console.log("Response", response);
 
     if (!response.Item) {
       return { success: false, message: "Resource not found" };
@@ -75,6 +74,5 @@ async function deleteBunnyVideo(videoID) {
       },
     }
   );
-  console.log(await response.json());
   return response.ok;
 }

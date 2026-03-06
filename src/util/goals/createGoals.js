@@ -3,11 +3,14 @@ import { dynamoDB } from "../awsAgent";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
 
 export default async function createGoals({ title, icon }) {
+  const pKey = `GOAL#${crypto.randomUUID()}`;
   const params = {
     TableName: `${process.env.AWS_DB_NAME}master`,
     Item: {
-      pKey: `GOAL#${crypto.randomUUID()}`,
+      pKey,
       sKey: "GOALS",
+      "GSI1-pKey": "GOALS",
+      "GSI1-sKey": pKey,
       title,
       icon,
       tagline: "",
@@ -17,8 +20,8 @@ export default async function createGoals({ title, icon }) {
       subjectList: [],
       coursesList: [],
       blogList: [],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     },
   };
   try {

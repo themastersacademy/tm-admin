@@ -31,7 +31,6 @@ export function CourseProvider({ children }) {
 
   // Derive only titles and thumbnails
   const courseDetails = useMemo(() => {
-    // console.log("🚨 courseRes:", courseRes);
     if (courseErr) return [];
     return (
       courseRes?.data?.map((c) => {

@@ -21,7 +21,6 @@ export async function POST(request, { params }) {
     const result = await renameBank({ bankID, title: title.trim() });
     return Response.json(result, { status: result.success ? 200 : 404 });
   } catch (err) {
-    console.log(err);
     return Response.json(
       { success: false, message: "Internal server error" },
       { status: 500 },

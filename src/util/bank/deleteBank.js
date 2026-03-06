@@ -1,5 +1,5 @@
 import { dynamoDB } from "../awsAgent";
-import { GetCommand, ScanCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, QueryCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 
 export default async function deleteBank({ bankID }) {
   // 1. Check if the bank exists.
@@ -20,17 +20,21 @@ export default async function deleteBank({ bankID }) {
       };
     }
 
-    // 2. Scan for resources associated with the bank.
-    const resourceParams = {
-      TableName: `${process.env.AWS_DB_NAME}content`,
-      FilterExpression: "sKey = :skeyVal",
-      ExpressionAttributeValues: {
-        ":skeyVal": `RESOURCE@${bankID}`,
-      },
-    };
-
-    const resources = await dynamoDB.send(new ScanCommand(resourceParams));
-    console.log("Resources:", resources);
+    // 2. Query for resources associated with the bank via GSI.
+    const resources = await dynamoDB.send(
+      new QueryCommand({
+        TableName: `${process.env.AWS_DB_NAME}content`,
+        IndexName: "contentTableIndex",
+        KeyConditionExpression: "#gsi1pk = :gsi1pk",
+        ExpressionAttributeNames: {
+          "#gsi1pk": "GSI1-pKey",
+        },
+        ExpressionAttributeValues: {
+          ":gsi1pk": `RESOURCE@${bankID}`,
+        },
+        Limit: 1,
+      })
+    );
     if (resources.Items && resources.Items.length > 0) {
       return {
         success: false,
@@ -80,7 +84,6 @@ async function deleteBunnyCollection({ videoCollectionID }) {
   try {
     const res = await fetch(url, options);
     const json = await res.json();
-    console.log("Bunny Collection delete response:", json);
   } catch (err) {
     console.error("Error deleting Bunny collection:", err);
   }

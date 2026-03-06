@@ -25,7 +25,7 @@ export default function ResourceCard({ resource, onAction }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
-  const { type, name, path } = resource;
+  const { type, name } = resource;
   const isVideo = type === "VIDEO";
 
   const handleClick = (event) => {
@@ -44,19 +44,19 @@ export default function ResourceCard({ resource, onAction }) {
   };
 
   const getIcon = () => {
-    if (isVideo) return <VideoLibraryOutlined sx={{ fontSize: "32px" }} />;
+    if (isVideo) return <VideoLibraryOutlined sx={{ fontSize: "18px" }} />;
     if (name.endsWith(".pdf"))
-      return <PictureAsPdfOutlined sx={{ fontSize: "32px" }} />;
+      return <PictureAsPdfOutlined sx={{ fontSize: "18px" }} />;
     if (name.match(/\.(jpg|jpeg|png|gif)$/i))
-      return <ImageOutlined sx={{ fontSize: "32px" }} />;
-    return <InsertDriveFileOutlined sx={{ fontSize: "32px" }} />;
+      return <ImageOutlined sx={{ fontSize: "18px" }} />;
+    return <InsertDriveFileOutlined sx={{ fontSize: "18px" }} />;
   };
 
   const getColor = () => {
-    if (isVideo) return "#F44336"; // Red for video
-    if (name.endsWith(".pdf")) return "#FF9800"; // Orange for PDF
-    if (name.match(/\.(jpg|jpeg|png|gif)$/i)) return "#4CAF50"; // Green for images
-    return "#2196F3"; // Blue for others
+    if (isVideo) return "#F44336";
+    if (name.endsWith(".pdf")) return "#FF9800";
+    if (name.match(/\.(jpg|jpeg|png|gif)$/i)) return "#4CAF50";
+    return "#2196F3";
   };
 
   const color = getColor();
@@ -65,87 +65,77 @@ export default function ResourceCard({ resource, onAction }) {
     <Card
       elevation={0}
       sx={{
-        width: "280px",
-        borderRadius: "16px",
+        width: "100%",
+        borderRadius: "10px",
         border: "1px solid var(--border-color)",
-        transition: "all 0.2s ease-in-out",
         backgroundColor: "var(--white)",
         position: "relative",
+        overflow: "visible",
         "&:hover": {
-          transform: "translateY(-4px)",
-          boxShadow: "0 12px 24px -10px rgba(0, 0, 0, 0.08)",
           borderColor: color,
-          "& .resource-icon": {
-            transform: "scale(1.1)",
-          },
         },
       }}
     >
       <CardActionArea
         onClick={() => handleAction(isVideo ? "play" : "preview")}
-        sx={{ padding: "20px" }}
+        sx={{ padding: "12px" }}
       >
-        <Stack gap="16px">
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="flex-start"
+        <Stack direction="row" alignItems="center" gap="10px">
+          <Box
+            sx={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "8px",
+              backgroundColor: `${color}12`,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              color: color,
+              flexShrink: 0,
+            }}
           >
-            <Box
-              className="resource-icon"
-              sx={{
-                width: "56px",
-                height: "56px",
-                borderRadius: "14px",
-                backgroundColor: `${color}15`,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                color: color,
-                transition: "all 0.2s ease",
-              }}
-            >
-              {getIcon()}
-            </Box>
-            <Box sx={{ width: "40px", height: "40px" }} />
-          </Stack>
+            {getIcon()}
+          </Box>
 
-          <Box>
+          <Stack gap="2px" sx={{ minWidth: 0, flex: 1 }}>
             <Typography
               sx={{
-                fontSize: "15px",
+                fontSize: "12px",
                 fontWeight: 600,
                 color: "var(--text1)",
-                mb: "6px",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
-                fontFamily: "Lato",
+                lineHeight: 1.3,
               }}
               title={name}
             >
               {name}
             </Typography>
-            <Stack direction="row" alignItems="center" gap="8px">
+            <Stack direction="row" alignItems="center" gap="6px">
               <Chip
                 label={isVideo ? "Stream" : name.split(".").pop().toUpperCase()}
                 size="small"
                 sx={{
-                  height: "22px",
-                  fontSize: "10px",
+                  height: "18px",
+                  fontSize: "9px",
                   fontWeight: 600,
                   backgroundColor: `${color}10`,
                   color: color,
-                  borderRadius: "6px",
+                  borderRadius: "4px",
+                  "& .MuiChip-label": { px: "6px" },
                 }}
               />
-              <Typography sx={{ fontSize: "11px", color: "var(--text3)" }}>
-                {resource.createdAt
-                  ? new Date(resource.createdAt).toLocaleDateString()
-                  : ""}
-              </Typography>
+              {resource.createdAt && (
+                <Typography sx={{ fontSize: "10px", color: "var(--text4)" }}>
+                  {new Date(resource.createdAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </Typography>
+              )}
             </Stack>
-          </Box>
+          </Stack>
         </Stack>
       </CardActionArea>
 
@@ -154,14 +144,15 @@ export default function ResourceCard({ resource, onAction }) {
         onClick={handleClick}
         sx={{
           position: "absolute",
-          top: "20px",
-          right: "20px",
+          top: "10px",
+          right: "8px",
           color: "var(--text3)",
           zIndex: 1,
+          padding: "4px",
           "&:hover": { backgroundColor: "rgba(0,0,0,0.04)" },
         }}
       >
-        <MoreVert fontSize="small" />
+        <MoreVert sx={{ fontSize: "16px" }} />
       </IconButton>
 
       <Menu
@@ -169,10 +160,21 @@ export default function ResourceCard({ resource, onAction }) {
         open={open}
         onClose={handleClose}
         PaperProps={{
+          elevation: 0,
           sx: {
-            borderRadius: "12px",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-            minWidth: "160px",
+            overflow: "visible",
+            filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.08))",
+            mt: 1,
+            border: "1px solid var(--border-color)",
+            borderRadius: "8px",
+            minWidth: "140px",
+            "& .MuiMenuItem-root": {
+              fontSize: "13px",
+              fontWeight: 600,
+              gap: "8px",
+              py: 1,
+              px: 2,
+            },
           },
         }}
         transformOrigin={{ horizontal: "right", vertical: "top" }}
@@ -183,14 +185,14 @@ export default function ResourceCard({ resource, onAction }) {
             handleClose();
             onAction(isVideo ? "play" : "preview", resource);
           }}
-          sx={{ fontSize: "14px", gap: "12px" }}
+          sx={{ color: "var(--text1)" }}
         >
           {isVideo ? (
-            <PlayCircleOutline fontSize="small" />
+            <PlayCircleOutline sx={{ fontSize: "16px", color }} />
           ) : (
-            <ImageOutlined fontSize="small" />
+            <ImageOutlined sx={{ fontSize: "16px", color }} />
           )}
-          {isVideo ? "Play Video" : "Preview"}
+          {isVideo ? "Play" : "Preview"}
         </MenuItem>
         {!isVideo && (
           <MenuItem
@@ -198,9 +200,11 @@ export default function ResourceCard({ resource, onAction }) {
               handleClose();
               onAction("download", resource);
             }}
-            sx={{ fontSize: "14px", gap: "12px" }}
+            sx={{ color: "var(--text1)" }}
           >
-            <FileDownloadOutlined fontSize="small" />
+            <FileDownloadOutlined
+              sx={{ fontSize: "16px", color: "var(--primary-color)" }}
+            />
             Download
           </MenuItem>
         )}
@@ -209,9 +213,9 @@ export default function ResourceCard({ resource, onAction }) {
             handleClose();
             onAction("delete", resource);
           }}
-          sx={{ fontSize: "14px", gap: "12px", color: "var(--delete-color)" }}
+          sx={{ color: "var(--delete-color)" }}
         >
-          <DeleteOutline fontSize="small" />
+          <DeleteOutline sx={{ fontSize: "16px" }} />
           Delete
         </MenuItem>
       </Menu>

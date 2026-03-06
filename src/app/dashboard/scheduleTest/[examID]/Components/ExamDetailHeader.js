@@ -5,17 +5,16 @@ import {
   Chip,
   IconButton,
   Skeleton,
-  Button,
+  Switch,
+  Box,
 } from "@mui/material";
 import {
   ArrowBack,
-  Edit,
   Quiz,
   Category,
   Timer,
   CheckCircle,
   Schedule,
-  Cancel,
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
@@ -37,80 +36,70 @@ export default function ExamDetailHeader({
 }) {
   const router = useRouter();
   const { showSnackbar } = useSnackbar();
-  const [examLive, setExamLive] = useState(isLive);
+  const [examLive, setExamLive] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
 
   useEffect(() => {
-    setExamLive(isLive);
+    setExamLive(isLive === true);
   }, [isLive]);
 
   const handleLiveToggle = async () => {
-    const isChecked = !examLive; // Toggle the current state
-
+    const newState = !examLive;
+    setIsToggling(true);
     try {
-      const url = isChecked
+      const url = newState
         ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/exam-live`
         : `${process.env.NEXT_PUBLIC_BASE_URL}/api/exam/exam-unlive`;
 
       const data = await apiFetch(url, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ examID: examID, type: type }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ examID, type }),
       });
 
       if (data.success) {
-        setExamLive(isChecked);
+        setExamLive(newState);
         if (fetchTestSeries) fetchTestSeries();
         showSnackbar(
-          isChecked ? "Exam is now live" : "Exam is no longer live",
+          newState ? "Exam is now live" : "Exam is no longer live",
           "success",
           "",
-          "3000"
+          "3000",
         );
       } else {
         showSnackbar(
-          data.message || data.error || "Failed to update exam status",
+          data.message || "Failed to update exam status",
           "error",
           "",
-          "3000"
+          "3000",
         );
       }
     } catch (error) {
-      console.error("Error toggling exam live state:", error);
       showSnackbar("Failed to update exam status", "error", "", "3000");
+    } finally {
+      setIsToggling(false);
     }
   };
 
   const handleBack = () => {
-    if (onBackClick) {
-      onBackClick();
-    } else {
-      router.back();
-    }
+    if (onBackClick) onBackClick();
+    else router.back();
   };
 
-  // Determine status
-  const getStatus = () => {
-    if (isLive === true)
-      return { label: "Live", color: "#4CAF50", bg: "rgba(76, 175, 80, 0.1)" };
-    if (isLive === false)
-      return { label: "Draft", color: "#FF9800", bg: "rgba(255, 152, 0, 0.1)" };
-    return {
-      label: "Unknown",
-      color: "#9E9E9E",
-      bg: "rgba(158, 158, 158, 0.1)",
-    };
+  const formatDuration = (mins) => {
+    if (!mins) return "Not Set";
+    const hours = Math.floor(mins / 60);
+    const m = mins % 60;
+    if (hours > 0) return `${hours}h ${m}m`;
+    return `${m}m`;
   };
-
-  const status = getStatus();
 
   return (
     <Stack
       sx={{
         backgroundColor: "var(--white)",
         border: "1px solid var(--border-color)",
-        borderRadius: "12px",
+        borderRadius: "16px",
         overflow: "hidden",
       }}
     >
@@ -120,59 +109,40 @@ export default function ExamDetailHeader({
         justifyContent="space-between"
         alignItems="center"
         padding="20px 24px"
-        sx={{
-          borderBottom: "1px solid var(--border-color)",
-          background: "linear-gradient(135deg, #F8F9FA 0%, #FFFFFF 100%)",
-        }}
+        sx={{ borderBottom: "1px solid var(--border-color)" }}
       >
-        {/* Left: Back Button + Title & Icon */}
-        <Stack direction="row" alignItems="center" gap="16px">
+        {/* Left: Back + Title */}
+        <Stack direction="row" alignItems="center" gap="14px">
           <IconButton
             onClick={handleBack}
             sx={{
-              width: "44px",
-              height: "44px",
+              width: "40px",
+              height: "40px",
               backgroundColor: "var(--bg-color)",
               border: "1px solid var(--border-color)",
               borderRadius: "10px",
               "&:hover": {
-                backgroundColor: "rgba(var(--primary-rgb), 0.08)",
+                backgroundColor: "rgba(24, 113, 99, 0.08)",
                 borderColor: "var(--primary-color)",
-                transform: "translateX(-2px)",
               },
-              transition: "all 0.2s ease",
             }}
           >
-            <ArrowBack sx={{ fontSize: "20px", color: "var(--text1)" }} />
+            <ArrowBack sx={{ fontSize: "18px", color: "var(--text1)" }} />
           </IconButton>
 
-          <Stack
-            sx={{
-              width: "52px",
-              height: "52px",
-              background:
-                "linear-gradient(135deg, rgba(var(--primary-rgb), 0.12) 0%, rgba(var(--primary-rgb), 0.06) 100%)",
-              borderRadius: "14px",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              border: `1.5px solid rgba(var(--primary-rgb), 0.25)`,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-            }}
-          >
-            <Edit sx={{ fontSize: "26px", color: "var(--primary-color)" }} />
-          </Stack>
-
-          <Stack gap="6px">
-            <Stack direction="row" alignItems="center" gap="12px">
-              {isLoading ? (
-                <Skeleton variant="text" width={200} height={32} />
-              ) : (
-                <>
+          <Stack gap="2px">
+            {isLoading ? (
+              <>
+                <Skeleton variant="text" width={220} height={28} />
+                <Skeleton variant="text" width={140} height={16} />
+              </>
+            ) : (
+              <>
+                <Stack direction="row" alignItems="center" gap="10px">
                   <Typography
                     sx={{
                       fontFamily: "Lato",
-                      fontSize: "22px",
+                      fontSize: "20px",
                       fontWeight: 700,
                       color: "var(--text1)",
                     }}
@@ -180,195 +150,159 @@ export default function ExamDetailHeader({
                     {examTitle || "Untitled Exam"}
                   </Typography>
                   <Chip
-                    label={status.label}
+                    label={examLive ? "Live" : "Draft"}
                     size="small"
                     sx={{
-                      backgroundColor: status.bg,
-                      color: status.color,
-                      fontWeight: 700,
+                      height: "22px",
                       fontSize: "11px",
-                      height: "24px",
-                      border: `1px solid ${status.color}40`,
+                      fontWeight: 600,
+                      backgroundColor: examLive
+                        ? "rgba(76, 175, 80, 0.1)"
+                        : "rgba(255, 152, 0, 0.1)",
+                      color: examLive ? "#2e7d32" : "#e65100",
+                      border: `1px solid ${examLive ? "rgba(76, 175, 80, 0.3)" : "rgba(255, 152, 0, 0.3)"}`,
                     }}
                   />
-                  {/* Live Button */}
-                  {!isLoading && (
-                    <Button
-                      variant="contained"
-                      onClick={handleLiveToggle}
-                      startIcon={examLive ? <CheckCircle /> : <Schedule />}
-                      sx={{
-                        background: examLive
-                          ? "linear-gradient(135deg, #4CAF50 0%, #45A049 100%)"
-                          : "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
-                        color: "#FFFFFF",
-                        textTransform: "none",
-                        borderRadius: "10px",
-                        padding: "8px 20px",
-                        fontWeight: 700,
-                        fontSize: "13px",
-                        boxShadow: examLive
-                          ? "0 3px 10px rgba(76, 175, 80, 0.25)"
-                          : "0 3px 10px rgba(255, 152, 0, 0.25)",
-                        height: "40px",
-                        minWidth: "140px",
-                        "&:hover": {
-                          background: examLive
-                            ? "linear-gradient(135deg, #45A049 0%, #3D8B40 100%)"
-                            : "linear-gradient(135deg, #F57C00 0%, #E65100 100%)",
-                          boxShadow: examLive
-                            ? "0 4px 14px rgba(76, 175, 80, 0.35)"
-                            : "0 4px 14px rgba(255, 152, 0, 0.35)",
-                          transform: "translateY(-1px)",
-                        },
-                        transition: "all 0.2s ease",
-                      }}
-                      disableElevation
-                    >
-                      {examLive ? "Published" : "Make Live"}
-                    </Button>
-                  )}
-                </>
-              )}
-            </Stack>
-            <Typography
-              sx={{ fontSize: "13px", color: "var(--text3)", lineHeight: 1.4 }}
-            >
-              {isLoading ? (
-                <Skeleton variant="text" width={150} />
-              ) : createdAt ? (
-                `Created on ${new Date(createdAt).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}`
-              ) : (
-                "Manage exam questions, settings, and student progress"
-              )}
-            </Typography>
+                </Stack>
+                <Typography sx={{ fontSize: "12px", color: "var(--text3)" }}>
+                  {createdAt
+                    ? `Created on ${new Date(createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
+                    : "Manage questions, settings, and students"}
+                </Typography>
+              </>
+            )}
           </Stack>
         </Stack>
+
+        {/* Right: Live toggle */}
+        {!isLoading && (
+          <Stack direction="row" alignItems="center" gap="8px">
+            <Typography
+              sx={{
+                fontSize: "13px",
+                fontWeight: 600,
+                color: examLive ? "#2e7d32" : "var(--text3)",
+              }}
+            >
+              {examLive ? "Live" : "Draft"}
+            </Typography>
+            <Switch
+              checked={examLive}
+              onChange={handleLiveToggle}
+              disabled={isToggling}
+              sx={{
+                "& .MuiSwitch-switchBase.Mui-checked": {
+                  color: "#4CAF50",
+                },
+                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                  backgroundColor: "#4CAF50",
+                },
+              }}
+            />
+          </Stack>
+        )}
       </Stack>
 
-      {/* Stats Section */}
-      <Stack padding="24px" gap="20px">
-        <Stack direction="row" alignItems="center" gap="10px">
-          <Typography
-            sx={{
-              fontSize: "14px",
-              fontWeight: 700,
-              color: "var(--text1)",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-            }}
-          >
-            Exam Overview
-          </Typography>
-          <Stack
-            sx={{
-              width: "32px",
-              height: "2px",
-              background:
-                "linear-gradient(90deg, var(--primary-color) 0%, transparent 100%)",
-            }}
-          />
-        </Stack>
-
-        {/* Stats Cards */}
-        <Stack direction="row" gap="16px" flexWrap="wrap">
-          <ModernStatCard
-            icon={<Quiz />}
-            label="Total Questions"
-            value={totalQuestions || 0}
-            color="#2196F3"
-            bgColor="rgba(33, 150, 243, 0.08)"
-            isLoading={isLoading}
-          />
-          <ModernStatCard
-            icon={<Category />}
-            label="Sections"
-            value={totalSections || 0}
-            color="#9C27B0"
-            bgColor="rgba(156, 39, 176, 0.08)"
-            isLoading={isLoading}
-          />
-          <ModernStatCard
-            icon={<Timer />}
-            label="Duration"
-            value={`${duration || 0} min`}
-            color="#FF9800"
-            bgColor="rgba(255, 152, 0, 0.08)"
-            isLoading={isLoading}
-          />
-          <ModernStatCard
-            icon={isLive ? <CheckCircle /> : <Schedule />}
-            label="Status"
-            value={status.label}
-            color={status.color}
-            bgColor={status.bg}
-            isLoading={isLoading}
-          />
-        </Stack>
+      {/* Stats Row - Compact inline */}
+      <Stack direction="row" sx={{ minHeight: "64px" }}>
+        <StatItem
+          icon={<Quiz />}
+          label="Questions"
+          value={totalQuestions || 0}
+          isLoading={isLoading}
+        />
+        <Box
+          sx={{
+            width: "1px",
+            backgroundColor: "var(--border-color)",
+            alignSelf: "stretch",
+          }}
+        />
+        <StatItem
+          icon={<Category />}
+          label="Sections"
+          value={totalSections || 0}
+          isLoading={isLoading}
+        />
+        <Box
+          sx={{
+            width: "1px",
+            backgroundColor: "var(--border-color)",
+            alignSelf: "stretch",
+          }}
+        />
+        <StatItem
+          icon={<Timer />}
+          label="Duration"
+          value={formatDuration(duration)}
+          isLoading={isLoading}
+        />
+        <Box
+          sx={{
+            width: "1px",
+            backgroundColor: "var(--border-color)",
+            alignSelf: "stretch",
+          }}
+        />
+        <StatItem
+          icon={examLive ? <CheckCircle /> : <Schedule />}
+          label="Status"
+          value={examLive ? "Live" : "Draft"}
+          color={examLive ? "#2e7d32" : "#e65100"}
+          isLoading={isLoading}
+        />
       </Stack>
     </Stack>
   );
 }
 
-const ModernStatCard = ({ icon, label, value, color, bgColor, isLoading }) => (
+const StatItem = ({ icon, label, value, color, isLoading }) => (
   <Stack
     direction="row"
     alignItems="center"
-    gap="12px"
-    padding="16px 20px"
-    sx={{
-      backgroundColor: bgColor || "var(--bg-color)",
-      borderRadius: "12px",
-      border: "1px solid var(--border-color)",
-      minWidth: "200px",
-      flex: 1,
-    }}
+    gap="10px"
+    flex={1}
+    padding="14px 20px"
   >
     <Stack
       sx={{
-        width: "44px",
-        height: "44px",
-        backgroundColor: "var(--white)",
-        borderRadius: "10px",
+        width: "36px",
+        height: "36px",
+        borderRadius: "8px",
+        backgroundColor: "var(--bg-color)",
         justifyContent: "center",
         alignItems: "center",
-        border: `1.5px solid ${color}30`,
         flexShrink: 0,
       }}
     >
       {icon &&
         React.cloneElement(icon, {
-          sx: { fontSize: "22px", color: color },
+          sx: { fontSize: "18px", color: color || "var(--primary-color)" },
         })}
     </Stack>
-    <Stack gap="4px" flex={1}>
+    <Stack>
       <Typography
         sx={{
-          fontSize: "12px",
+          fontSize: "11px",
           color: "var(--text3)",
           fontWeight: 600,
           textTransform: "uppercase",
-          letterSpacing: "0.5px",
+          letterSpacing: "0.3px",
+          lineHeight: 1.2,
         }}
       >
         {label}
       </Typography>
       {isLoading ? (
-        <Typography sx={{ fontSize: "24px", color: "var(--text3)" }}>
-          -
-        </Typography>
+        <Skeleton variant="text" width={40} height={22} />
       ) : (
         <Typography
           sx={{
-            fontSize: "26px",
-            fontWeight: 800,
-            color: color,
+            fontSize: "16px",
+            fontWeight: 700,
+            color: color || "var(--text1)",
             fontFamily: "Lato",
-            lineHeight: 1,
+            lineHeight: 1.3,
           }}
         >
           {value}

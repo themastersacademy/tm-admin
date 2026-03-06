@@ -4,9 +4,6 @@ import {
   Stack,
   TextField,
   Typography,
-  Card,
-  CardContent,
-  Divider,
 } from "@mui/material";
 import MarkdownEditor from "@/src/components/MarkdownEditor/MarkdownEditor";
 import ThumbnailUpload from "@/src/components/ThumbnailUpload/ThumbnailUpload";
@@ -14,11 +11,6 @@ import { useEffect, useState } from "react";
 import StyledTextField from "@/src/components/StyledTextField/StyledTextField";
 import { apiFetch } from "@/src/lib/apiFetch";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
-import {
-  InfoOutlined,
-  Image as ImageIcon,
-  Settings,
-} from "@mui/icons-material";
 
 export default function Basic({ course, setCourse }) {
   const { showSnackbar } = useSnackbar();
@@ -56,7 +48,6 @@ export default function Basic({ course, setCourse }) {
         showSnackbar(data.message, "success", "", "3000");
         setIsChanged(false);
       } else {
-        console.log(data.message);
       }
     } catch (error) {
       console.error(error.message);
@@ -64,7 +55,7 @@ export default function Basic({ course, setCourse }) {
   };
 
   return (
-    <Stack gap="24px" sx={{ position: "relative" }}>
+    <Stack gap="12px" sx={{ position: "relative" }}>
       {/* Sticky Action Bar */}
       <Stack
         direction="row"
@@ -74,41 +65,34 @@ export default function Basic({ course, setCourse }) {
           position: "sticky",
           top: 0,
           zIndex: 100,
-          backgroundColor: "rgba(255, 255, 255, 0.9)",
+          backgroundColor: "rgba(255, 255, 255, 0.95)",
           backdropFilter: "blur(8px)",
-          padding: "16px 0",
+          padding: "10px 0",
           borderBottom: "1px solid var(--border-color)",
-          marginBottom: "16px",
         }}
       >
-        <Stack gap="4px">
-          <Typography
-            sx={{
-              fontFamily: "Lato",
-              fontSize: "20px",
-              fontWeight: 700,
-              color: "var(--text1)",
-            }}
-          >
-            Course Overview
-          </Typography>
-          <Typography
-            sx={{ fontFamily: "Lato", fontSize: "14px", color: "var(--text3)" }}
-          >
-            Manage your course&apos;s core details and settings
-          </Typography>
-        </Stack>
+        <Typography
+          sx={{
+            fontSize: "14px",
+            fontWeight: 700,
+            color: "var(--text1)",
+          }}
+        >
+          Course Details
+        </Typography>
         <Button
           variant="contained"
           sx={{
             textTransform: "none",
             backgroundColor: "var(--primary-color)",
-            padding: "8px 24px",
+            padding: "5px 16px",
             borderRadius: "8px",
-            fontSize: "14px",
+            fontSize: "12px",
             fontWeight: 600,
-            opacity: isChanged ? 1 : 0.6,
+            height: "32px",
+            opacity: isChanged ? 1 : 0.5,
             pointerEvents: isChanged ? "auto" : "none",
+            "&:hover": { backgroundColor: "var(--primary-color-dark)" },
           }}
           onClick={handleSave}
           disableElevation
@@ -119,248 +103,135 @@ export default function Basic({ course, setCourse }) {
 
       <Stack
         flexDirection="row"
-        gap="24px"
+        gap="12px"
         flexWrap="wrap"
         alignItems="flex-start"
       >
-        {/* Left Column - General Information */}
-        <Card
-          elevation={0}
+        {/* Left Column */}
+        <Stack
+          flex={2}
+          minWidth="400px"
+          gap="12px"
           sx={{
-            flex: 2,
-            minWidth: "400px",
+            padding: "14px",
             border: "1px solid var(--border-color)",
-            borderRadius: "12px",
+            borderRadius: "10px",
           }}
         >
-          <CardContent sx={{ padding: "24px" }}>
-            <Stack gap="24px">
-              <Stack direction="row" gap="12px" alignItems="center">
-                <InfoOutlined sx={{ color: "var(--primary-color)" }} />
-                <Typography
-                  sx={{
-                    fontFamily: "Lato",
-                    fontSize: "18px",
-                    fontWeight: 700,
-                    color: "var(--text1)",
-                  }}
-                >
-                  General Information
-                </Typography>
-              </Stack>
-              <Divider />
+          <Stack gap="4px">
+            <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "var(--text2)" }}>
+              Course Title*
+            </Typography>
+            <StyledTextField
+              placeholder="e.g., Advanced Physics for Grade 12"
+              value={course.title || ""}
+              onChange={(e) =>
+                setCourse((prev) => ({ ...prev, title: e.target.value }))
+              }
+              fullWidth
+            />
+          </Stack>
 
-              <Stack gap="8px">
-                <Typography
-                  sx={{
-                    fontFamily: "Lato",
-                    fontSize: "14px",
-                    fontWeight: 700,
-                    color: "var(--text1)",
-                  }}
-                >
-                  Course Title*
-                </Typography>
-                <StyledTextField
-                  placeholder="e.g., Advanced Physics for Grade 12"
-                  value={course.title || ""}
-                  onChange={(e) =>
-                    setCourse((prev) => ({ ...prev, title: e.target.value }))
-                  }
-                  fullWidth
-                  helperText="This title will be displayed on the course card and details page."
-                />
-              </Stack>
+          <Stack gap="4px" flex={1}>
+            <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "var(--text2)" }}>
+              Course Description*
+            </Typography>
+            <MarkdownEditor
+              value={course.description || ""}
+              onChange={(val) =>
+                setCourse((prev) => ({ ...prev, description: val }))
+              }
+              height="300px"
+            />
+          </Stack>
+        </Stack>
 
-              <Stack gap="8px" flex={1}>
-                <Typography
-                  sx={{
-                    fontFamily: "Lato",
-                    fontSize: "14px",
-                    fontWeight: 700,
-                    color: "var(--text1)",
-                  }}
-                >
-                  Course Description*
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: "Lato",
-                    fontSize: "12px",
-                    color: "var(--text3)",
-                    mb: 1,
-                  }}
-                >
-                  Provide a comprehensive overview of what students will learn
-                  in this course.
-                </Typography>
-                <MarkdownEditor
-                  value={course.description || ""}
-                  onChange={(val) =>
-                    setCourse((prev) => ({ ...prev, description: val }))
-                  }
-                  height="400px"
-                />
-              </Stack>
-            </Stack>
-          </CardContent>
-        </Card>
-
-        {/* Right Column - Media & Settings */}
-        <Stack flex={1} gap="24px" minWidth="300px">
-          {/* Media Card */}
-          <Card
-            elevation={0}
+        {/* Right Column */}
+        <Stack flex={1} gap="12px" minWidth="260px">
+          {/* Thumbnail */}
+          <Stack
+            gap="10px"
             sx={{
+              padding: "14px",
               border: "1px solid var(--border-color)",
-              borderRadius: "12px",
+              borderRadius: "10px",
             }}
           >
-            <CardContent sx={{ padding: "24px" }}>
-              <Stack gap="24px">
-                <Stack direction="row" gap="12px" alignItems="center">
-                  <ImageIcon sx={{ color: "var(--primary-color)" }} />
-                  <Typography
-                    sx={{
-                      fontFamily: "Lato",
-                      fontSize: "18px",
-                      fontWeight: 700,
-                      color: "var(--text1)",
-                    }}
-                  >
-                    Course Media
-                  </Typography>
-                </Stack>
-                <Divider />
+            <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "var(--text2)" }}>
+              Thumbnail
+            </Typography>
+            <ThumbnailUpload course={course} setCourse={setCourse} />
+          </Stack>
 
-                <Stack gap="8px">
-                  <Typography
-                    sx={{
-                      fontFamily: "Lato",
-                      fontSize: "14px",
-                      fontWeight: 700,
-                      color: "var(--text1)",
-                    }}
-                  >
-                    Thumbnail
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: "Lato",
-                      fontSize: "12px",
-                      color: "var(--text3)",
-                      mb: 1,
-                    }}
-                  >
-                    Upload a high-quality image (16:9 ratio recommended).
-                  </Typography>
-                  <ThumbnailUpload course={course} setCourse={setCourse} />
-                </Stack>
-              </Stack>
-            </CardContent>
-          </Card>
-
-          {/* Settings Card */}
-          <Card
-            elevation={0}
+          {/* Language */}
+          <Stack
+            gap="4px"
             sx={{
+              padding: "14px",
               border: "1px solid var(--border-color)",
-              borderRadius: "12px",
+              borderRadius: "10px",
             }}
           >
-            <CardContent sx={{ padding: "24px" }}>
-              <Stack gap="24px">
-                <Stack direction="row" gap="12px" alignItems="center">
-                  <Settings sx={{ color: "var(--primary-color)" }} />
-                  <Typography
-                    sx={{
-                      fontFamily: "Lato",
-                      fontSize: "18px",
-                      fontWeight: 700,
-                      color: "var(--text1)",
-                    }}
-                  >
-                    Configuration
-                  </Typography>
-                </Stack>
-                <Divider />
+            <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "var(--text2)" }}>
+              Language
+            </Typography>
+            <Autocomplete
+              multiple
+              filterSelectedOptions
+              size="small"
+              options={["English", "Tamil", "Hindi", "Malayalam", "Telugu"]}
+              value={course.language || []}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder={course.language?.length ? "" : "Select languages"}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "8px",
+                      fontSize: "13px",
+                      backgroundColor: "var(--bg-color)",
+                      "& fieldset": { border: "none" },
+                    },
+                  }}
+                />
+              )}
+              onChange={(_, newValue) =>
+                setCourse((prev) => ({ ...prev, language: newValue }))
+              }
+              sx={{
+                "& .MuiChip-root": {
+                  borderRadius: "6px",
+                  fontSize: "11px",
+                  height: "24px",
+                },
+              }}
+            />
+          </Stack>
 
-                <Stack gap="8px">
-                  <Typography
-                    sx={{
-                      fontFamily: "Lato",
-                      fontSize: "14px",
-                      fontWeight: 700,
-                      color: "var(--text1)",
-                    }}
-                  >
-                    Language
-                  </Typography>
-                  <Autocomplete
-                    multiple
-                    filterSelectedOptions
-                    options={[
-                      "English",
-                      "Tamil",
-                      "Hindi",
-                      "Malayalam",
-                      "Telugu",
-                    ]}
-                    value={course.language || []}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        placeholder={
-                          course.language?.length ? "" : "Select languages"
-                        }
-                        sx={{
-                          "& .MuiOutlinedInput-root": {
-                            borderRadius: "8px",
-                            backgroundColor: "var(--bg-color)",
-                            "& fieldset": { border: "none" },
-                          },
-                        }}
-                      />
-                    )}
-                    onChange={(_, newValue) =>
-                      setCourse((prev) => ({ ...prev, language: newValue }))
-                    }
-                    sx={{
-                      "& .MuiChip-root": {
-                        borderRadius: "6px",
-                        fontFamily: "Lato",
-                      },
-                    }}
-                  />
-                </Stack>
-
-                <Stack gap="8px">
-                  <Typography
-                    sx={{
-                      fontFamily: "Lato",
-                      fontSize: "14px",
-                      fontWeight: 700,
-                      color: "var(--text1)",
-                    }}
-                  >
-                    Duration (Hours)*
-                  </Typography>
-                  <StyledTextField
-                    placeholder="e.g. 12.5"
-                    value={course.duration || ""}
-                    onChange={(e) =>
-                      setCourse((prev) => ({
-                        ...prev,
-                        duration: e.target.value,
-                      }))
-                    }
-                    type="number"
-                    helperText="Total estimated duration of the course content."
-                  />
-                </Stack>
-              </Stack>
-            </CardContent>
-          </Card>
+          {/* Duration */}
+          <Stack
+            gap="4px"
+            sx={{
+              padding: "14px",
+              border: "1px solid var(--border-color)",
+              borderRadius: "10px",
+            }}
+          >
+            <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "var(--text2)" }}>
+              Duration (Hours)*
+            </Typography>
+            <StyledTextField
+              placeholder="e.g. 12.5"
+              value={course.duration || ""}
+              onChange={(e) =>
+                setCourse((prev) => ({
+                  ...prev,
+                  duration: e.target.value,
+                }))
+              }
+              type="number"
+            />
+          </Stack>
         </Stack>
       </Stack>
     </Stack>

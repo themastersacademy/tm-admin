@@ -6,20 +6,19 @@ const PageHeader = ({ title, action }) => {
       direction="row"
       justifyContent="space-between"
       alignItems="center"
-      sx={{ mb: "24px" }}
+      sx={{ mb: "16px" }}
     >
       <Typography
         sx={{
-          fontSize: "20px",
+          fontSize: "15px",
           fontWeight: 700,
           color: "var(--text1)",
-          letterSpacing: "-0.5px",
         }}
       >
         {title}
       </Typography>
       {action && (
-        <Stack direction="row" gap="12px" alignItems="center">
+        <Stack direction="row" gap="8px" alignItems="center">
           {action}
         </Stack>
       )}

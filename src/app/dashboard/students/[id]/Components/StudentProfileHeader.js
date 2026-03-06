@@ -2,7 +2,6 @@
 import {
   Stack,
   Typography,
-  Avatar,
   Button,
   Chip,
   IconButton,
@@ -10,20 +9,22 @@ import {
   Dialog,
   DialogContent,
   DialogActions,
+  Box,
 } from "@mui/material";
 import {
   ArrowBack,
   VerifiedUser,
   CheckCircle,
-  Cancel,
   Block,
   Delete,
   Person,
   Warning,
   ErrorOutline,
+  Phone,
+  CalendarToday,
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import { useState } from "react";
 import { apiFetch } from "@/src/lib/apiFetch";
 import { enqueueSnackbar } from "notistack";
 
@@ -34,7 +35,6 @@ export default function StudentProfileHeader({ student, isLoading }) {
   const [isBlockDialogOpen, setIsBlockDialogOpen] = useState(false);
   const [isBlocking, setIsBlocking] = useState(false);
 
-  // Calculate account age
   const getAccountAge = (createdAt) => {
     if (!createdAt) return "New";
     const created = new Date(createdAt);
@@ -43,10 +43,6 @@ export default function StudentProfileHeader({ student, isLoading }) {
     if (months < 1) return "New";
     if (months < 12) return `${months}mo`;
     return `${Math.floor(months / 12)}yr`;
-  };
-
-  const handleBlock = () => {
-    setIsBlockDialogOpen(true);
   };
 
   const confirmBlock = async () => {
@@ -62,16 +58,12 @@ export default function StudentProfileHeader({ student, isLoading }) {
       );
       if (response.success) {
         enqueueSnackbar(
-          `User ${
-            newStatus === "active" ? "unblocked" : "blocked"
-          } successfully`,
+          `User ${newStatus === "active" ? "unblocked" : "blocked"} successfully`,
           { variant: "success" }
         );
         window.location.reload();
       } else {
-        enqueueSnackbar(response.error || "Failed to update status", {
-          variant: "error",
-        });
+        enqueueSnackbar(response.error || "Failed to update status", { variant: "error" });
       }
     } catch (error) {
       enqueueSnackbar("Failed to update status", { variant: "error" });
@@ -86,17 +78,13 @@ export default function StudentProfileHeader({ student, isLoading }) {
     try {
       const response = await apiFetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${student.id}`,
-        {
-          method: "DELETE",
-        }
+        { method: "DELETE" }
       );
       if (response.success) {
         enqueueSnackbar("User deleted successfully", { variant: "success" });
         router.push("/dashboard/students");
       } else {
-        enqueueSnackbar(response.error || "Failed to delete user", {
-          variant: "error",
-        });
+        enqueueSnackbar(response.error || "Failed to delete user", { variant: "error" });
       }
     } catch (error) {
       enqueueSnackbar("Failed to delete user", { variant: "error" });
@@ -109,344 +97,207 @@ export default function StudentProfileHeader({ student, isLoading }) {
   return (
     <>
       <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
         sx={{
           backgroundColor: "var(--white)",
           border: "1px solid var(--border-color)",
           borderRadius: "12px",
-          overflow: "hidden",
+          padding: "16px 20px",
         }}
       >
-        {/* Top Bar */}
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          padding="20px 24px"
-          sx={{
-            borderBottom: "1px solid var(--border-color)",
-            background: "linear-gradient(135deg, #F8F9FA 0%, #FFFFFF 100%)",
-          }}
-        >
-          {/* Left: Back Button + Student Info */}
-          <Stack direction="row" alignItems="center" gap="16px">
-            <IconButton
-              onClick={() => router.back()}
-              sx={{
-                width: "40px",
-                height: "40px",
-                border: "1.5px solid var(--border-color)",
-                backgroundColor: "var(--white)",
-                "&:hover": {
-                  backgroundColor: "var(--bg-color)",
-                  borderColor: "var(--primary-color)",
-                },
-              }}
-            >
-              <ArrowBack sx={{ fontSize: "20px", color: "var(--text2)" }} />
-            </IconButton>
+        {/* Left */}
+        <Stack direction="row" alignItems="center" gap="12px">
+          <IconButton
+            onClick={() => router.back()}
+            sx={{
+              width: 34,
+              height: 34,
+              border: "1px solid var(--border-color)",
+              borderRadius: "8px",
+              "&:hover": {
+                backgroundColor: "var(--primary-color)",
+                borderColor: "var(--primary-color)",
+                "& svg": { color: "#fff" },
+              },
+            }}
+          >
+            <ArrowBack sx={{ fontSize: "18px", color: "var(--text2)", transition: "color 0.2s" }} />
+          </IconButton>
 
-            <Stack
-              sx={{
-                width: "52px",
-                height: "52px",
-                background:
-                  "linear-gradient(135deg, rgba(var(--primary-rgb), 0.12) 0%, rgba(var(--primary-rgb), 0.06) 100%)",
-                borderRadius: "14px",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                border: "1.5px solid rgba(var(--primary-rgb), 0.25)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-              }}
-            >
-              <Person
-                sx={{ fontSize: "26px", color: "var(--primary-color)" }}
-              />
-            </Stack>
+          <Box
+            sx={{
+              width: 38,
+              height: 38,
+              borderRadius: "10px",
+              backgroundColor: "var(--primary-color-acc-2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "1px solid rgba(24, 113, 99, 0.15)",
+              flexShrink: 0,
+            }}
+          >
+            <Person sx={{ fontSize: "20px", color: "var(--primary-color)" }} />
+          </Box>
 
-            <Stack gap="6px">
-              <Stack direction="row" alignItems="center" gap="12px">
-                {isLoading ? (
-                  <Skeleton variant="text" width={200} height={28} />
-                ) : (
-                  <>
-                    <Typography
-                      sx={{
-                        fontFamily: "Lato",
-                        fontSize: "22px",
-                        fontWeight: 700,
-                        color: "var(--text1)",
-                      }}
-                    >
-                      {student?.name || "Student Name"}
-                    </Typography>
-                    <Chip
-                      label={`ID: ${student?.id?.slice(0, 8) || "N/A"}`}
-                      size="small"
-                      sx={{
-                        backgroundColor: "rgba(255, 152, 0, 0.1)",
-                        color: "#F57C00",
-                        fontWeight: 700,
-                        fontSize: "11px",
-                        height: "24px",
-                        border: "1px solid rgba(255, 152, 0, 0.2)",
-                      }}
-                    />
-                  </>
-                )}
-              </Stack>
+          <Stack>
+            <Stack direction="row" alignItems="center" gap="8px">
               {isLoading ? (
-                <Skeleton variant="text" width={250} height={20} />
+                <Skeleton variant="text" width={180} height={24} />
               ) : (
-                <Stack direction="row" alignItems="center" gap="8px">
+                <>
                   <Typography
                     sx={{
-                      fontSize: "13px",
-                      color: "var(--text3)",
-                      lineHeight: 1.4,
+                      fontFamily: "Lato",
+                      fontSize: "18px",
+                      fontWeight: 700,
+                      color: "var(--text1)",
                     }}
                   >
-                    {student?.email || "email@example.com"}
+                    {student?.name || "Student"}
                   </Typography>
+                  <Chip
+                    label={student?.status === "active" ? "Active" : "Blocked"}
+                    size="small"
+                    sx={{
+                      height: "20px",
+                      fontSize: "10px",
+                      fontWeight: 700,
+                      backgroundColor: student?.status === "active" ? "rgba(76, 175, 80, 0.08)" : "rgba(244, 67, 54, 0.08)",
+                      color: student?.status === "active" ? "#4caf50" : "#f44336",
+                      border: `1px solid ${student?.status === "active" ? "#4caf5030" : "#f4433630"}`,
+                    }}
+                  />
                   {student?.emailVerified && (
-                    <VerifiedUser
-                      sx={{
-                        fontSize: "16px",
-                        color: "#4CAF50",
-                      }}
-                    />
+                    <VerifiedUser sx={{ fontSize: "14px", color: "#4CAF50" }} />
                   )}
-                </Stack>
+                </>
               )}
             </Stack>
-          </Stack>
-
-          {/* Right: Action Buttons */}
-          <Stack direction="row" gap="12px">
-            <Button
-              variant="outlined"
-              startIcon={
-                student?.status === "active" ? (
-                  <Block sx={{ fontSize: "18px" }} />
-                ) : (
-                  <CheckCircle sx={{ fontSize: "18px" }} />
-                )
-              }
-              onClick={handleBlock}
-              sx={{
-                border: "1.5px solid var(--border-color)",
-                backgroundColor: "var(--white)",
-                color: "var(--text1)",
-                textTransform: "none",
-                borderRadius: "10px",
-                padding: "10px 20px",
-                fontWeight: 600,
-                fontSize: "14px",
-                height: "48px",
-                "&:hover": {
-                  borderColor:
-                    student?.status === "active" ? "#F57C00" : "#4CAF50",
-                  backgroundColor:
-                    student?.status === "active"
-                      ? "rgba(255, 152, 0, 0.08)"
-                      : "rgba(76, 175, 80, 0.08)",
-                },
-              }}
-            >
-              {student?.status === "active" ? "Block User" : "Unblock User"}
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<Delete sx={{ fontSize: "18px" }} />}
-              onClick={() => setIsDeleteDialogOpen(true)}
-              sx={{
-                background: "linear-gradient(135deg, #F44336 0%, #D32F2F 100%)",
-                color: "#FFFFFF",
-                textTransform: "none",
-                borderRadius: "10px",
-                padding: "10px 20px",
-                fontWeight: 700,
-                fontSize: "14px",
-                boxShadow: "0 4px 12px rgba(244, 67, 54, 0.25)",
-                height: "48px",
-                "&:hover": {
-                  background:
-                    "linear-gradient(135deg, #D32F2F 0%, #C62828 100%)",
-                  boxShadow: "0 6px 16px rgba(244, 67, 54, 0.35)",
-                  transform: "translateY(-1px)",
-                },
-              }}
-              disableElevation
-            >
-              Delete User
-            </Button>
-          </Stack>
-        </Stack>
-
-        {/* Info Section */}
-        <Stack padding="24px" gap="20px">
-          <Stack direction="row" alignItems="center" gap="10px">
-            <Typography
-              sx={{
-                fontSize: "14px",
-                fontWeight: 700,
-                color: "var(--text1)",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-              }}
-            >
-              Student Information
-            </Typography>
-            <Stack
-              sx={{
-                width: "32px",
-                height: "2px",
-                background:
-                  "linear-gradient(90deg, #FF9800 0%, transparent 100%)",
-              }}
-            />
-          </Stack>
-
-          {/* Info Cards */}
-          <Stack direction="row" gap="16px" flexWrap="wrap">
-            <InfoCard
-              label="Account Status"
-              value={student?.status === "active" ? "Active" : "Inactive"}
-              icon={
-                student?.status === "active" ? (
-                  <CheckCircle sx={{ fontSize: "22px" }} />
-                ) : (
-                  <Cancel sx={{ fontSize: "22px" }} />
-                )
-              }
-              color={student?.status === "active" ? "#4CAF50" : "#F44336"}
-              bgColor={
-                student?.status === "active"
-                  ? "rgba(76, 175, 80, 0.08)"
-                  : "rgba(244, 67, 54, 0.08)"
-              }
-              isLoading={isLoading}
-            />
-            <InfoCard
-              label="Email Status"
-              value={student?.emailVerified ? "Verified" : "Not Verified"}
-              icon={
-                student?.emailVerified ? (
-                  <VerifiedUser sx={{ fontSize: "22px" }} />
-                ) : (
-                  <Cancel sx={{ fontSize: "22px" }} />
-                )
-              }
-              color={student?.emailVerified ? "#2196F3" : "#FF9800"}
-              bgColor={
-                student?.emailVerified
-                  ? "rgba(33, 150, 243, 0.08)"
-                  : "rgba(255, 152, 0, 0.08)"
-              }
-              isLoading={isLoading}
-            />
-            <InfoCard
-              label="Member Since"
-              value={getAccountAge(student?.createdAt)}
-              icon={<Person sx={{ fontSize: "22px" }} />}
-              color="#9C27B0"
-              bgColor="rgba(156, 39, 176, 0.08)"
-              isLoading={isLoading}
-            />
-            {student?.phoneNumber && (
-              <InfoCard
-                label="Phone Number"
-                value={student.phoneNumber}
-                icon={<span style={{ fontSize: "22px" }}>📱</span>}
-                color="#607D8B"
-                bgColor="rgba(96, 125, 139, 0.08)"
-                isLoading={isLoading}
-              />
+            {isLoading ? (
+              <Skeleton variant="text" width={220} height={16} />
+            ) : (
+              <Stack direction="row" alignItems="center" gap="12px">
+                <Typography sx={{ fontSize: "12px", color: "var(--text4)" }}>
+                  {student?.email}
+                </Typography>
+                {student?.phoneNumber && (
+                  <Stack direction="row" alignItems="center" gap="3px">
+                    <Phone sx={{ fontSize: "11px", color: "var(--text4)" }} />
+                    <Typography sx={{ fontSize: "11px", color: "var(--text4)" }}>
+                      {student.phoneNumber}
+                    </Typography>
+                  </Stack>
+                )}
+                <Stack direction="row" alignItems="center" gap="3px">
+                  <CalendarToday sx={{ fontSize: "11px", color: "var(--text4)" }} />
+                  <Typography sx={{ fontSize: "11px", color: "var(--text4)" }}>
+                    {getAccountAge(student?.createdAt)}
+                  </Typography>
+                </Stack>
+              </Stack>
             )}
           </Stack>
         </Stack>
+
+        {/* Right */}
+        <Stack direction="row" gap="8px">
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={
+              student?.status === "active" ? (
+                <Block sx={{ fontSize: "14px" }} />
+              ) : (
+                <CheckCircle sx={{ fontSize: "14px" }} />
+              )
+            }
+            onClick={() => setIsBlockDialogOpen(true)}
+            sx={{
+              borderColor: "var(--border-color)",
+              color: "var(--text2)",
+              textTransform: "none",
+              borderRadius: "8px",
+              fontSize: "12px",
+              fontWeight: 600,
+              height: "34px",
+              "&:hover": {
+                borderColor: student?.status === "active" ? "#ff9800" : "#4caf50",
+                backgroundColor: student?.status === "active" ? "rgba(255, 152, 0, 0.04)" : "rgba(76, 175, 80, 0.04)",
+              },
+            }}
+          >
+            {student?.status === "active" ? "Block" : "Unblock"}
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<Delete sx={{ fontSize: "14px" }} />}
+            onClick={() => setIsDeleteDialogOpen(true)}
+            sx={{
+              borderColor: "#f4433640",
+              color: "#f44336",
+              textTransform: "none",
+              borderRadius: "8px",
+              fontSize: "12px",
+              fontWeight: 600,
+              height: "34px",
+              "&:hover": {
+                borderColor: "#f44336",
+                backgroundColor: "rgba(244, 67, 54, 0.04)",
+              },
+            }}
+          >
+            Delete
+          </Button>
+        </Stack>
       </Stack>
 
-      {/* Block Confirmation Dialog */}
+      {/* Block Dialog */}
       <Dialog
         open={isBlockDialogOpen}
         onClose={() => !isBlocking && setIsBlockDialogOpen(false)}
-        PaperProps={{
-          sx: {
-            borderRadius: "16px",
-            padding: "8px",
-            maxWidth: "420px",
-            width: "100%",
-          },
-        }}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: "12px" } }}
       >
-        <DialogContent sx={{ padding: "32px 24px 24px" }}>
-          <Stack alignItems="center" gap="20px">
-            <Stack
+        <DialogContent sx={{ padding: "24px" }}>
+          <Stack alignItems="center" gap="16px">
+            <Box
               sx={{
-                width: "64px",
-                height: "64px",
-                borderRadius: "50%",
-                backgroundColor:
-                  student?.status === "active"
-                    ? "rgba(255, 152, 0, 0.1)"
-                    : "rgba(76, 175, 80, 0.1)",
+                width: 48,
+                height: 48,
+                borderRadius: "12px",
+                backgroundColor: student?.status === "active" ? "rgba(255, 152, 0, 0.1)" : "rgba(76, 175, 80, 0.1)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
               {student?.status === "active" ? (
-                <Warning sx={{ fontSize: "32px", color: "#FF9800" }} />
+                <Warning sx={{ fontSize: "24px", color: "#FF9800" }} />
               ) : (
-                <CheckCircle sx={{ fontSize: "32px", color: "#4CAF50" }} />
+                <CheckCircle sx={{ fontSize: "24px", color: "#4CAF50" }} />
               )}
-            </Stack>
-
-            <Stack alignItems="center" gap="8px">
-              <Typography
-                sx={{
-                  fontSize: "20px",
-                  fontWeight: 700,
-                  color: "var(--text1)",
-                  fontFamily: "Lato",
-                }}
-              >
-                {student?.status === "active" ? "Block User?" : "Unblock User?"}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "14px",
-                  color: "var(--text3)",
-                  textAlign: "center",
-                  lineHeight: 1.5,
-                }}
-              >
-                {student?.status === "active"
-                  ? `Are you sure you want to block ${student?.name}? They won't be able to log in or access their account.`
-                  : `Are you sure you want to unblock ${student?.name}? They will regain access to their account.`}
-              </Typography>
-            </Stack>
+            </Box>
+            <Typography sx={{ fontSize: "16px", fontWeight: 700, color: "var(--text1)" }}>
+              {student?.status === "active" ? "Block User?" : "Unblock User?"}
+            </Typography>
+            <Typography sx={{ fontSize: "13px", color: "var(--text3)", textAlign: "center" }}>
+              {student?.status === "active"
+                ? `${student?.name} won't be able to log in or access their account.`
+                : `${student?.name} will regain access to their account.`}
+            </Typography>
           </Stack>
         </DialogContent>
-
-        <DialogActions sx={{ padding: "0 24px 24px", gap: "12px" }}>
+        <DialogActions sx={{ padding: "0 24px 20px", gap: "8px" }}>
           <Button
             onClick={() => setIsBlockDialogOpen(false)}
             disabled={isBlocking}
-            variant="outlined"
             fullWidth
-            sx={{
-              textTransform: "none",
-              borderColor: "var(--border-color)",
-              color: "var(--text2)",
-              fontWeight: 600,
-              height: "44px",
-              "&:hover": {
-                borderColor: "var(--text2)",
-                backgroundColor: "var(--bg-color)",
-              },
-            }}
+            sx={{ textTransform: "none", color: "var(--text2)", fontWeight: 600, height: "36px", borderRadius: "8px", border: "1px solid var(--border-color)" }}
           >
             Cancel
           </Button>
@@ -455,123 +306,58 @@ export default function StudentProfileHeader({ student, isLoading }) {
             disabled={isBlocking}
             variant="contained"
             fullWidth
+            disableElevation
             sx={{
               textTransform: "none",
-              background:
-                student?.status === "active"
-                  ? "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)"
-                  : "linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)",
-              color: "#fff",
+              backgroundColor: student?.status === "active" ? "#FF9800" : "#4CAF50",
               fontWeight: 700,
-              height: "44px",
-              boxShadow:
-                student?.status === "active"
-                  ? "0 4px 12px rgba(255, 152, 0, 0.25)"
-                  : "0 4px 12px rgba(76, 175, 80, 0.25)",
-              "&:hover": {
-                background:
-                  student?.status === "active"
-                    ? "linear-gradient(135deg, #F57C00 0%, #E65100 100%)"
-                    : "linear-gradient(135deg, #388E3C 0%, #2E7D32 100%)",
-              },
+              height: "36px",
+              borderRadius: "8px",
+              "&:hover": { backgroundColor: student?.status === "active" ? "#F57C00" : "#388E3C" },
             }}
-            disableElevation
           >
-            {isBlocking
-              ? student?.status === "active"
-                ? "Blocking..."
-                : "Unblocking..."
-              : student?.status === "active"
-              ? "Block User"
-              : "Unblock User"}
+            {isBlocking ? "Processing..." : student?.status === "active" ? "Block" : "Unblock"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Dialog */}
       <Dialog
         open={isDeleteDialogOpen}
         onClose={() => !isDeleting && setIsDeleteDialogOpen(false)}
-        PaperProps={{
-          sx: {
-            borderRadius: "16px",
-            padding: "8px",
-            maxWidth: "420px",
-            width: "100%",
-          },
-        }}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: "12px" } }}
       >
-        <DialogContent sx={{ padding: "32px 24px 24px" }}>
-          <Stack alignItems="center" gap="20px">
-            <Stack
+        <DialogContent sx={{ padding: "24px" }}>
+          <Stack alignItems="center" gap="16px">
+            <Box
               sx={{
-                width: "64px",
-                height: "64px",
-                borderRadius: "50%",
+                width: 48,
+                height: 48,
+                borderRadius: "12px",
                 backgroundColor: "rgba(244, 67, 54, 0.1)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <ErrorOutline sx={{ fontSize: "32px", color: "#F44336" }} />
-            </Stack>
-
-            <Stack alignments="center" gap="8px">
-              <Typography
-                sx={{
-                  fontSize: "20px",
-                  fontWeight: 700,
-                  color: "var(--text1)",
-                  fontFamily: "Lato",
-                  textAlign: "center",
-                }}
-              >
-                Delete User?
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "14px",
-                  color: "var(--text3)",
-                  textAlign: "center",
-                  lineHeight: 1.5,
-                }}
-              >
-                Are you sure you want to permanently delete{" "}
-                <strong>{student?.name}</strong>?
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "13px",
-                  color: "#F44336",
-                  textAlign: "center",
-                  fontWeight: 600,
-                  marginTop: "8px",
-                }}
-              >
-                ⚠️ This action cannot be undone!
-              </Typography>
-            </Stack>
+              <ErrorOutline sx={{ fontSize: "24px", color: "#F44336" }} />
+            </Box>
+            <Typography sx={{ fontSize: "16px", fontWeight: 700, color: "var(--text1)" }}>
+              Delete User?
+            </Typography>
+            <Typography sx={{ fontSize: "13px", color: "var(--text3)", textAlign: "center" }}>
+              Permanently delete <strong>{student?.name}</strong> and all their data. This cannot be undone.
+            </Typography>
           </Stack>
         </DialogContent>
-
-        <DialogActions sx={{ padding: "0 24px 24px", gap: "12px" }}>
+        <DialogActions sx={{ padding: "0 24px 20px", gap: "8px" }}>
           <Button
             onClick={() => setIsDeleteDialogOpen(false)}
             disabled={isDeleting}
-            variant="outlined"
             fullWidth
-            sx={{
-              textTransform: "none",
-              borderColor: "var(--border-color)",
-              color: "var(--text2)",
-              fontWeight: 600,
-              height: "44px",
-              "&:hover": {
-                borderColor: "var(--text2)",
-                backgroundColor: "var(--bg-color)",
-              },
-            }}
+            sx={{ textTransform: "none", color: "var(--text2)", fontWeight: 600, height: "36px", borderRadius: "8px", border: "1px solid var(--border-color)" }}
           >
             Cancel
           </Button>
@@ -580,87 +366,20 @@ export default function StudentProfileHeader({ student, isLoading }) {
             disabled={isDeleting}
             variant="contained"
             fullWidth
+            disableElevation
             sx={{
               textTransform: "none",
-              background: "linear-gradient(135deg, #F44336 0%, #D32F2F 100%)",
-              color: "#fff",
+              backgroundColor: "#F44336",
               fontWeight: 700,
-              height: "44px",
-              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.25)",
-              "&:hover": {
-                background: "linear-gradient(135deg, #D32F2F 0%, #C62828 100%)",
-              },
+              height: "36px",
+              borderRadius: "8px",
+              "&:hover": { backgroundColor: "#D32F2F" },
             }}
-            disableElevation
           >
-            {isDeleting ? "Deleting..." : "Delete User"}
+            {isDeleting ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>
     </>
   );
 }
-
-const InfoCard = ({ label, value, icon, color, bgColor, isLoading }) => (
-  <Stack
-    direction="row"
-    alignItems="center"
-    gap="12px"
-    padding="16px 20px"
-    sx={{
-      backgroundColor: bgColor || "var(--bg-color)",
-      borderRadius: "12px",
-      border: "1px solid var(--border-color)",
-      minWidth: "220px",
-      flex: 1,
-    }}
-  >
-    <Stack
-      sx={{
-        width: "44px",
-        height: "44px",
-        backgroundColor: "var(--white)",
-        borderRadius: "10px",
-        justifyContent: "center",
-        alignItems: "center",
-        border: `1.5px solid ${color}30`,
-        flexShrink: 0,
-      }}
-    >
-      {icon &&
-        React.cloneElement(icon, {
-          sx: { fontSize: "22px", color: color },
-        })}
-    </Stack>
-    <Stack gap="4px" flex={1}>
-      <Typography
-        sx={{
-          fontSize: "12px",
-          color: "var(--text3)",
-          fontWeight: 600,
-          textTransform: "uppercase",
-          letterSpacing: "0.5px",
-        }}
-      >
-        {label}
-      </Typography>
-      {isLoading ? (
-        <Typography sx={{ fontSize: "18px", color: "var(--text3)" }}>
-          -
-        </Typography>
-      ) : (
-        <Typography
-          sx={{
-            fontSize: "18px",
-            fontWeight: 700,
-            color: color,
-            fontFamily: "Lato",
-            lineHeight: 1,
-          }}
-        >
-          {value}
-        </Typography>
-      )}
-    </Stack>
-  </Stack>
-);

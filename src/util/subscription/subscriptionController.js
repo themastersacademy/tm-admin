@@ -41,7 +41,6 @@ export async function createSubscriptionPlan({
 
   const params = {
     TableName: `${process.env.AWS_DB_NAME}master`,
-    IndexName: "masterTableIndex",
     Item: newItem,
     ConditionExpression: "attribute_not_exists(pKey)",
   };
@@ -102,31 +101,34 @@ export async function getAllSubscriptionPlan() {
       lastKey = response.LastEvaluatedKey;
     } while (lastKey);
 
-    // Backward compatibility for legacy records missing GSI attributes.
-    if (items.length === 0) {
-      let legacyLastKey;
-      do {
-        const response = await dynamoDB.send(
-          new ScanCommand({
-            TableName: `${process.env.AWS_DB_NAME}master`,
-            FilterExpression: "sKey = :sKey",
-            ExpressionAttributeValues: {
-              ":sKey": "SUBSCRIPTION_PLAN",
-            },
-            ProjectionExpression:
-              "pKey, sKey, priceWithTax, #type, #duration, #discountInPercent, createdAt, updatedAt",
-            ExpressionAttributeNames: {
-              "#type": "type",
-              "#duration": "duration",
-              "#discountInPercent": "discountInPercent",
-            },
-            ...(legacyLastKey && { ExclusiveStartKey: legacyLastKey }),
-          })
-        );
-        items.push(...(response.Items || []));
-        legacyLastKey = response.LastEvaluatedKey;
-      } while (legacyLastKey);
-    }
+    // Merge with legacy scan fallback (deduplicated)
+    const foundKeys = new Set(items.map((item) => item.pKey));
+    let legacyLastKey;
+    do {
+      const response = await dynamoDB.send(
+        new ScanCommand({
+          TableName: `${process.env.AWS_DB_NAME}master`,
+          FilterExpression: "sKey = :sKey",
+          ExpressionAttributeValues: {
+            ":sKey": "SUBSCRIPTION_PLAN",
+          },
+          ProjectionExpression:
+            "pKey, sKey, priceWithTax, #type, #duration, #discountInPercent, createdAt, updatedAt",
+          ExpressionAttributeNames: {
+            "#type": "type",
+            "#duration": "duration",
+            "#discountInPercent": "discountInPercent",
+          },
+          ...(legacyLastKey && { ExclusiveStartKey: legacyLastKey }),
+        })
+      );
+      for (const item of response.Items || []) {
+        if (!foundKeys.has(item.pKey)) {
+          items.push(item);
+        }
+      }
+      legacyLastKey = response.LastEvaluatedKey;
+    } while (legacyLastKey);
 
     return {
       status: true,

@@ -3,9 +3,10 @@ import React, { useState, useCallback, useRef } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import {
   Delete,
+  DriveFileMove,
   Link,
   LinkOff,
-  Menu,
+  Menu as MenuIcon,
   PlayCircleRounded,
   SaveAlt,
 } from "@mui/icons-material";
@@ -14,6 +15,8 @@ import {
   CircularProgress,
   DialogContent,
   IconButton,
+  Menu,
+  MenuItem,
   Stack,
   Tooltip,
   Typography,
@@ -42,6 +45,9 @@ export default function LectureCard({
   reorderLessons,
   lessons,
   setLessons,
+  sectionID,
+  sections,
+  onMoveLesson,
 }) {
   const router = useRouter();
 
@@ -52,6 +58,7 @@ export default function LectureCard({
   const [isVideoPlayerOpen, setIsVideoPlayerOpen] = useState(false);
   const [initialTitle, setInitialTitle] = useState(lesson.title);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [moveAnchorEl, setMoveAnchorEl] = useState(null);
 
   const openDeleteDialog = useCallback(() => setIsDeleteDialogOpen(true), []);
   const closeDeleteDialog = useCallback(() => setIsDeleteDialogOpen(false), []);
@@ -60,14 +67,16 @@ export default function LectureCard({
   const videoPlayerOpen = useCallback(() => setIsVideoPlayerOpen(true), []);
   const videoPlayerClose = useCallback(() => setIsVideoPlayerOpen(false), []);
 
+  const dragType = sectionID ? `${ItemType.CARD}-${sectionID}` : ItemType.CARD;
+
   const [{ isDragging }, dragRef] = useDrag({
-    type: ItemType.CARD,
+    type: dragType,
     item: { lesson, index, initialIndex: index },
     collect: (monitor) => ({ isDragging: monitor.isDragging() }),
   });
 
   const [, dropRef] = useDrop({
-    accept: ItemType.CARD,
+    accept: dragType,
     hover: (draggedItem) => {
       if (draggedItem.index !== index) {
         moveCard(draggedItem.index, index);
@@ -134,31 +143,46 @@ export default function LectureCard({
         ref={dragDropRef}
         sx={{
           border: "1px solid var(--border-color)",
-          borderRadius: "12px",
+          borderRadius: "8px",
           backgroundColor: isDragging
             ? "var(--sec-color-acc-1)"
             : "var(--white)",
-          padding: "16px 24px",
+          padding: "8px 12px",
           opacity: isDragging ? 0.5 : 1,
-          transition: "all 0.2s ease",
+          transition: "all 0.15s ease",
           "&:hover": {
-            boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
             borderColor: "var(--primary-color)",
+            "& .lesson-actions": { opacity: 1 },
           },
         }}
       >
-        <Stack direction="row" alignItems="center" gap="16px">
+        <Stack direction="row" alignItems="center" gap="8px">
           {/* Drag Handle */}
           <IconButton
             disableRipple
+            size="small"
             sx={{
               cursor: "grab",
-              color: "var(--text3)",
-              "&:hover": { color: "var(--text1)" },
+              color: "var(--text4)",
+              width: 24,
+              height: 24,
+              "&:hover": { color: "var(--text2)" },
             }}
           >
-            <Menu fontSize="small" />
+            <MenuIcon sx={{ fontSize: "16px" }} />
           </IconButton>
+
+          {/* Index */}
+          <Typography
+            sx={{
+              fontSize: "11px",
+              fontWeight: 700,
+              color: "var(--text4)",
+              minWidth: "20px",
+            }}
+          >
+            {index + 1}.
+          </Typography>
 
           {/* Title Input */}
           <Stack flex={1}>
@@ -187,28 +211,27 @@ export default function LectureCard({
               }}
               sx={{
                 "& .MuiInputBase-input": {
-                  fontSize: "16px",
+                  fontSize: "13px",
                   fontWeight: 600,
                   color: "var(--text1)",
-                  padding: "8px 0",
+                  padding: "4px 0",
                 },
                 "& fieldset": { border: "none" },
               }}
             />
           </Stack>
 
-          {/* Actions Group */}
-          <Stack direction="row" alignItems="center" gap="16px">
+          {/* Actions */}
+          <Stack direction="row" alignItems="center" gap="6px">
             {/* Preview Toggle */}
-            <Stack direction="row" alignItems="center" gap="8px">
+            <Stack direction="row" alignItems="center" gap="4px">
               <Typography
                 sx={{
-                  fontFamily: "Lato",
-                  fontSize: "12px",
+                  fontSize: "10px",
                   fontWeight: 700,
-                  color: "var(--text3)",
+                  color: "var(--text4)",
                   textTransform: "uppercase",
-                  letterSpacing: "0.5px",
+                  letterSpacing: "0.3px",
                 }}
               >
                 Preview
@@ -234,17 +257,17 @@ export default function LectureCard({
             <div
               style={{
                 width: "1px",
-                height: "24px",
+                height: "20px",
                 backgroundColor: "var(--border-color)",
               }}
             />
 
             {/* Resource Actions */}
-            <Stack direction="row" gap="8px">
+            <Stack direction="row" gap="4px" className="lesson-actions" sx={{ opacity: { xs: 1, md: 0.4 }, transition: "opacity 0.15s" }}>
               {lesson.isLinked &&
                 (lesson.type === "VIDEO" ? (
                   <Button
-                    startIcon={<PlayCircleRounded />}
+                    startIcon={<PlayCircleRounded sx={{ fontSize: "14px !important" }} />}
                     onClick={() => {
                       playVideo({ videoID: lesson.resourceID });
                       videoPlayerOpen();
@@ -256,18 +279,22 @@ export default function LectureCard({
                       borderColor: "var(--primary-color)",
                       color: "var(--primary-color)",
                       fontWeight: 600,
+                      fontSize: "11px",
                       borderRadius: "6px",
+                      padding: "2px 10px",
+                      height: "26px",
+                      minWidth: "unset",
                       "&:hover": {
-                        backgroundColor: "rgba(var(--primary-rgb), 0.05)",
+                        backgroundColor: "rgba(24, 113, 99, 0.04)",
                         borderColor: "var(--primary-color)",
                       },
                     }}
                   >
-                    Play Video
+                    Play
                   </Button>
                 ) : (
                   <Button
-                    startIcon={<SaveAlt />}
+                    startIcon={<SaveAlt sx={{ fontSize: "14px !important" }} />}
                     onClick={() => downloadFile({ path: lesson.path })}
                     variant="outlined"
                     size="small"
@@ -276,9 +303,13 @@ export default function LectureCard({
                       borderColor: "var(--primary-color)",
                       color: "var(--primary-color)",
                       fontWeight: 600,
+                      fontSize: "11px",
                       borderRadius: "6px",
+                      padding: "2px 10px",
+                      height: "26px",
+                      minWidth: "unset",
                       "&:hover": {
-                        backgroundColor: "rgba(var(--primary-rgb), 0.05)",
+                        backgroundColor: "rgba(24, 113, 99, 0.04)",
                         borderColor: "var(--primary-color)",
                       },
                     }}
@@ -288,7 +319,13 @@ export default function LectureCard({
                 ))}
 
               <Button
-                startIcon={lesson.isLinked ? <LinkOff /> : <Link />}
+                startIcon={
+                  lesson.isLinked ? (
+                    <LinkOff sx={{ fontSize: "14px !important" }} />
+                  ) : (
+                    <Link sx={{ fontSize: "14px !important" }} />
+                  )
+                }
                 onClick={() => {
                   if (lesson.isLinked) {
                     setIsUnlinkLoading(true);
@@ -308,51 +345,126 @@ export default function LectureCard({
                   textTransform: "none",
                   backgroundColor: lesson.isLinked
                     ? "transparent"
-                    : "var(--sec-color)",
+                    : "var(--primary-color)",
                   borderColor: lesson.isLinked
                     ? "var(--warning-color)"
-                    : "transparent",
+                    : "var(--primary-color)",
                   color: lesson.isLinked
                     ? "var(--warning-color)"
                     : "var(--white)",
                   fontWeight: 600,
+                  fontSize: "11px",
                   borderRadius: "6px",
+                  padding: "2px 10px",
+                  height: "26px",
+                  minWidth: "unset",
                   boxShadow: "none",
                   "&:hover": {
                     backgroundColor: lesson.isLinked
                       ? "rgba(255, 152, 0, 0.05)"
-                      : "var(--sec-color-dark)",
+                      : "var(--primary-color-dark)",
                     borderColor: lesson.isLinked
                       ? "var(--warning-color)"
-                      : "transparent",
+                      : "var(--primary-color-dark)",
                     boxShadow: "none",
                   },
                 }}
                 disabled={isUnlinkLoading}
               >
                 {isUnlinkLoading ? (
-                  <CircularProgress size={16} color="inherit" />
+                  <CircularProgress size={12} color="inherit" />
                 ) : lesson.isLinked ? (
                   "Unlink"
                 ) : (
-                  "Link Resource"
+                  "Link"
                 )}
               </Button>
+
+              {/* Move to Section */}
+              {sectionID && sections?.length > 1 && (
+                <>
+                  <Tooltip title="Move to Section">
+                    <IconButton
+                      onClick={(e) => setMoveAnchorEl(e.currentTarget)}
+                      size="small"
+                      sx={{
+                        width: 26,
+                        height: 26,
+                        color: "var(--text4)",
+                        "&:hover": {
+                          color: "var(--primary-color)",
+                          backgroundColor: "rgba(24, 113, 99, 0.04)",
+                        },
+                      }}
+                    >
+                      <DriveFileMove sx={{ fontSize: "14px" }} />
+                    </IconButton>
+                  </Tooltip>
+                  <Menu
+                    anchorEl={moveAnchorEl}
+                    open={Boolean(moveAnchorEl)}
+                    onClose={() => setMoveAnchorEl(null)}
+                    PaperProps={{
+                      sx: {
+                        borderRadius: "8px",
+                        minWidth: "160px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                      },
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        color: "var(--text4)",
+                        padding: "4px 12px 2px",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                      }}
+                    >
+                      Move to
+                    </Typography>
+                    {sections
+                      .filter((s) => s.id !== sectionID)
+                      .map((s) => (
+                        <MenuItem
+                          key={s.id}
+                          onClick={() => {
+                            setMoveAnchorEl(null);
+                            onMoveLesson(lesson.id, sectionID, s.id);
+                          }}
+                          sx={{
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            padding: "6px 12px",
+                            "&:hover": {
+                              backgroundColor: "rgba(24, 113, 99, 0.04)",
+                              color: "var(--primary-color)",
+                            },
+                          }}
+                        >
+                          {s.title}
+                        </MenuItem>
+                      ))}
+                  </Menu>
+                </>
+              )}
 
               <Tooltip title="Delete Lesson">
                 <IconButton
                   onClick={openDeleteDialog}
                   size="small"
                   sx={{
-                    color: "var(--text3)",
-                    marginLeft: "8px",
+                    width: 26,
+                    height: 26,
+                    color: "var(--text4)",
                     "&:hover": {
-                      color: "var(--delete-color)",
-                      backgroundColor: "rgba(255, 0, 0, 0.05)",
+                      color: "#f44336",
+                      backgroundColor: "rgba(244, 67, 54, 0.04)",
                     },
                   }}
                 >
-                  <Delete />
+                  <Delete sx={{ fontSize: "14px" }} />
                 </IconButton>
               </Tooltip>
             </Stack>
@@ -377,7 +489,7 @@ export default function LectureCard({
             <Stack
               direction="row"
               justifyContent="center"
-              sx={{ gap: "20px", width: "100%" }}
+              sx={{ gap: "12px", width: "100%" }}
             >
               <Button
                 variant="contained"
@@ -394,13 +506,15 @@ export default function LectureCard({
                   textTransform: "none",
                   backgroundColor: "var(--delete-color)",
                   borderRadius: "8px",
-                  width: "120px",
+                  width: "100px",
                   fontWeight: 600,
+                  fontSize: "12px",
+                  height: "34px",
                 }}
                 disableElevation
               >
                 {loading ? (
-                  <CircularProgress size={20} sx={{ color: "var(--white)" }} />
+                  <CircularProgress size={16} sx={{ color: "var(--white)" }} />
                 ) : (
                   "Delete"
                 )}
@@ -413,10 +527,12 @@ export default function LectureCard({
                   borderRadius: "8px",
                   borderColor: "var(--border-color)",
                   color: "var(--text2)",
-                  width: "120px",
+                  width: "100px",
                   fontWeight: 600,
+                  fontSize: "12px",
+                  height: "34px",
                   "&:hover": {
-                    borderColor: "var(--text2)",
+                    borderColor: "var(--text3)",
                     backgroundColor: "transparent",
                   },
                 }}

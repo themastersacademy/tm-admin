@@ -23,7 +23,6 @@ export default async function getVideoURL(resourceID) {
     const resourceResult = await dynamoDB.send(
       new QueryCommand(resourceQueryParams)
     );
-    console.log("Resource result:", resourceResult);
 
     if (!resourceResult.Items || resourceResult.Items.length === 0) {
       return { success: false, message: "Resource not found" };

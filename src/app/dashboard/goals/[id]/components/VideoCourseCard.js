@@ -1,6 +1,6 @@
 "use client";
-import { Circle, Edit, PlayCircle } from "@mui/icons-material";
-import { Box, Button, Card, Stack, Typography } from "@mui/material";
+import { Circle, East } from "@mui/icons-material";
+import { Box, Card, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import Image from "next/image";
 
 export default function VideoCourseCard({
@@ -16,66 +16,35 @@ export default function VideoCourseCard({
       elevation={0}
       sx={{
         width: "100%",
-        maxWidth: "280px",
+        maxWidth: "240px",
         border: "1px solid var(--border-color)",
-        borderRadius: "16px",
+        borderRadius: "10px",
         overflow: "hidden",
-        transition: "all 0.3s ease",
+        transition: "all 0.15s ease",
+        cursor: "pointer",
         "&:hover": {
-          transform: "translateY(-4px)",
-          boxShadow: "0 12px 24px -10px rgba(0, 0, 0, 0.1)",
           borderColor: "var(--primary-color)",
-          "& .play-icon": {
-            opacity: 1,
-            transform: "scale(1)",
-          },
+          "& .edit-btn": { opacity: 1 },
         },
       }}
+      onClick={onEdit}
     >
-      {/* Thumbnail Section */}
-      <Box sx={{ position: "relative", width: "100%", height: "160px" }}>
+      {/* Thumbnail */}
+      <Box sx={{ position: "relative", width: "100%", height: "120px" }}>
         <Image
           src={thumbnail}
           alt={title}
           fill
           style={{ objectFit: "cover" }}
         />
-        <Box
-          sx={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background:
-              "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 100%)",
-          }}
-        />
-        <Box
-          className="play-icon"
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%) scale(0.8)",
-            opacity: 0,
-            transition: "all 0.3s ease",
-            color: "white",
-            backgroundColor: "rgba(0,0,0,0.3)",
-            borderRadius: "50%",
-            display: "flex",
-          }}
-        >
-          <PlayCircle sx={{ fontSize: "48px" }} />
-        </Box>
         {language && (
           <Stack
             flexDirection="row"
-            gap="4px"
+            gap="3px"
             sx={{
               position: "absolute",
-              bottom: "12px",
-              left: "12px",
+              top: "6px",
+              left: "6px",
             }}
           >
             {(Array.isArray(language) ? language : [language]).map(
@@ -83,10 +52,10 @@ export default function VideoCourseCard({
                 <Box
                   key={index}
                   sx={{
-                    backgroundColor: "rgba(255, 255, 255, 0.9)",
-                    padding: "2px 8px",
+                    backgroundColor: "rgba(255, 255, 255, 0.92)",
+                    padding: "1px 6px",
                     borderRadius: "4px",
-                    fontSize: "10px",
+                    fontSize: "9px",
                     fontWeight: 700,
                     color: "var(--text1)",
                     fontFamily: "Lato",
@@ -100,60 +69,67 @@ export default function VideoCourseCard({
         )}
       </Box>
 
-      {/* Content Section */}
-      <Stack padding="16px" gap="12px">
-        <Typography
-          sx={{
-            fontFamily: "Lato",
-            fontSize: "16px",
-            fontWeight: 700,
-            color: "var(--text1)",
-            lineHeight: 1.4,
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-            height: "44px",
-          }}
-        >
-          {title}
-        </Typography>
+      {/* Content */}
+      <Stack padding="10px 12px" gap="6px">
+        <Stack direction="row" alignItems="flex-start" gap="6px">
+          <Typography
+            sx={{
+              flex: 1,
+              fontFamily: "Lato",
+              fontSize: "13px",
+              fontWeight: 700,
+              color: "var(--text1)",
+              lineHeight: 1.3,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              minHeight: "34px",
+            }}
+          >
+            {title}
+          </Typography>
+          <Tooltip title="Edit Course">
+            <IconButton
+              className="edit-btn"
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              sx={{
+                width: 24,
+                height: 24,
+                opacity: 0,
+                transition: "opacity 0.15s",
+                flexShrink: 0,
+                marginTop: "1px",
+                color: "var(--text4)",
+                "&:hover": {
+                  color: "var(--primary-color)",
+                  backgroundColor: "rgba(24, 113, 99, 0.06)",
+                },
+              }}
+            >
+              <East sx={{ fontSize: "13px" }} />
+            </IconButton>
+          </Tooltip>
+        </Stack>
 
         <Stack
           flexDirection="row"
           alignItems="center"
-          gap="8px"
-          color="var(--text3)"
+          gap="6px"
+          color="var(--text4)"
         >
-          <Typography sx={{ fontFamily: "Lato", fontSize: "12px" }}>
+          <Typography sx={{ fontFamily: "Lato", fontSize: "11px" }}>
             {lessons}
           </Typography>
-          <Circle sx={{ fontSize: "4px" }} />
-          <Typography sx={{ fontFamily: "Lato", fontSize: "12px" }}>
+          <Circle sx={{ fontSize: "3px" }} />
+          <Typography sx={{ fontFamily: "Lato", fontSize: "11px" }}>
             {hours}
           </Typography>
         </Stack>
-
-        <Button
-          variant="outlined"
-          startIcon={<Edit />}
-          onClick={onEdit}
-          fullWidth
-          sx={{
-            textTransform: "none",
-            borderColor: "var(--border-color)",
-            color: "var(--text2)",
-            borderRadius: "8px",
-            marginTop: "4px",
-            "&:hover": {
-              borderColor: "var(--primary-color)",
-              color: "var(--primary-color)",
-              backgroundColor: "var(--primary-color-acc-1)",
-            },
-          }}
-        >
-          Edit Course
-        </Button>
       </Stack>
     </Card>
   );

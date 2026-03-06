@@ -22,14 +22,13 @@ export default function SideNav() {
       sx={{
         borderRight: "1px solid var(--border-color)",
         position: "relative",
-        boxShadow: "2px 0 8px rgba(0,0,0,0.04)",
       }}
     >
       <Stack
         sx={{
-          width: isSideNavOpen ? "80px" : "280px",
+          width: isSideNavOpen ? "68px" : "240px",
           height: "100vh",
-          transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          transition: "width 0.25s ease",
           position: "relative",
           overflowX: "hidden",
           overflowY: "hidden",
@@ -37,12 +36,12 @@ export default function SideNav() {
       >
         <Stack
           position="fixed"
-          gap="32px"
+          gap="20px"
           height="100vh"
-          padding={isSideNavOpen ? "24px 12px" : "24px 16px"}
+          padding={isSideNavOpen ? "16px 10px" : "16px 12px"}
           sx={{
-            width: isSideNavOpen ? "80px" : "280px",
-            transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            width: isSideNavOpen ? "68px" : "240px",
+            transition: "width 0.25s ease",
             overflowX: "hidden",
             "& > :last-child": { marginTop: "auto" },
           }}
@@ -61,9 +60,9 @@ export default function SideNav() {
             sx: {
               backgroundColor: "var(--text1)",
               color: "#fff",
-              fontSize: "12px",
+              fontSize: "11px",
               fontWeight: 600,
-              padding: "6px 10px",
+              padding: "4px 8px",
               borderRadius: "6px",
             },
           },
@@ -73,19 +72,17 @@ export default function SideNav() {
           onClick={drawer}
           sx={{
             position: "fixed",
-            top: "70px",
-            left: isSideNavOpen ? "68px" : "268px",
-            width: "32px",
-            height: "32px",
+            top: "52px",
+            left: isSideNavOpen ? "56px" : "228px",
+            width: "24px",
+            height: "24px",
             backgroundColor: "var(--white)",
-            border: "1.5px solid var(--border-color)",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            border: "1px solid var(--border-color)",
+            transition: "all 0.25s ease",
             zIndex: 10,
             "&:hover": {
               backgroundColor: "var(--primary-color)",
               borderColor: "var(--primary-color)",
-              boxShadow: "0 4px 12px rgba(var(--primary-rgb), 0.3)",
               "& svg": {
                 color: "#fff",
               },
@@ -95,17 +92,15 @@ export default function SideNav() {
           {isSideNavOpen ? (
             <ChevronRight
               sx={{
-                fontSize: "20px",
-                color: "var(--primary-color)",
-                transition: "color 0.2s",
+                fontSize: "16px",
+                color: "var(--text3)",
               }}
             />
           ) : (
             <ChevronLeft
               sx={{
-                fontSize: "20px",
-                color: "var(--primary-color)",
-                transition: "color 0.2s",
+                fontSize: "16px",
+                color: "var(--text3)",
               }}
             />
           )}

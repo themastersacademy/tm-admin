@@ -12,7 +12,6 @@ import {
   Card,
   CardActionArea,
   Chip,
-  Divider,
   Stack,
   Typography,
   IconButton,
@@ -33,193 +32,147 @@ export default function InstituteCard({ institute, onEdit }) {
     <Card
       elevation={0}
       sx={{
-        width: "350px",
+        flex: "1 1 280px",
+        maxWidth: "380px",
         border: "1px solid var(--border-color)",
-        borderRadius: "16px",
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        borderRadius: "12px",
+        transition: "all 0.2s ease",
         background: "var(--white)",
         position: "relative",
         overflow: "visible",
         "&:hover": {
-          transform: "translateY(-4px)",
-          boxShadow: "0 12px 24px -4px rgba(0, 0, 0, 0.08)",
-          borderColor: "transparent",
-          "& .action-arrow": {
-            opacity: 1,
-            transform: "translateX(0)",
-          },
+          borderColor: "var(--primary-color)",
+          boxShadow: "0 4px 16px rgba(24, 113, 99, 0.08)",
+          "& .edit-btn": { opacity: 1 },
         },
       }}
     >
-      <Box sx={{ position: "relative", height: "100%" }}>
-        <CardActionArea
-          onClick={() => router.push(`/dashboard/institute/${id}`)}
-          sx={{
-            height: "100%",
-            padding: "24px",
-            borderRadius: "16px",
-            "&:hover .MuiCardActionArea-focusHighlight": {
-              opacity: 0,
-            },
-          }}
-        >
-          <Stack gap="20px">
-            {/* Header with Icon and Status */}
-            <Stack
-              flexDirection="row"
-              justifyContent="space-between"
-              alignItems="flex-start"
-            >
+      <CardActionArea
+        onClick={() => router.push(`/dashboard/institute/${id}`)}
+        sx={{
+          padding: "16px",
+          borderRadius: "12px",
+          "&:hover .MuiCardActionArea-focusHighlight": { opacity: 0 },
+        }}
+      >
+        <Stack gap="14px">
+          {/* Header */}
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Stack direction="row" alignItems="center" gap="10px" flex={1} minWidth={0}>
               <Avatar
                 variant="rounded"
                 sx={{
-                  background:
-                    "linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)",
-                  color: "#F57C00",
-                  width: 52,
-                  height: 52,
-                  borderRadius: "12px",
-                  border: "1px solid rgba(255, 152, 0, 0.1)",
+                  background: "var(--primary-color-acc-2)",
+                  color: "var(--primary-color)",
+                  width: 38,
+                  height: 38,
+                  borderRadius: "10px",
+                  border: "1px solid rgba(24, 113, 99, 0.15)",
+                  flexShrink: 0,
                 }}
               >
-                <AccountBalance sx={{ fontSize: "26px" }} />
+                <AccountBalance sx={{ fontSize: "20px" }} />
               </Avatar>
-              <Stack direction="row" gap={1}>
-                {/* Spacer for the absolute positioned edit button */}
-                <Box width={32} />
-                <Chip
-                  label={status || "Active"}
-                  size="small"
-                  sx={{
-                    backgroundColor:
-                      status === "ACTIVE" ? "#E8F5E9" : "#FFEBEE",
-                    color: status === "ACTIVE" ? "#2E7D32" : "#C62828",
-                    fontWeight: 700,
-                    fontSize: "11px",
-                    height: "26px",
-                    borderRadius: "6px",
-                    border: "1px solid",
-                    borderColor:
-                      status === "ACTIVE"
-                        ? "rgba(46, 125, 50, 0.1)"
-                        : "rgba(198, 40, 40, 0.1)",
-                  }}
-                />
-              </Stack>
-            </Stack>
-
-            {/* Title and Email */}
-            <Box>
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 800,
-                  fontSize: "18px",
-                  color: "var(--text1)",
-                  mb: 0.5,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  fontFamily: "Lato",
-                }}
-              >
-                {title}
-              </Typography>
-              <Stack flexDirection="row" alignItems="center" gap="8px">
-                <Email sx={{ fontSize: 15, color: "var(--text3)" }} />
+              <Stack minWidth={0} flex={1}>
                 <Typography
-                  variant="body2"
                   sx={{
-                    color: "var(--text3)",
-                    fontSize: "13px",
+                    fontWeight: 700,
+                    fontSize: "14px",
+                    color: "var(--text1)",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
-                    fontWeight: 500,
+                    fontFamily: "Lato",
+                  }}
+                >
+                  {title}
+                </Typography>
+                <Typography
+                  sx={{
+                    color: "var(--text4)",
+                    fontSize: "11px",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {email}
                 </Typography>
               </Stack>
-            </Box>
-
-            <Divider
+            </Stack>
+            <Chip
+              label={status || "Active"}
+              size="small"
               sx={{
-                borderStyle: "dashed",
-                borderColor: "var(--border-color)",
+                backgroundColor: status === "ACTIVE" ? "rgba(76, 175, 80, 0.08)" : "#FFEBEE",
+                color: status === "ACTIVE" ? "#4caf50" : "#C62828",
+                fontWeight: 600,
+                fontSize: "10px",
+                height: "22px",
+                borderRadius: "6px",
+                border: `1px solid ${status === "ACTIVE" ? "rgba(76, 175, 80, 0.2)" : "rgba(198, 40, 40, 0.1)"}`,
+                flexShrink: 0,
+                ml: "8px",
               }}
             />
+          </Stack>
 
-            {/* Stats Footer */}
-            <Stack
-              flexDirection="row"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Stack
-                flexDirection="row"
-                alignItems="center"
-                gap="8px"
-                sx={{
-                  backgroundColor: "rgba(33, 150, 243, 0.08)",
-                  padding: "6px 10px",
-                  borderRadius: "6px",
-                }}
-              >
-                <Class sx={{ fontSize: 16, color: "#1976D2" }} />
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: 700,
-                    color: "#1565C0",
-                    fontSize: "12px",
-                  }}
-                >
-                  {batchCount || 0} Batches
-                </Typography>
-              </Stack>
-
-              <Stack flexDirection="row" alignItems="center" gap="6px">
-                <CalendarToday sx={{ fontSize: 14, color: "var(--text3)" }} />
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: "var(--text3)",
-                    fontSize: "12px",
-                    fontWeight: 500,
-                  }}
-                >
-                  {formattedDate}
-                </Typography>
-              </Stack>
+          {/* Footer Stats */}
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{
+              padding: "8px 10px",
+              backgroundColor: "var(--bg-color, #fafafa)",
+              borderRadius: "8px",
+              border: "1px solid var(--border-color)",
+            }}
+          >
+            <Stack direction="row" alignItems="center" gap="6px">
+              <Class sx={{ fontSize: 14, color: "var(--primary-color)" }} />
+              <Typography sx={{ fontWeight: 700, color: "var(--primary-color)", fontSize: "12px" }}>
+                {batchCount || 0} Batches
+              </Typography>
+            </Stack>
+            <Stack direction="row" alignItems="center" gap="4px">
+              <CalendarToday sx={{ fontSize: 12, color: "var(--text4)" }} />
+              <Typography sx={{ color: "var(--text4)", fontSize: "11px", fontWeight: 500 }}>
+                {formattedDate}
+              </Typography>
             </Stack>
           </Stack>
-        </CardActionArea>
+        </Stack>
+      </CardActionArea>
 
-        {/* Edit Button - Positioned Absolutely */}
-        <IconButton
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(institute);
-          }}
-          sx={{
-            position: "absolute",
-            top: "24px",
-            right: "80px", // Adjusted based on Chip position
-            zIndex: 2,
-            border: "1px solid var(--border-color)",
-            borderRadius: "8px",
-            padding: "4px",
-            backgroundColor: "var(--white)",
-            "&:hover": {
-              backgroundColor: "var(--bg-color)",
-            },
-          }}
-        >
-          <Edit sx={{ fontSize: "16px", color: "var(--text2)" }} />
-        </IconButton>
-      </Box>
+      {/* Edit Button */}
+      <IconButton
+        className="edit-btn"
+        size="small"
+        onClick={(e) => {
+          e.stopPropagation();
+          onEdit(institute);
+        }}
+        sx={{
+          position: "absolute",
+          top: "12px",
+          right: "12px",
+          zIndex: 2,
+          opacity: 0,
+          width: 28,
+          height: 28,
+          border: "1px solid var(--border-color)",
+          borderRadius: "6px",
+          backgroundColor: "var(--white)",
+          transition: "opacity 0.2s ease",
+          "&:hover": {
+            backgroundColor: "var(--primary-color-acc-2)",
+            borderColor: "var(--primary-color)",
+          },
+        }}
+      >
+        <Edit sx={{ fontSize: "14px", color: "var(--text2)" }} />
+      </IconButton>
     </Card>
   );
 }

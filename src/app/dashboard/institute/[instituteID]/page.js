@@ -7,7 +7,7 @@ import InstituteDetailHeader from "./Components/InstituteDetailHeader";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
 import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
 import { apiFetch } from "@/src/lib/apiFetch";
-import { Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 
@@ -60,7 +60,6 @@ export default function InstituteID() {
         }
       } catch (err) {
         if (err.name !== "AbortError") {
-          console.log(err);
         }
       } finally {
         setIsLoading(false);
@@ -163,53 +162,35 @@ export default function InstituteID() {
         onCreateBatch={dialogOpen}
         isLoading={isLoading}
       />
-      <Stack
+      <Box
         sx={{
-          border: "1px solid var(--border-color)",
-          borderRadius: "10px",
-          padding: "20px",
-          backgroundColor: "var(--white)",
-          minHeight: "83vh",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+          gap: "14px",
         }}
       >
-        <Stack gap="15px">
-          <Stack flexDirection="row" justifyContent="space-between">
-            <Typography
-              sx={{ fontFamily: "Lato", fontSize: "20px", fontWeight: "700" }}
-            >
-              Batches
-            </Typography>
-          </Stack>
-          <Stack
-            flexDirection="row"
-            flexWrap="wrap"
-            rowGap="15px"
-            columnGap="40px"
-          >
-            {!isLoading ? (
-              batchList.length > 0 ? (
-                batchList.map((item, index) => (
-                  <BatchCard
-                    key={index}
-                    batch={item}
-                    instituteID={instituteID}
-                    onEdit={handleEditBatch}
-                    onDelete={handleDeleteClick}
-                  />
-                ))
-              ) : (
-                <Stack width="100%" minHeight="60vh">
-                  <NoDataFound info="No batches added" />
-                </Stack>
-              )
-            ) : (
-              Array.from({ length: 3 }).map((_, index) => (
-                <SecondaryCardSkeleton key={index} />
-              ))
-            )}
-          </Stack>
-        </Stack>
-      </Stack>
+        {!isLoading ? (
+          batchList.length > 0 ? (
+            batchList.map((item, index) => (
+              <BatchCard
+                key={index}
+                batch={item}
+                instituteID={instituteID}
+                onEdit={handleEditBatch}
+                onDelete={handleDeleteClick}
+              />
+            ))
+          ) : (
+            <Stack sx={{ gridColumn: "1 / -1", minHeight: "60vh" }}>
+              <NoDataFound info="No batches added" />
+            </Stack>
+          )
+        ) : (
+          Array.from({ length: 6 }).map((_, index) => (
+            <SecondaryCardSkeleton key={index} />
+          ))
+        )}
+      </Box>
       <CreateBatchDialog
         open={isDialogOpen}
         onClose={dialogClose}

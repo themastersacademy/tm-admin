@@ -50,6 +50,14 @@ export default async function deleteLesson({ lessonID, courseID, goalID }) {
     const updatedLessonsCount =
       (courseItem.lessons || 0) > 0 ? courseItem.lessons - 1 : 0;
 
+    // Remove lessonID from its section (if sections exist)
+    const sections = courseItem.sections || [];
+    if (sections.length > 0) {
+      for (const section of sections) {
+        section.lessonIDs = (section.lessonIDs || []).filter((id) => id !== lessonID);
+      }
+    }
+
     // Prepare transaction items:
     const transactItems = [
       // Delete the lesson item.
@@ -71,10 +79,11 @@ export default async function deleteLesson({ lessonID, courseID, goalID }) {
             sKey: `COURSES@${goalID}`,
           },
           UpdateExpression:
-            "SET lessonIDs = :lids, lessons = :count, updatedAt = :u",
+            "SET lessonIDs = :lids, lessons = :count, sections = :sections, updatedAt = :u",
           ExpressionAttributeValues: {
             ":lids": updatedLessonIDs,
             ":count": updatedLessonsCount,
+            ":sections": sections,
             ":u": now,
           },
         },

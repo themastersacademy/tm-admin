@@ -221,7 +221,6 @@ export async function getExamByGoalID({ goalID, type }) {
 
   try {
     const result = await dynamoDB.send(new QueryCommand(params));
-    console.log("result", result);
     return {
       success: true,
       message: "Exam retrieved successfully",
@@ -461,8 +460,6 @@ export async function updateBatchListExamBasicInfo({ batchList, examID }) {
     },
   };
 
-  console.log("updateExamParams", updateExamParams);
-  console.log("TransactItems", TransactItems);
 
   try {
     await dynamoDB.send(new TransactWriteCommand({ TransactItems }));
@@ -663,7 +660,6 @@ export async function createAndUpdateExamSection({
   }
 
   try {
-    console.log(params);
     await dynamoDB.send(new UpdateCommand(params));
     return {
       success: true,
@@ -673,7 +669,6 @@ export async function createAndUpdateExamSection({
           : "Exam section updated successfully",
     };
   } catch (error) {
-    console.log(error);
     throw error;
   }
 }
@@ -919,7 +914,6 @@ export async function deleteSection({ examID, type, sectionIndex }) {
       );
     }
     examItem.questionSection.splice(sectionIndex, 1);
-    console.log(examItem);
 
     const updateParams = {
       TableName: masterTable,
@@ -979,7 +973,6 @@ export async function markExamAsLive({ examID, type }) {
 
   // if the blob was updated after the exam was updated, we don't need to create a new blob
   if (examItem.blobUpdatedAt >= examItem.updatedAt) {
-    console.log("Exam re-activated without new blob");
     await dynamoDB.send(
       new UpdateCommand({
         TableName: MASTER,
@@ -1084,7 +1077,6 @@ export async function markExamAsLive({ examID, type }) {
             ? []
             : src.answerKey.map((k) => {
                 const opt = src.options.find((o) => o.id === k);
-                console.log(opt);
                 return opt
                   ? { id: opt.id, text: opt.text, weight: opt.weight }
                   : null;

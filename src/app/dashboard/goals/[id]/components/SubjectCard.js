@@ -8,38 +8,38 @@ export default function SubjectCard({ title, onRemove }) {
       elevation={0}
       sx={{
         width: "100%",
-        maxWidth: "300px",
-        padding: "16px",
-        borderRadius: "12px",
+        maxWidth: "260px",
+        padding: "10px 12px",
+        borderRadius: "8px",
         border: "1px solid var(--border-color)",
-        transition: "all 0.2s ease",
+        transition: "all 0.15s ease",
         "&:hover": {
           borderColor: "var(--primary-color)",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
-          transform: "translateY(-2px)",
+          "& .delete-btn": { opacity: 1 },
         },
       }}
     >
-      <Stack flexDirection="row" alignItems="center" gap="16px">
+      <Stack flexDirection="row" alignItems="center" gap="10px">
         <Stack
           sx={{
-            width: "48px",
-            height: "48px",
-            borderRadius: "10px",
-            backgroundColor: "var(--primary-color-acc-1)",
+            width: 32,
+            height: 32,
+            borderRadius: "8px",
+            backgroundColor: "var(--primary-color-acc-2)",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
+            flexShrink: 0,
           }}
         >
-          <InsertDriveFile sx={{ color: "var(--primary-color)" }} />
+          <InsertDriveFile sx={{ fontSize: "16px", color: "var(--primary-color)" }} />
         </Stack>
         <Stack flex={1} overflow="hidden">
           <Typography
+            title={title}
             sx={{
-              fontFamily: "Lato",
-              fontWeight: 700,
-              fontSize: "16px",
+              fontWeight: 600,
+              fontSize: "13px",
               color: "var(--text1)",
               whiteSpace: "nowrap",
               overflow: "hidden",
@@ -48,29 +48,28 @@ export default function SubjectCard({ title, onRemove }) {
           >
             {title}
           </Typography>
-          <Typography
-            sx={{
-              fontFamily: "Lato",
-              fontSize: "12px",
-              color: "var(--text3)",
-            }}
-          >
+          <Typography sx={{ fontSize: "10px", color: "var(--text4)" }}>
             Subject
           </Typography>
         </Stack>
-        <Tooltip title="Remove Subject">
+        <Tooltip title="Remove">
           <IconButton
+            className="delete-btn"
             size="small"
             onClick={onRemove}
             sx={{
-              color: "var(--text3)",
+              width: 26,
+              height: 26,
+              opacity: 0,
+              transition: "opacity 0.15s",
+              color: "var(--text4)",
               "&:hover": {
-                color: "var(--delete-color)",
-                backgroundColor: "#ffebee",
+                color: "#f44336",
+                backgroundColor: "rgba(244, 67, 54, 0.04)",
               },
             }}
           >
-            <Delete fontSize="small" />
+            <Delete sx={{ fontSize: "14px" }} />
           </IconButton>
         </Tooltip>
       </Stack>

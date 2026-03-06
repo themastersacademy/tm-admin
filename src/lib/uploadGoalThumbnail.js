@@ -25,12 +25,10 @@ export async function uploadGoalThumbnailToS3({
   setBannerPreview,
   onUploadSuccess,
 }) {
-  console.log(fileData.data.url);
 
   await axios.put(fileData.data.url, file, {
     headers: { "Content-Type": file.type },
     onUploadProgress: (progressEvent) => {
-      console.log("Uploading banner...");
 
       const percent = (
         (progressEvent.loaded / progressEvent.total) *

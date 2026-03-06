@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useCallback } from "react";
+import React, { createContext, useContext, useCallback, useRef } from "react";
 import {
   SnackbarProvider as NotistackProvider,
   useSnackbar as useNotistack,
@@ -17,7 +17,6 @@ const StyledMaterialDesignContent = styled(MaterialDesignContent)(() => ({
   },
   "&.notistack-MuiContent-info": {
     backgroundColor: "var(--info-color)",
-    // color: "#B5C7EB",
   },
   "&.notistack-MuiContent-warning": {
     backgroundColor: "var(--sec-color-acc-2)",
@@ -33,9 +32,32 @@ const SnackbarContext = createContext();
 
 const InnerSnackbarProvider = ({ children }) => {
   const { enqueueSnackbar, closeSnackbar } = useNotistack();
+  const loadingKeyRef = useRef(null);
 
   const showSnackbar = useCallback(
     (message, severity, icon = null, autoHideDuration = 3000) => {
+      const variant = severity || "default";
+
+      // If showing a loading snackbar, store its key so we can close it later
+      if (variant === "loading") {
+        // Close any existing loading snackbar first
+        if (loadingKeyRef.current) {
+          closeSnackbar(loadingKeyRef.current);
+        }
+        const key = enqueueSnackbar(message, {
+          variant: "loading",
+          persist: true,
+        });
+        loadingKeyRef.current = key;
+        return;
+      }
+
+      // For non-loading snackbars, close any active loading snackbar first
+      if (loadingKeyRef.current) {
+        closeSnackbar(loadingKeyRef.current);
+        loadingKeyRef.current = null;
+      }
+
       const action = (key) => (
         <IconButton
           size="small"
@@ -55,7 +77,7 @@ const InnerSnackbarProvider = ({ children }) => {
       );
 
       enqueueSnackbar(message, {
-        variant: severity || "default",
+        variant,
         autoHideDuration: parseInt(autoHideDuration) || 3000,
         action: icon === "close" || !icon ? action : undefined,
       });
@@ -79,8 +101,8 @@ export const SnackbarProvider = ({ children }) => {
       iconVariant={{
         loading: (
           <CircularProgress
-            size={20}
-            sx={{ marginRight: "10px" }}
+            size={16}
+            sx={{ marginRight: "8px" }}
             color="inherit"
           />
         ),

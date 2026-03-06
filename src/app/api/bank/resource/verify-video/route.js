@@ -15,7 +15,6 @@ export async function POST(request) {
     const result = await verifyUpload({ videoID, bankID, resourceID });
     return Response.json(result, { status: 201 });
   } catch (err) {
-    console.log(err);
     return Response.json(
       { success: false, message: "Internal server error" },
       { status: 500 }

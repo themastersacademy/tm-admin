@@ -1,6 +1,51 @@
 import { Card, Stack, Skeleton } from "@mui/material";
 
-export default function SecondaryCardSkeleton({ questionCard }) {
+export default function SecondaryCardSkeleton({ questionCard, variant }) {
+  if (variant === "folder") {
+    return (
+      <Card
+        sx={{
+          width: "100%",
+          padding: "20px",
+          borderRadius: "16px",
+          border: "1px solid var(--border-color)",
+        }}
+        elevation={0}
+      >
+        <Stack gap="16px">
+          <Skeleton
+            variant="rounded"
+            animation="wave"
+            sx={{
+              width: "48px",
+              height: "48px",
+              borderRadius: "12px",
+              bgcolor: "var(--sec-color-acc-1)",
+            }}
+          />
+          <Stack gap="8px">
+            <Skeleton
+              variant="text"
+              animation="wave"
+              width="70%"
+              sx={{ fontSize: "15px" }}
+            />
+            <Stack direction="row" gap={1.5} alignItems="center">
+              <Skeleton
+                variant="rounded"
+                animation="wave"
+                width={65}
+                height={24}
+                sx={{ borderRadius: "6px" }}
+              />
+              <Skeleton variant="text" animation="wave" width={50} />
+            </Stack>
+          </Stack>
+        </Stack>
+      </Card>
+    );
+  }
+
   return (
     <Card
       sx={{

@@ -1,0 +1,42 @@
+[
+  {
+    "type": "bankSync",
+    "bankID": "046eb7da-db2b-45d6-8cb0-9d71f5a77ac2",
+    "error": "Pass options.removeUndefinedValues=true to remove undefined values from map/array/set."
+  },
+  {
+    "type": "bankSync",
+    "bankID": "7a5557d0-0926-4c89-abb3-dcec9f8d01d6",
+    "error": "Pass options.removeUndefinedValues=true to remove undefined values from map/array/set."
+  },
+  {
+    "type": "bankSync",
+    "bankID": "61f0cf53-1597-429e-9797-2507985d62d8",
+    "error": "Pass options.removeUndefinedValues=true to remove undefined values from map/array/set."
+  },
+  {
+    "type": "bankSync",
+    "bankID": "fb0f77a5-bdff-4b34-bff1-1c73519741ce",
+    "error": "Pass options.removeUndefinedValues=true to remove undefined values from map/array/set."
+  },
+  {
+    "type": "bankSync",
+    "bankID": "e4149277-d5f9-42ad-8612-05d53616276a",
+    "error": "Pass options.removeUndefinedValues=true to remove undefined values from map/array/set."
+  },
+  {
+    "type": "bankSync",
+    "bankID": "b8ea01f4-3bb9-42c9-b251-7d176194339d",
+    "error": "Pass options.removeUndefinedValues=true to remove undefined values from map/array/set."
+  },
+  {
+    "type": "bankSync",
+    "bankID": "c718370a-fbe1-4b9c-8b49-3277513d0c7a",
+    "error": "Pass options.removeUndefinedValues=true to remove undefined values from map/array/set."
+  },
+  {
+    "type": "bankSync",
+    "bankID": "7aed29bf-3108-4a6a-b5d2-e91b8edf0654",
+    "error": "Pass options.removeUndefinedValues=true to remove undefined values from map/array/set."
+  }
+]

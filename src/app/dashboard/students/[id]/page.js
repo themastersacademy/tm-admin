@@ -111,31 +111,10 @@ export default function StudentprofileID() {
   );
 
   return (
-    <Stack padding="20px" gap="20px">
-      {/* Modern Profile Header */}
-      <StudentProfileHeader
-        student={student}
-        isLoading={isLoading}
-        onEditProfile={() => console.log("Edit profile")}
-        onSendEmail={() => (window.location.href = `mailto:${student?.email}`)}
-        onViewActivity={() => console.log("View activity")}
-      />
-
-      {/* Dashboard Overview */}
+    <Stack padding="20px" gap="16px">
+      <StudentProfileHeader student={student} isLoading={isLoading} />
       <StudentDashboard stats={dashboardStats} isLoading={isLoading} />
-
-      {/* Tabs Section */}
-      <Stack
-        sx={{
-          backgroundColor: "var(--white)",
-          border: "1px solid var(--border-color)",
-          borderRadius: "12px",
-          padding: "4px",
-          minHeight: "60vh",
-        }}
-      >
-        <CustomTabs tabs={tabs} width="560px" />
-      </Stack>
+      <CustomTabs tabs={tabs} />
     </Stack>
   );
 }

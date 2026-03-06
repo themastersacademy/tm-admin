@@ -1,7 +1,7 @@
 "use client";
 import SectionCard from "@/src/components/CreateExam/Components/SectionCard";
 import { Add } from "@mui/icons-material";
-import { Button, Stack, Tooltip, Typography } from "@mui/material";
+import { Button, Chip, Stack, Tooltip, Typography } from "@mui/material";
 import question from "@/public/Icons/question.svg";
 import Image from "next/image";
 import { useParams } from "next/navigation";
@@ -19,7 +19,6 @@ export default function ExamQuestions({
   questionList,
   setQuestionList,
 }) {
-  console.log(sections, questionList);
   const params = useParams();
   const goalID = params.id;
   const examID = params.examID;
@@ -194,30 +193,30 @@ export default function ExamQuestions({
       followCursor
       placement="right"
     >
-      <Stack marginTop="24px" gap="24px">
-        <Stack flexDirection="row" gap="20px" alignItems="center">
+      <Stack marginTop="16px" gap="16px">
+        <Stack flexDirection="row" gap="12px" alignItems="center">
           <Tooltip
             title={isLive ? "You cannot create section when exam is live" : ""}
             followCursor
           >
             <Button
               variant="contained"
+              size="small"
               startIcon={<Add />}
               onClick={createSection}
               sx={{
-                padding: "10px 24px",
+                padding: "6px 16px",
                 backgroundColor: "var(--primary-color)",
                 textTransform: "none",
                 fontFamily: "Lato",
                 fontWeight: "600",
-                fontSize: "14px",
+                fontSize: "13px",
                 borderRadius: "8px",
-                boxShadow: "0 4px 12px rgba(33, 150, 243, 0.2)",
+                boxShadow: "none",
                 cursor: isLive ? "not-allowed" : "pointer",
                 "&:hover": {
                   backgroundColor: "var(--primary-color-dark)",
-                  boxShadow: "0 6px 16px rgba(33, 150, 243, 0.3)",
-                  color: "white",
+                  boxShadow: "0 2px 8px rgba(24, 113, 99, 0.2)",
                 },
               }}
               disabled={isLive}
@@ -226,47 +225,22 @@ export default function ExamQuestions({
               Add Section
             </Button>
           </Tooltip>
-          <Stack
-            flexDirection="row"
-            justifyContent="space-between"
-            alignItems="center"
+          <Chip
+            label={`${sections.length} Sections`}
             sx={{
-              border: "1px solid var(--border-color)",
-              backgroundColor: "var(--white)",
-              borderRadius: "8px",
-              padding: "8px 16px",
-              minWidth: "160px",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+              fontFamily: "Lato",
+              fontSize: "13px",
+              fontWeight: "700",
+              color: "var(--primary-color)",
+              backgroundColor: "var(--primary-color-acc-2)",
+              border: "1px solid rgba(24, 113, 99, 0.2)",
+              height: "32px",
             }}
-          >
-            <Typography
-              sx={{
-                fontFamily: "Lato",
-                fontSize: "14px",
-                color: "var(--text2)",
-                fontWeight: "600",
-              }}
-            >
-              Total Sections
-            </Typography>
-            <Typography
-              sx={{
-                fontFamily: "Lato",
-                fontSize: "16px",
-                color: "var(--primary-color)",
-                fontWeight: "700",
-                backgroundColor: "var(--primary-color-acc-2)",
-                padding: "2px 10px",
-                borderRadius: "6px",
-              }}
-            >
-              {sections.length}
-            </Typography>
-          </Stack>
+          />
         </Stack>
         {!isLoading ? (
           sections.length > 0 ? (
-            <Stack gap="16px">
+            <Stack gap="10px">
               {sections.map((section, index) => (
                 <SectionCard
                   key={index}

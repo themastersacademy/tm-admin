@@ -7,9 +7,11 @@ import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/Second
 import { apiFetch } from "@/src/lib/apiFetch";
 import { CloudUpload, PlayCircle } from "@mui/icons-material";
 import {
+  Box,
   Button,
   CircularProgress,
   DialogContent,
+  Pagination,
   Skeleton,
   Stack,
   Typography,
@@ -20,7 +22,7 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import CourseBankHeader from "../components/CourseBankHeader";
 import ResourceCard from "../components/ResourceCard";
 import axios from "axios";
@@ -67,6 +69,8 @@ export default function CourseBankId() {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const ITEMS_PER_PAGE = 24;
 
   const dialogOpenFile = () => setIsDialogFileOPen(true);
   const dialogCloseFile = () => setIsDialogFileOPen(false);
@@ -76,6 +80,7 @@ export default function CourseBankId() {
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
+    setPage(1);
     if (newValue === "all") {
       setFilteredResources(resourceList);
     } else if (newValue === "streaming") {
@@ -84,6 +89,16 @@ export default function CourseBankId() {
       setFilteredResources(resourceList.filter((r) => r.type === "FILE"));
     }
   };
+
+  const totalPages = Math.ceil(filteredResources.length / ITEMS_PER_PAGE);
+  const paginatedResources = useMemo(
+    () =>
+      filteredResources.slice(
+        (page - 1) * ITEMS_PER_PAGE,
+        page * ITEMS_PER_PAGE
+      ),
+    [filteredResources, page]
+  );
 
   const handleResourceAction = (action, resource) => {
     if (action === "delete") {
@@ -281,18 +296,17 @@ export default function CourseBankId() {
     <Stack padding="20px" gap="24px">
       <CourseBankHeader
         title={bank.bankTitle || <Skeleton width={200} />}
-        breadcrumbs={[
-          { label: "Course Bank", href: "/dashboard/library/coursebank" },
-          { label: bank.bankTitle || "Loading..." },
-        ]}
+        countLabel={`${resourceList.length} ${resourceList.length === 1 ? "Resource" : "Resources"}`}
+        subtitle="Upload and manage videos and files for this course"
         actions={[
           {
             label: "Upload File",
             icon: <CloudUpload />,
             onClick: dialogOpenFile,
             sx: {
-              background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
+              backgroundColor: "var(--primary-color)",
               color: "white",
+              "&:hover": { backgroundColor: "var(--primary-color-dark)" },
             },
           },
           {
@@ -300,8 +314,9 @@ export default function CourseBankId() {
             icon: <PlayCircle />,
             onClick: dialogOpenVideo,
             sx: {
-              background: "linear-gradient(135deg, #F44336 0%, #D32F2F 100%)",
+              backgroundColor: "var(--primary-color)",
               color: "white",
+              "&:hover": { backgroundColor: "var(--primary-color-dark)" },
             },
           },
         ]}
@@ -324,8 +339,8 @@ export default function CourseBankId() {
         sx={{
           border: "1px solid var(--border-color)",
           backgroundColor: "var(--white)",
-          borderRadius: "16px",
-          padding: "24px",
+          borderRadius: "10px",
+          padding: "16px",
           minHeight: "75vh",
         }}
       >
@@ -333,46 +348,21 @@ export default function CourseBankId() {
           direction="row"
           justifyContent="space-between"
           alignItems="center"
-          mb={3}
-          borderBottom="1px solid var(--border-color)"
-          pb={2}
-        >
-          <Stack direction="row" gap={4}>
-            <Stack>
-              <Typography fontSize="12px" color="var(--text3)">
-                Streaming
-              </Typography>
-              <Typography fontSize="16px" fontWeight={700}>
-                {resourceList.filter((r) => r.type === "VIDEO").length}
-              </Typography>
-            </Stack>
-            <Stack>
-              <Typography fontSize="12px" color="var(--text3)">
-                Drive Files
-              </Typography>
-              <Typography fontSize="16px" fontWeight={700}>
-                {resourceList.filter((r) => r.type === "FILE").length}
-              </Typography>
-            </Stack>
-          </Stack>
-        </Stack>
-
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={3}
+          mb="12px"
           borderBottom="1px solid var(--border-color)"
         >
           <Tabs
             value={activeTab}
             onChange={handleTabChange}
             sx={{
+              minHeight: "36px",
               "& .MuiTab-root": {
                 textTransform: "none",
                 fontWeight: 600,
-                fontSize: "14px",
-                minWidth: "80px",
+                fontSize: "12px",
+                minWidth: "60px",
+                minHeight: "36px",
+                padding: "6px 12px",
               },
               "& .Mui-selected": {
                 color: "var(--primary-color)",
@@ -382,25 +372,33 @@ export default function CourseBankId() {
               },
             }}
           >
-            <Tab label="All Resources" value="all" />
-            <Tab label="Streaming" value="streaming" />
-            <Tab label="Drive" value="drive" />
+            <Tab label={`All (${resourceList.length})`} value="all" />
+            <Tab label={`Streaming (${resourceList.filter((r) => r.type === "VIDEO").length})`} value="streaming" />
+            <Tab label={`Drive (${resourceList.filter((r) => r.type === "FILE").length})`} value="drive" />
           </Tabs>
           <Typography
             sx={{
-              fontSize: "14px",
+              fontSize: "11px",
               fontWeight: 600,
-              color: "var(--text2)",
+              color: "var(--text3)",
             }}
           >
             {filteredResources.length} Items
           </Typography>
         </Stack>
 
-        <Stack flexDirection="row" gap="24px" flexWrap="wrap">
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+            gap: "10px",
+            width: "100%",
+            alignContent: "start",
+          }}
+        >
           {!isLoading ? (
-            filteredResources.length > 0 ? (
-              filteredResources.map((item, index) => (
+            paginatedResources.length > 0 ? (
+              paginatedResources.map((item, index) => (
                 <ResourceCard
                   key={index}
                   resource={item}
@@ -408,16 +406,74 @@ export default function CourseBankId() {
                 />
               ))
             ) : (
-              <Stack width="100%" height="50vh">
+              <Box sx={{ gridColumn: "1 / -1", height: "50vh" }}>
                 <NoDataFound info="No resources found" />
-              </Stack>
+              </Box>
             )
           ) : (
-            [...Array(4)].map((_, index) => (
-              <SecondaryCardSkeleton key={index} />
+            [...Array(8)].map((_, index) => (
+              <SecondaryCardSkeleton key={index} variant="folder" />
             ))
           )}
-        </Stack>
+        </Box>
+
+        {totalPages > 1 && (
+          <Stack
+            direction="row"
+            justifyContent="center"
+            alignItems="center"
+            gap={1}
+            mt="16px"
+            pt="12px"
+            borderTop="1px solid var(--border-color)"
+          >
+            <Typography
+              sx={{ fontSize: "11px", color: "var(--text3)", fontWeight: 500 }}
+            >
+              Page {page} of {totalPages}
+            </Typography>
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={(_, value) => {
+                setPage(value);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              size="small"
+              shape="rounded"
+              sx={{
+                "& .MuiPaginationItem-root": {
+                  fontWeight: 600,
+                  fontSize: "12px",
+                  minWidth: "30px",
+                  height: "30px",
+                  borderRadius: "8px",
+                  color: "var(--text2)",
+                  border: "1px solid var(--border-color)",
+                  "&:hover": {
+                    backgroundColor: "rgba(24, 113, 99, 0.08)",
+                    borderColor: "var(--primary-color)",
+                  },
+                  "&.Mui-selected": {
+                    backgroundColor: "var(--primary-color)",
+                    color: "white",
+                    borderColor: "var(--primary-color)",
+                    "&:hover": {
+                      backgroundColor: "var(--primary-color-dark)",
+                    },
+                  },
+                },
+                "& .MuiPaginationItem-previousNext": {
+                  border: "1px solid var(--border-color)",
+                  "&:hover": {
+                    backgroundColor: "rgba(24, 113, 99, 0.08)",
+                    borderColor: "var(--primary-color)",
+                  },
+                },
+              }}
+            />
+          </Stack>
+        )}
       </Stack>
 
       <DeleteDialogBox
@@ -438,12 +494,14 @@ export default function CourseBankId() {
                 backgroundColor: "var(--delete-color)",
                 borderRadius: "8px",
                 width: "120px",
-                height: "44px",
+                height: "36px",
+                fontSize: "13px",
+                fontWeight: 600,
               }}
               disableElevation
             >
               {isLoading ? (
-                <CircularProgress size={20} sx={{ color: "var(--white)" }} />
+                <CircularProgress size={18} sx={{ color: "var(--white)" }} />
               ) : (
                 "Delete"
               )}
@@ -457,7 +515,9 @@ export default function CourseBankId() {
                 color: "var(--text2)",
                 borderColor: "var(--border-color)",
                 width: "120px",
-                height: "44px",
+                height: "36px",
+                fontSize: "13px",
+                fontWeight: 600,
               }}
             >
               Cancel
@@ -482,25 +542,26 @@ export default function CourseBankId() {
         filePath={previewPath}
       />
 
-      <Dialog open={isDownloading} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontSize: "16px", fontWeight: 600 }}>
+      <Dialog open={isDownloading} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: "14px" } }}>
+        <DialogTitle sx={{ fontSize: "14px", fontWeight: 700, padding: "16px 20px 8px" }}>
           Downloading...
         </DialogTitle>
-        <DialogContent>
-          <Stack gap={1}>
+        <DialogContent sx={{ padding: "8px 20px 16px" }}>
+          <Stack gap="4px">
             <LinearProgress
               variant="determinate"
               value={downloadProgress}
               sx={{
-                height: 8,
-                borderRadius: 4,
+                height: 4,
+                borderRadius: 2,
                 backgroundColor: "var(--border-color)",
                 "& .MuiLinearProgress-bar": {
                   backgroundColor: "var(--primary-color)",
+                  borderRadius: 2,
                 },
               }}
             />
-            <Typography align="right" fontSize="12px" color="var(--text2)">
+            <Typography align="right" fontSize="11px" fontWeight={700} color="var(--text2)">
               {downloadProgress}%
             </Typography>
           </Stack>

@@ -8,7 +8,6 @@
  * @returns {{ questions: Array<Object>, errors: Array<Object> }}
  */
 export function sanitizeQuestions(rows, subjectID) {
-  console.log(rows);
   const questions = [];
   const errors = [];
 

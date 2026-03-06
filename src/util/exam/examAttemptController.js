@@ -24,7 +24,7 @@ export async function getAllExamAttemptsByExamID(examID) {
         ":examID": examID,
       },
       FilterExpression: "examID = :examID",
-      ProjectionExpression: `pKey, userMeta, batchMeta,
+      ProjectionExpression: `pKey, sKey, userMeta, batchMeta,
                             title, #status, obtainedMarks,
                             totalMarks, totalAttemptedAnswers, totalCorrectAnswers,
                             totalWrongAnswers, totalSkippedAnswers, totalSections, startTimeStamp,
@@ -51,7 +51,6 @@ export async function getAllExamAttemptsByExamID(examID) {
     }
   } while (ExclusiveStartKey); // Continue loop if LastEvaluatedKey is present
 
-  console.log(allItems.length + " exam attempts (after pagination)");
 
   return {
     success: true,

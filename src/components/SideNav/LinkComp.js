@@ -1,6 +1,6 @@
 "use client";
 import { ExpandMore } from "@mui/icons-material";
-import { Stack, Tooltip, Typography, Chip } from "@mui/material";
+import { Stack, Tooltip, Typography } from "@mui/material";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -15,16 +15,16 @@ export default function LinkComp({ isSideNavOpen, sideNavOpen }) {
   return (
     <Stack
       sx={{
-        gap: "8px",
+        gap: "4px",
         maxHeight: "100%",
         overflowY: "auto",
         overflowX: "hidden",
         scrollbarWidth: "thin",
         "&::-webkit-scrollbar": {
-          width: "4px",
+          width: "3px",
         },
         "&::-webkit-scrollbar-thumb": {
-          backgroundColor: "rgba(255, 152, 0, 0.2)",
+          backgroundColor: "rgba(24, 113, 99, 0.2)",
           borderRadius: "10px",
         },
       }}
@@ -35,16 +35,12 @@ export default function LinkComp({ isSideNavOpen, sideNavOpen }) {
         href="/"
         isSideNavOpen={isSideNavOpen}
         isRoot={true}
-        color="#FF9800"
-        bgColor="rgba(255, 152, 0, 0.1)"
       />
       <NavComp
         icon={goals.src}
         title="Home Page"
         href="/dashboard/homepage"
         isSideNavOpen={isSideNavOpen}
-        color="#FF9800"
-        bgColor="rgba(255, 152, 0, 0.1)"
       />
       <NavComp
         icon={library.src}
@@ -57,8 +53,6 @@ export default function LinkComp({ isSideNavOpen, sideNavOpen }) {
         ]}
         isSideNavOpen={isSideNavOpen}
         sideNavOpen={sideNavOpen}
-        color="#FF9800"
-        bgColor="rgba(255, 152, 0, 0.1)"
       />
       <NavComp
         icon={institute.src}
@@ -70,24 +64,18 @@ export default function LinkComp({ isSideNavOpen, sideNavOpen }) {
         ]}
         isSideNavOpen={isSideNavOpen}
         sideNavOpen={sideNavOpen}
-        color="#FF9800"
-        bgColor="rgba(255, 152, 0, 0.1)"
       />
       <NavComp
         icon={students.src}
         title="Students"
         href="/dashboard/students"
         isSideNavOpen={isSideNavOpen}
-        color="#FF9800"
-        bgColor="rgba(255, 152, 0, 0.1)"
       />
       <NavComp
         icon={payments.src}
         title="Payments & Coupons"
         href="/dashboard/payments"
         isSideNavOpen={isSideNavOpen}
-        color="#FF9800"
-        bgColor="rgba(255, 152, 0, 0.1)"
       />
     </Stack>
   );
@@ -101,8 +89,6 @@ const NavComp = ({
   isSideNavOpen,
   sideNavOpen,
   isRoot,
-  color,
-  bgColor,
 }) => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const pathname = usePathname();
@@ -110,6 +96,7 @@ const NavComp = ({
     ? pathname === "/dashboard" || pathname.startsWith("/dashboard/goals")
     : pathname === href || pathname.startsWith(href + "/");
   const isChildActive = list?.some((item) => pathname.startsWith(item.href));
+  const isActive = isParentActive || isChildActive;
 
   const toggleLibrary = () => {
     setIsNavOpen((prev) => !prev);
@@ -137,53 +124,43 @@ const NavComp = ({
             sx: {
               backgroundColor: "var(--text1)",
               color: "#fff",
-              fontSize: "13px",
+              fontSize: "11px",
               fontWeight: 600,
-              padding: "8px 12px",
-              borderRadius: "8px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              padding: "4px 8px",
+              borderRadius: "6px",
             },
           },
         }}
       >
         <Stack
           sx={{
-            minHeight: "48px",
-            padding: isSideNavOpen ? "6px" : "8px 10px",
+            padding: isSideNavOpen ? "6px" : "6px 10px",
             cursor: "pointer",
             alignItems: isSideNavOpen ? "center" : "flex-start",
-            background:
-              isParentActive || isChildActive
-                ? `linear-gradient(135deg, ${bgColor} 0%, ${color}15 100%)`
-                : "transparent",
-            borderRadius: "12px",
-            border: `1.5px solid ${
-              isParentActive || isChildActive ? color + "40" : "transparent"
-            }`,
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            backgroundColor: isActive
+              ? "rgba(24, 113, 99, 0.06)"
+              : "transparent",
+            borderRadius: "8px",
             position: "relative",
-            overflow: "hidden",
             "&:hover": {
-              background:
+              backgroundColor:
                 list && isNavOpen
                   ? "transparent"
-                  : `linear-gradient(135deg, ${bgColor} 0%, ${color}15 100%)`,
-              borderColor: color + "40",
+                  : "rgba(24, 113, 99, 0.06)",
             },
-            "&::before":
-              isParentActive || isChildActive
-                ? {
-                    content: '""',
-                    position: "absolute",
-                    left: 0,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    width: "4px",
-                    height: "60%",
-                    backgroundColor: color,
-                    borderRadius: "0 4px 4px 0",
-                  }
-                : {},
+            "&::before": isActive
+              ? {
+                  content: '""',
+                  position: "absolute",
+                  left: 0,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  width: "3px",
+                  height: "50%",
+                  backgroundColor: "var(--primary-color)",
+                  borderRadius: "0 3px 3px 0",
+                }
+              : {},
           }}
         >
           <Link href={href || ""} passHref style={{ width: "100%" }}>
@@ -191,53 +168,45 @@ const NavComp = ({
               flexDirection="row"
               alignItems="center"
               onClick={toggleLibrary}
-              gap={isSideNavOpen ? 0 : "12px"}
+              gap={isSideNavOpen ? 0 : "10px"}
               justifyContent="space-between"
             >
-              <Stack direction="row" alignItems="center" gap="12px">
+              <Stack direction="row" alignItems="center" gap="10px">
                 <Stack
                   sx={{
-                    width: "40px",
-                    height: "40px",
-                    backgroundColor:
-                      isParentActive || isChildActive ? color + "20" : bgColor,
-                    borderRadius: "10px",
+                    width: "34px",
+                    height: "34px",
+                    backgroundColor: isActive
+                      ? "rgba(24, 113, 99, 0.1)"
+                      : "rgba(24, 113, 99, 0.06)",
+                    borderRadius: "8px",
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
-                    border: `1.5px solid ${
-                      isParentActive || isChildActive
-                        ? color + "60"
-                        : color + "30"
-                    }`,
-                    transition: "all 0.3s ease",
                     flexShrink: 0,
                   }}
                 >
                   <Image
                     src={icon}
                     alt={title}
-                    width={20}
-                    height={20}
+                    width={18}
+                    height={18}
                     style={{
-                      filter:
-                        isParentActive || isChildActive
-                          ? "brightness(0) saturate(100%)"
-                          : "none",
+                      filter: isActive
+                        ? "brightness(0) saturate(100%)"
+                        : "none",
                     }}
                   />
                 </Stack>
                 {!isSideNavOpen && (
                   <Typography
                     sx={{
-                      fontFamily: "Lato",
-                      fontSize: "14px",
-                      fontWeight: isParentActive || isChildActive ? 700 : 600,
-                      color:
-                        isParentActive || isChildActive
-                          ? color
-                          : "var(--text1)",
-                      transition: "all 0.2s ease",
+                      fontSize: "13px",
+                      fontWeight: isActive ? 700 : 500,
+                      color: isActive
+                        ? "var(--primary-color)"
+                        : "var(--text1)",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {title}
@@ -247,11 +216,12 @@ const NavComp = ({
               {list && !isSideNavOpen && (
                 <ExpandMore
                   sx={{
-                    color:
-                      isParentActive || isChildActive ? color : "var(--text3)",
-                    fontSize: "20px",
+                    color: isActive
+                      ? "var(--primary-color)"
+                      : "var(--text3)",
+                    fontSize: "18px",
                     transform: isNavOpen ? "rotate(180deg)" : "rotate(0deg)",
-                    transition: "transform 0.3s ease",
+                    transition: "transform 0.2s ease",
                   }}
                 />
               )}
@@ -261,50 +231,31 @@ const NavComp = ({
             {isNavOpen && list && (
               <Stack
                 sx={{
-                  pl: isSideNavOpen ? 0 : "52px",
-                  mt: "8px",
-                  gap: "4px",
-                  animation: "slideDown 0.3s ease",
-                  "@keyframes slideDown": {
-                    from: {
-                      opacity: 0,
-                      transform: "translateY(-10px)",
-                    },
-                    to: {
-                      opacity: 1,
-                      transform: "translateY(0)",
-                    },
-                  },
+                  pl: isSideNavOpen ? 0 : "44px",
+                  mt: "4px",
+                  gap: "2px",
                 }}
               >
                 {list.map((item, index) => (
                   <Link href={item.href} key={index} passHref>
                     <Stack
                       sx={{
-                        fontFamily: "Lato",
-                        fontSize: "13px",
-                        fontWeight: 600,
+                        fontSize: "12px",
+                        fontWeight: pathname.startsWith(item.href) ? 700 : 500,
                         color: pathname.startsWith(item.href)
-                          ? color
+                          ? "var(--primary-color)"
                           : "var(--text2)",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
-                        borderRadius: "8px",
-                        padding: "8px 10px",
+                        borderRadius: "6px",
+                        padding: "6px 10px",
                         backgroundColor: pathname.startsWith(item.href)
-                          ? bgColor
+                          ? "rgba(24, 113, 99, 0.06)"
                           : "transparent",
-                        border: `1px solid ${
-                          pathname.startsWith(item.href)
-                            ? color + "30"
-                            : "transparent"
-                        }`,
-                        transition: "all 0.2s ease",
                         cursor: "pointer",
                         "&:hover": {
-                          backgroundColor: bgColor,
-                          borderColor: color + "30",
+                          backgroundColor: "rgba(24, 113, 99, 0.06)",
                         },
                       }}
                     >

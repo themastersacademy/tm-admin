@@ -2,11 +2,11 @@
 import SubjectContext from "@/src/app/context/SubjectContext";
 import { Edit, Delete } from "@mui/icons-material";
 import {
+  Box,
   Chip,
   IconButton,
   Stack,
   Typography,
-  Box,
   Tooltip,
 } from "@mui/material";
 import React, { useContext } from "react";
@@ -34,78 +34,68 @@ export default function QuestionCard({
 
   return (
     <Stack sx={{ width: "100%" }}>
-      <Stack>
         <Stack
           flexDirection="row"
           alignItems="center"
           sx={{
-            padding: "20px",
+            padding: "10px 14px",
             border: "1px solid var(--border-color)",
-            borderRadius: "12px",
-            minHeight: "100px",
+            borderRadius: "8px",
             width: "100%",
-            gap: "16px",
+            gap: "10px",
             backgroundColor: "var(--white)",
-            transition: "all 0.2s ease-in-out",
+            transition: "all 0.15s ease-in-out",
             "&:hover": {
-              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.05)",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
               borderColor: "var(--primary-color)",
-              transform: "translateY(-2px)",
             },
           }}
         >
           {check}
-          <Stack width="100%" gap="12px">
+          <Stack width="100%" gap="6px">
             <Stack
               flexDirection="row"
               justifyContent="space-between"
               alignItems="center"
             >
-              <Stack flexDirection="row" alignItems="center" gap="12px">
-                <Box
+              <Stack flexDirection="row" alignItems="center" gap="8px">
+                <Typography
                   sx={{
-                    width: "32px",
-                    height: "32px",
-                    borderRadius: "50%",
-                    backgroundColor: "rgba(102, 126, 234, 0.1)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    color: "var(--primary-color)",
+                    backgroundColor: "rgba(24, 113, 99, 0.08)",
+                    padding: "2px 8px",
+                    borderRadius: "4px",
+                    minWidth: "28px",
+                    textAlign: "center",
                   }}
                 >
-                  <Typography
-                    sx={{
-                      fontSize: "14px",
-                      fontWeight: "700",
-                      color: "var(--primary-color)",
-                    }}
-                  >
-                    {questionNumber.replace("Q", "")}
-                  </Typography>
-                </Box>
-                <Stack direction="row" gap="8px">
+                  {questionNumber}
+                </Typography>
+                <Stack direction="row" gap="4px">
                   <Chip
                     label={questionType}
                     size="small"
                     sx={{
-                      fontSize: "11px",
+                      fontSize: "10px",
                       fontWeight: "600",
-                      backgroundColor: "rgba(102, 126, 234, 0.08)",
+                      backgroundColor: "rgba(24, 113, 99, 0.08)",
                       color: "var(--primary-color)",
-                      borderRadius: "6px",
-                      height: "24px",
+                      borderRadius: "4px",
+                      height: "20px",
                     }}
                   />
                   <Chip
                     label={subjectTitle}
                     size="small"
                     sx={{
-                      fontSize: "11px",
+                      fontSize: "10px",
                       fontWeight: "600",
                       backgroundColor: "rgba(245, 0, 87, 0.08)",
                       color: "#f50057",
-                      borderRadius: "6px",
-                      height: "24px",
+                      borderRadius: "4px",
+                      height: "20px",
                     }}
                   />
                   <Chip
@@ -120,10 +110,10 @@ export default function QuestionCard({
                     }
                     size="small"
                     sx={{
-                      fontSize: "11px",
+                      fontSize: "10px",
                       fontWeight: "600",
-                      borderRadius: "6px",
-                      height: "24px",
+                      borderRadius: "4px",
+                      height: "20px",
                       backgroundColor:
                         difficulty === 1
                           ? "rgba(76, 175, 80, 0.08)"
@@ -146,69 +136,61 @@ export default function QuestionCard({
               </Stack>
             </Stack>
             <Box
-              sx={{ "& p": { margin: 0, fontSize: "15px", lineHeight: 1.6 } }}
+              sx={{ "& p": { margin: 0, fontSize: "14px", lineHeight: 1.5 } }}
             >
               {question}
             </Box>
           </Stack>
           <Stack
-            gap="8px"
+            gap="4px"
             flexDirection="row"
             marginLeft="auto"
             alignItems="center"
+            flexShrink={0}
           >
             {preview}
             {onEdit && (
-              <Tooltip title="Edit Question" arrow>
+              <Tooltip title="Edit" arrow>
                 <IconButton
+                  size="small"
                   onClick={onEdit}
                   sx={{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "8px",
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "6px",
                     border: "1px solid var(--border-color)",
-                    backgroundColor: "var(--white)",
-                    transition: "all 0.2s ease",
                     "&:hover": {
-                      backgroundColor: "rgba(255, 152, 0, 0.08)",
-                      borderColor: "#FF9800",
-                      "& svg": {
-                        color: "#FF9800",
-                      },
+                      backgroundColor: "rgba(24, 113, 99, 0.08)",
+                      borderColor: "var(--primary-color)",
                     },
                   }}
                 >
-                  <Edit sx={{ fontSize: "18px", color: "var(--text2)" }} />
+                  <Edit sx={{ fontSize: "15px", color: "var(--text2)" }} />
                 </IconButton>
               </Tooltip>
             )}
             {onDelete && (
-              <Tooltip title="Delete Question" arrow>
+              <Tooltip title="Delete" arrow>
                 <IconButton
+                  size="small"
                   onClick={onDelete}
                   sx={{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "8px",
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "6px",
                     border: "1px solid var(--border-color)",
-                    backgroundColor: "var(--white)",
-                    transition: "all 0.2s ease",
                     "&:hover": {
                       backgroundColor: "rgba(244, 67, 54, 0.08)",
                       borderColor: "#f44336",
-                      "& svg": {
-                        color: "#f44336",
-                      },
                     },
                   }}
                 >
-                  <Delete sx={{ fontSize: "18px", color: "var(--text2)" }} />
+                  <Delete sx={{ fontSize: "15px", color: "var(--text2)" }} />
                 </IconButton>
               </Tooltip>
             )}
           </Stack>
         </Stack>
-      </Stack>
     </Stack>
   );
 }

@@ -30,9 +30,10 @@ const Info = dynamic(
 const StyledTabs = styled(Tabs)({
   backgroundColor: "var(--white)",
   borderRadius: "10px",
-  width: "308px",
-  padding: "4px",
-  minHeight: "40px",
+  border: "1px solid var(--border-color)",
+  width: "fit-content",
+  padding: "3px",
+  minHeight: "36px",
   "& .MuiTabs-indicator": {
     display: "none",
   },
@@ -42,14 +43,16 @@ const StyledTab = styled(Tab)({
   textTransform: "none",
   fontFamily: "Lato",
   fontWeight: 600,
-  borderRadius: "8px",
-  width: "100px",
-  transition: "all 0.2s ease",
-  minHeight: "32px",
-  padding: "0px",
+  fontSize: "13px",
+  borderRadius: "7px",
+  minWidth: "100px",
+  transition: "all 0.15s ease",
+  minHeight: "30px",
+  padding: "4px 16px",
+  color: "var(--text3)",
   "&.Mui-selected": {
-    color: "var(--sec-color)",
-    backgroundColor: "var(--sec-color-acc-1)",
+    color: "var(--primary-color)",
+    backgroundColor: "var(--primary-color-acc-2)",
   },
 });
 
@@ -87,7 +90,7 @@ export default function GoalTabs({ tabs, goal, fetchGoal, goalLoading }) {
     router.push(`/dashboard/goals/${goal.goalID}?${params.toString()}`);
   };
   return (
-    <Stack gap="18px">
+    <Stack gap="16px">
       <StyledTabs value={value} onChange={handleChange}>
         {tabs.map((tab, index) => (
           <StyledTab key={index} label={tab.label} />

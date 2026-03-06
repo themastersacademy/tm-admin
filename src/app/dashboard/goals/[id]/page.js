@@ -26,7 +26,7 @@ export default function Goals() {
         );
         if (json.success) {
           setGoal(json.data);
-        } else {
+        } else if (!json.isAborted) {
           showSnackbar("No Goal Found", "error", "", "3000");
           router.push(`/404`);
         }

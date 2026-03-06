@@ -29,20 +29,6 @@ const TabLoading = () => (
   </Stack>
 );
 
-const TabContentWrapper = ({ children }) => (
-  <Box
-    sx={{
-      backgroundColor: "var(--white)",
-      borderRadius: "12px",
-      minHeight: "60vh",
-      border: "1px solid var(--border-color)",
-      marginTop: "20px",
-    }}
-  >
-    {children}
-  </Box>
-);
-
 export default function Payments() {
   const [stats, setStats] = useState({
     totalRevenue: 0,
@@ -53,7 +39,6 @@ export default function Payments() {
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState([]);
 
-  // Fetch stats from API
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -78,7 +63,6 @@ export default function Payments() {
           allTransactions = transData.data;
           setTransactions(allTransactions);
 
-          // Calculate total revenue from completed transactions
           const completedTransactions = allTransactions.filter(
             (t) => t.status === "completed"
           );
@@ -88,7 +72,6 @@ export default function Payments() {
             0
           );
 
-          // Calculate Monthly Growth
           const now = new Date();
           const currentMonth = now.getMonth();
           const currentYear = now.getFullYear();
@@ -120,7 +103,7 @@ export default function Payments() {
               ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) *
               100;
           } else if (currentMonthRevenue > 0) {
-            monthlyGrowth = 100; // 100% growth if previous month was 0
+            monthlyGrowth = 100;
           }
         }
 
@@ -144,42 +127,29 @@ export default function Payments() {
     () => [
       {
         label: "Transactions",
-        content: (
-          <TabContentWrapper>
-            <Transactions initialTransactions={transactions} />
-          </TabContentWrapper>
-        ),
+        content: <Transactions initialTransactions={transactions} />,
       },
       {
         label: "Subscription Plans",
-        content: (
-          <TabContentWrapper>
-            <Subscription />
-          </TabContentWrapper>
-        ),
+        content: <Subscription />,
       },
       {
         label: "Coupons & Offers",
-        content: (
-          <TabContentWrapper>
-            <Coupons />
-          </TabContentWrapper>
-        ),
+        content: <Coupons />,
       },
     ],
     [transactions]
   );
 
   return (
-    <Stack padding="20px" gap="24px">
+    <Stack padding="20px" gap="16px">
       <PaymentsHeader stats={stats} loading={loading} />
 
-      {/* Analytics Charts */}
       {!loading && transactions.length > 0 && (
         <Stack
           direction={{ xs: "column", md: "row" }}
-          gap="24px"
-          height="400px"
+          gap="16px"
+          height="350px"
         >
           <Box flex={2}>
             <RevenueTrendChart transactions={transactions} />

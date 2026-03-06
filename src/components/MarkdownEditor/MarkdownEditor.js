@@ -10,7 +10,7 @@ import { apiFetch } from "@/src/lib/apiFetch";
 
 const rehypePlugins = [rehypeSanitize];
 
-export default function MarkdownEditor({ value, onChange }) {
+export default function MarkdownEditor({ value, onChange, height = "300px" }) {
   const customCommands = [
     commands.bold,
     commands.italic,
@@ -68,7 +68,6 @@ export default function MarkdownEditor({ value, onChange }) {
 
             const markdownImage = `![Uploaded Image](${imgUrl})\n`;
             api.replaceSelection(markdownImage);
-            console.log(markdownImage);
           } catch (error) {
             console.error("Upload failed:", error);
             alert("Image upload failed!");
@@ -86,7 +85,7 @@ export default function MarkdownEditor({ value, onChange }) {
         position: "relative",
         width: "100%",
         maxWidth: "100%",
-        height: "400px",
+        height,
       }}
       data-color-mode="light"
     >
@@ -94,9 +93,10 @@ export default function MarkdownEditor({ value, onChange }) {
         value={value}
         onChange={onChange}
         commands={customCommands}
+        preview="edit"
         style={{
           width: "100%",
-          minHeight: "400px",
+          minHeight: height,
         }}
         previewOptions={{
           components: {

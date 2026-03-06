@@ -3,38 +3,42 @@ import { Skeleton, Stack } from "@mui/material";
 export default function LessonCardSkeleton() {
   return (
     <Stack
-      flexDirection="row"
+      direction="row"
       alignItems="center"
+      gap="8px"
       sx={{
         width: "100%",
-        height: "60px",
-        gap: "10px",
         border: "1px solid var(--border-color)",
-        backgroundColor: "var(--sec-color-acc-2)",
-        padding: "0px 20px 0px 20px",
-        borderRadius: "4px",
+        backgroundColor: "var(--white)",
+        padding: "8px 12px",
+        borderRadius: "8px",
       }}
     >
-      <Stack flexDirection="row" gap="20px" alignItems="center">
+      <Skeleton
+        variant="rounded"
+        animation="wave"
+        sx={{ width: 16, height: 16, borderRadius: "4px", flexShrink: 0 }}
+      />
+      <Skeleton
+        variant="rounded"
+        animation="wave"
+        sx={{ width: 24, height: 14, borderRadius: "4px", flexShrink: 0 }}
+      />
+      <Skeleton
+        variant="rounded"
+        animation="wave"
+        sx={{ width: "40%", height: 14, borderRadius: "4px" }}
+      />
+      <Stack direction="row" alignItems="center" gap="6px" sx={{ marginLeft: "auto" }}>
         <Skeleton
-          variant="rectangular"
+          variant="rounded"
           animation="wave"
-          sx={{ width: "20px", borderRadius: "4px" }}
+          sx={{ width: 50, height: 20, borderRadius: "6px" }}
         />
         <Skeleton
-          variant="rectangular"
+          variant="rounded"
           animation="wave"
-          sx={{ width: "275px", height: "35px", borderRadius: "4px" }}
-        />
-      </Stack>
-      <Stack
-        flexDirection="row"
-        alignItems="center"
-        sx={{ marginLeft: "auto", gap: "25px" }}
-      >
-        <Skeleton
-          variant="rectangular"
-          sx={{ width: "40px", borderRadius: "3px" }}
+          sx={{ width: 50, height: 20, borderRadius: "6px" }}
         />
       </Stack>
     </Stack>

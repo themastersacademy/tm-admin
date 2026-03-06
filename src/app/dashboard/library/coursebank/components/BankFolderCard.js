@@ -4,7 +4,6 @@ import {
   DeleteOutline,
   DriveFileRenameOutline,
   FolderOutlined,
-  ArrowForwardIos,
 } from "@mui/icons-material";
 import {
   Box,
@@ -52,46 +51,32 @@ export default function BankFolderCard({ bank, onDelete, onRename }) {
     <Card
       elevation={0}
       sx={{
-        width: "300px",
-        borderRadius: "18px",
+        width: "100%",
+        borderRadius: "16px",
         border: "1px solid var(--border-color)",
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
         backgroundColor: "var(--white)",
         position: "relative",
-        overflow: "hidden",
+        overflow: "visible",
         "&:hover": {
-          transform: "translateY(-8px)",
-          boxShadow: "0 20px 40px -10px rgba(102, 126, 234, 0.15)",
-          borderColor: "#667eea",
+          transform: "translateY(-4px)",
+          boxShadow: "0 12px 24px -10px rgba(0, 0, 0, 0.08)",
+          borderColor: "var(--primary-color)",
           "& .folder-icon-box": {
-            transform: "scale(1.05)",
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          },
-          "& .folder-icon": {
+            backgroundColor: "var(--primary-color)",
             color: "white",
-          },
-          "& .arrow-icon": {
-            opacity: 1,
-            transform: "translateX(0)",
+            transform: "scale(1.1) rotate(-5deg)",
           },
         },
       }}
     >
-      {/* Gradient accent bar */}
-      <Box
-        sx={{
-          height: "4px",
-          background: "linear-gradient(90deg, #667eea 0%, #764ba2 100%)",
-        }}
-      />
-
       <CardActionArea
         onClick={() =>
           router.push(`/dashboard/library/coursebank/${bank.bankID}`)
         }
-        sx={{ padding: "24px" }}
+        sx={{ padding: "20px" }}
       >
-        <Stack gap="20px">
+        <Stack gap="16px">
           <Stack
             direction="row"
             justifyContent="space-between"
@@ -100,73 +85,51 @@ export default function BankFolderCard({ bank, onDelete, onRename }) {
             <Box
               className="folder-icon-box"
               sx={{
-                width: "64px",
-                height: "64px",
-                borderRadius: "16px",
-                background: "rgba(102, 126, 234, 0.1)",
+                width: "48px",
+                height: "48px",
+                borderRadius: "12px",
+                backgroundColor: "rgba(24, 113, 99, 0.08)",
+                color: "var(--primary-color)",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 transition: "all 0.3s ease",
               }}
             >
-              <FolderOutlined
-                className="folder-icon"
-                sx={{
-                  fontSize: "32px",
-                  color: "#667eea",
-                  transition: "all 0.3s ease",
-                }}
-              />
+              <FolderOutlined sx={{ fontSize: "24px" }} />
             </Box>
-            <Box sx={{ width: "40px", height: "40px" }} />
+            <Box sx={{ width: "32px", height: "32px" }} />
           </Stack>
 
-          <Stack gap="12px">
-            <Stack
-              direction="row"
-              alignItems="center"
-              justifyContent="space-between"
+          <Stack gap="8px">
+            <Typography
+              sx={{
+                fontSize: "15px",
+                fontWeight: 700,
+                color: "var(--text1)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                fontFamily: "Lato",
+                lineHeight: 1.3,
+                pr: 1,
+              }}
+              title={bank.title}
             >
-              <Typography
-                sx={{
-                  fontSize: "17px",
-                  fontWeight: 700,
-                  color: "var(--text1)",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  fontFamily: "Lato",
-                  flex: 1,
-                  pr: 1,
-                }}
-                title={bank.title}
-              >
-                {bank.title}
-              </Typography>
-              <ArrowForwardIos
-                className="arrow-icon"
-                sx={{
-                  fontSize: "14px",
-                  color: "#667eea",
-                  opacity: 0,
-                  transform: "translateX(-10px)",
-                  transition: "all 0.3s ease",
-                }}
-              />
-            </Stack>
+              {bank.title}
+            </Typography>
 
             <Stack direction="row" alignItems="center" gap={1.5}>
               <Chip
                 label={`${itemCount} ${itemCount === 1 ? "Item" : "Items"}`}
                 size="small"
                 sx={{
-                  height: "26px",
-                  fontSize: "12px",
+                  height: "24px",
+                  fontSize: "11px",
                   fontWeight: 600,
-                  backgroundColor: "rgba(102, 126, 234, 0.1)",
-                  color: "#667eea",
-                  borderRadius: "8px",
+                  backgroundColor: "rgba(24, 113, 99, 0.06)",
+                  color: "var(--primary-color)",
+                  borderRadius: "6px",
                   "& .MuiChip-label": {
                     px: 1.5,
                   },
@@ -175,7 +138,7 @@ export default function BankFolderCard({ bank, onDelete, onRename }) {
               {bank.createdAt && (
                 <Typography
                   sx={{
-                    fontSize: "12px",
+                    fontSize: "11px",
                     color: "var(--text3)",
                     fontWeight: 500,
                   }}
@@ -196,8 +159,8 @@ export default function BankFolderCard({ bank, onDelete, onRename }) {
         onClick={handleClick}
         sx={{
           position: "absolute",
-          top: "28px",
-          right: "24px",
+          top: "20px",
+          right: "16px",
           color: "var(--text3)",
           zIndex: 1,
           "&:hover": { backgroundColor: "rgba(0,0,0,0.04)" },
@@ -211,42 +174,35 @@ export default function BankFolderCard({ bank, onDelete, onRename }) {
         open={open}
         onClose={handleClose}
         PaperProps={{
+          elevation: 0,
           sx: {
-            borderRadius: "12px",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-            minWidth: "160px",
+            overflow: "visible",
+            filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.08))",
+            mt: 1,
+            border: "1px solid var(--border-color)",
+            borderRadius: "8px",
+            minWidth: "140px",
+            "& .MuiMenuItem-root": {
+              fontSize: "13px",
+              fontWeight: 600,
+              gap: "8px",
+              py: 1,
+              px: 2,
+            },
           },
         }}
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        <MenuItem
-          onClick={handleRename}
-          sx={{
-            gap: "12px",
-            color: "var(--text1)",
-            fontSize: "14px",
-            fontWeight: 500,
-            padding: "10px 16px",
-            "&:hover": { backgroundColor: "rgba(102, 126, 234, 0.08)" },
-          }}
-        >
-          <DriveFileRenameOutline fontSize="small" sx={{ color: "#667eea" }} />
-          Rename Folder
+        <MenuItem onClick={handleRename} sx={{ color: "var(--text1)" }}>
+          <DriveFileRenameOutline
+            sx={{ fontSize: "16px", color: "var(--primary-color)" }}
+          />
+          Rename
         </MenuItem>
-        <MenuItem
-          onClick={handleDelete}
-          sx={{
-            gap: "12px",
-            color: "var(--error-color)",
-            fontSize: "14px",
-            fontWeight: 500,
-            padding: "10px 16px",
-            "&:hover": { backgroundColor: "#FFEBEE" },
-          }}
-        >
-          <DeleteOutline fontSize="small" />
-          Delete Folder
+        <MenuItem onClick={handleDelete} sx={{ color: "var(--delete-color)" }}>
+          <DeleteOutline sx={{ fontSize: "16px" }} />
+          Delete
         </MenuItem>
       </Menu>
     </Card>

@@ -192,12 +192,7 @@ export default function Subscription() {
       return;
     }
 
-    showSnackbar(
-      "Syncing...",
-      "success",
-      <CircularProgress size={20} sx={{ color: "var(--primary-color)" }} />,
-      ""
-    );
+    showSnackbar("Syncing...", "loading", "", "");
     setIsLoading(true);
 
     const updatedSub = {
@@ -257,31 +252,30 @@ export default function Subscription() {
   useEffect(() => {
     fetchSubscription();
   }, [fetchSubscription]);
+
   return (
-    <Stack gap="0px" padding="24px">
+    <Stack gap="0px" padding="16px">
       <PageHeader
         title="Subscription Plans"
         action={
           <Button
             variant="contained"
-            startIcon={<Add />}
+            startIcon={<Add sx={{ fontSize: "16px" }} />}
             onClick={dialogOpen}
+            disableElevation
             sx={{
-              background: "linear-gradient(135deg, #1976D2 0%, #1565C0 100%)",
-              color: "#FFFFFF",
+              backgroundColor: "var(--primary-color)",
+              color: "#fff",
               textTransform: "none",
-              borderRadius: "10px",
-              padding: "10px 24px",
-              fontWeight: 700,
-              fontSize: "14px",
-              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.25)",
+              borderRadius: "8px",
+              padding: "6px 16px",
+              fontWeight: 600,
+              fontSize: "12px",
+              height: "34px",
               "&:hover": {
-                background: "linear-gradient(135deg, #1565C0 0%, #0D47A1 100%)",
-                boxShadow: "0 6px 16px rgba(25, 118, 210, 0.35)",
-                transform: "translateY(-1px)",
+                backgroundColor: "var(--primary-color-dark)",
               },
             }}
-            disableElevation
           >
             Add Plan
           </Button>
@@ -314,7 +308,7 @@ export default function Subscription() {
           <CircularProgress />
         </Stack>
       ) : subscription.length > 0 ? (
-        <Grid container spacing={3}>
+        <Grid container spacing={2}>
           {subscription.map((item, index) => (
             <Grid item xs={12} sm={6} md={4} key={index}>
               <PlanCard
@@ -343,7 +337,7 @@ export default function Subscription() {
           <Stack
             flexDirection="row"
             justifyContent="center"
-            sx={{ gap: "16px", width: "100%" }}
+            sx={{ gap: "12px", width: "100%" }}
           >
             <Button
               variant="contained"
@@ -353,6 +347,8 @@ export default function Subscription() {
                 backgroundColor: "var(--delete-color)",
                 borderRadius: "8px",
                 width: "120px",
+                fontSize: "12px",
+                height: "34px",
               }}
               disableElevation
               disabled={isLoading}
@@ -368,6 +364,8 @@ export default function Subscription() {
                 borderColor: "var(--border-color)",
                 color: "var(--text2)",
                 width: "120px",
+                fontSize: "12px",
+                height: "34px",
               }}
               disableElevation
             >

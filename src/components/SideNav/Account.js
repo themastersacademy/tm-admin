@@ -6,13 +6,11 @@ import {
   Stack,
   Tooltip,
   Typography,
-  Chip,
   Divider,
 } from "@mui/material";
 import Image from "next/image";
 import { useState } from "react";
 import more_img from "@/public/Icons/More.svg";
-import students_img from "@/public/Icons/Students.svg";
 import logout_img from "@/public/Icons/Logout.svg";
 
 export default function Account({ isSideNavOpen }) {
@@ -30,7 +28,7 @@ export default function Account({ isSideNavOpen }) {
   return (
     <>
       <Tooltip
-        title="Account Settings"
+        title="Account"
         disableHoverListener={!isSideNavOpen}
         placement="right"
         slotProps={{
@@ -38,11 +36,10 @@ export default function Account({ isSideNavOpen }) {
             sx: {
               backgroundColor: "var(--text1)",
               color: "#fff",
-              fontSize: "13px",
+              fontSize: "11px",
               fontWeight: 600,
-              padding: "8px 12px",
-              borderRadius: "8px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              padding: "4px 8px",
+              borderRadius: "6px",
             },
           },
         }}
@@ -54,58 +51,48 @@ export default function Account({ isSideNavOpen }) {
             alignItems: "center",
             justifyContent: "space-between",
             marginTop: "auto",
-            borderRadius: "14px",
+            borderRadius: "8px",
             cursor: "pointer",
-            padding: isSideNavOpen ? "10px" : "12px",
-            background: open
-              ? "linear-gradient(135deg, rgba(var(--primary-rgb), 0.12) 0%, rgba(var(--primary-rgb), 0.08) 100%)"
+            padding: isSideNavOpen ? "8px" : "8px 10px",
+            backgroundColor: open
+              ? "rgba(24, 113, 99, 0.06)"
               : "transparent",
-            border: `1.5px solid ${
-              open ? "rgba(var(--primary-rgb), 0.3)" : "transparent"
-            }`,
-            transition: "all 0.3s ease",
             "&:hover": {
-              background:
-                "linear-gradient(135deg, rgba(var(--primary-rgb), 0.12) 0%, rgba(var(--primary-rgb), 0.08) 100%)",
-              borderColor: "rgba(var(--primary-rgb), 0.3)",
+              backgroundColor: "rgba(24, 113, 99, 0.06)",
             },
           }}
         >
           <Stack
-            sx={{ flexDirection: "row", alignItems: "center", gap: "12px" }}
+            sx={{ flexDirection: "row", alignItems: "center", gap: "10px" }}
           >
             <Avatar
               sx={{
-                width: 40,
-                height: 40,
-                border: "2px solid rgba(var(--primary-rgb), 0.3)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                width: 32,
+                height: 32,
+                fontSize: "13px",
+                fontWeight: 700,
               }}
             />
             {!isSideNavOpen && (
-              <Stack gap="2px">
+              <Stack gap="1px">
                 <Typography
                   sx={{
-                    fontFamily: "Lato",
-                    fontSize: "14px",
+                    fontSize: "13px",
                     fontWeight: 700,
                     color: "var(--text1)",
                   }}
                 >
-                  Abishek
+                  Admin
                 </Typography>
-                <Chip
-                  label="Admin"
-                  size="small"
+                <Typography
                   sx={{
-                    height: "18px",
                     fontSize: "10px",
-                    fontWeight: 700,
-                    backgroundColor: "rgba(var(--primary-rgb), 0.15)",
+                    fontWeight: 600,
                     color: "var(--primary-color)",
-                    border: "1px solid rgba(var(--primary-rgb), 0.3)",
                   }}
-                />
+                >
+                  Admin
+                </Typography>
               </Stack>
             )}
           </Stack>
@@ -113,11 +100,11 @@ export default function Account({ isSideNavOpen }) {
             <Image
               src={more_img.src}
               alt="more"
-              width={18}
-              height={18}
+              width={16}
+              height={16}
               style={{
                 transform: open ? "rotate(180deg)" : "rotate(0)",
-                transition: "all 0.3s ease",
+                transition: "transform 0.2s ease",
               }}
             />
           )}
@@ -132,50 +119,44 @@ export default function Account({ isSideNavOpen }) {
         disableScrollLock={true}
         sx={{
           "& .MuiPaper-root": {
-            width: "240px",
-            marginTop: "-90px",
+            width: "200px",
+            marginTop: "-80px",
             backgroundColor: "var(--white)",
-            borderRadius: "12px",
+            borderRadius: "10px",
             border: "1px solid var(--border-color)",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
             "& .MuiMenuItem-root": {
-              borderRadius: "8px",
-              margin: "4px 8px",
-              padding: "10px 12px",
-              transition: "all 0.2s ease",
+              borderRadius: "6px",
+              margin: "2px 6px",
+              padding: "8px 10px",
               "&:hover": {
-                backgroundColor: "rgba(var(--primary-rgb), 0.08)",
-              },
-              "&:active": {
-                backgroundColor: "rgba(var(--primary-rgb), 0.12) !important",
+                backgroundColor: "rgba(24, 113, 99, 0.06)",
               },
             },
           },
         }}
         elevation={0}
       >
-        <Stack padding="12px 16px 8px 16px" gap="4px">
+        <Stack padding="10px 14px 6px" gap="2px">
           <Typography
             sx={{
-              fontSize: "14px",
+              fontSize: "13px",
               fontWeight: 700,
               color: "var(--text1)",
-              fontFamily: "Lato",
             }}
           >
             Abishek
           </Typography>
           <Typography
             sx={{
-              fontSize: "12px",
+              fontSize: "11px",
               color: "var(--text3)",
-              fontFamily: "Lato",
             }}
           >
-            admin@example.com
+            Administrator
           </Typography>
         </Stack>
-        <Divider sx={{ margin: "8px 0" }} />
+        <Divider sx={{ margin: "6px 0" }} />
 
         <MenuItem
           onClick={() => {
@@ -183,25 +164,24 @@ export default function Account({ isSideNavOpen }) {
             handleClose();
           }}
           sx={{
-            gap: "12px",
-            fontFamily: "Lato",
-            fontSize: "14px",
+            gap: "10px",
+            fontSize: "13px",
             fontWeight: 600,
             color: "#F44336",
           }}
         >
           <Stack
             sx={{
-              width: "32px",
-              height: "32px",
-              backgroundColor: "rgba(244, 67, 54, 0.1)",
-              borderRadius: "8px",
+              width: "28px",
+              height: "28px",
+              backgroundColor: "rgba(244, 67, 54, 0.08)",
+              borderRadius: "6px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Image src={logout_img.src} alt="logout" width={16} height={16} />
+            <Image src={logout_img.src} alt="logout" width={14} height={14} />
           </Stack>
           Logout
         </MenuItem>

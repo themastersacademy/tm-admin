@@ -227,30 +227,28 @@ export default function Coupons() {
   }, [fetchCoupons, fetchCoursesAndGoals]);
 
   return (
-    <Stack gap="0px" padding="24px">
+    <Stack gap="0px" padding="16px">
       <PageHeader
         title="Coupons & Offers"
         action={
           <Button
             variant="contained"
-            startIcon={<Add />}
+            startIcon={<Add sx={{ fontSize: "16px" }} />}
             onClick={dialogOpen}
+            disableElevation
             sx={{
-              background: "linear-gradient(135deg, #4CAF50 0%, #45A049 100%)",
-              color: "#FFFFFF",
+              backgroundColor: "var(--primary-color)",
+              color: "#fff",
               textTransform: "none",
-              borderRadius: "10px",
-              padding: "10px 24px",
-              fontWeight: 700,
-              fontSize: "14px",
-              boxShadow: "0 4px 12px rgba(76, 175, 80, 0.25)",
+              borderRadius: "8px",
+              padding: "6px 16px",
+              fontWeight: 600,
+              fontSize: "12px",
+              height: "34px",
               "&:hover": {
-                background: "linear-gradient(135deg, #45A049 0%, #3D8B40 100%)",
-                boxShadow: "0 6px 16px rgba(76, 175, 80, 0.35)",
-                transform: "translateY(-1px)",
+                backgroundColor: "var(--primary-color-dark)",
               },
             }}
-            disableElevation
           >
             Create Coupon
           </Button>
@@ -277,7 +275,7 @@ export default function Coupons() {
           <CircularProgress />
         </Stack>
       ) : coupons.length > 0 ? (
-        <Grid container spacing={3}>
+        <Grid container spacing={2}>
           {coupons.map((item, index) => (
             <Grid item xs={12} md={6} lg={4} key={index}>
               <CouponCard
@@ -305,7 +303,7 @@ export default function Coupons() {
         actionButton={
           <Stack
             flexDirection="row"
-            gap="16px"
+            gap="12px"
             justifyContent="center"
             sx={{ width: "100%" }}
           >
@@ -317,6 +315,8 @@ export default function Coupons() {
                 backgroundColor: "var(--delete-color)",
                 borderRadius: "8px",
                 width: "120px",
+                fontSize: "12px",
+                height: "34px",
               }}
               disableElevation
             >
@@ -331,6 +331,8 @@ export default function Coupons() {
                 borderColor: "var(--border-color)",
                 color: "var(--text2)",
                 width: "120px",
+                fontSize: "12px",
+                height: "34px",
               }}
               disableElevation
             >

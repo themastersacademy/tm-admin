@@ -72,7 +72,6 @@ export default function AdditionalStepper({
   };
 
   const updateQuestionData = (updatedOptions) => {
-    console.log(updatedOptions);
     
     let correctAnswers = {};
     if (questionType === "FIB") {
@@ -81,7 +80,6 @@ export default function AdditionalStepper({
       });
     } else {
       correctAnswers = updatedOptions.reduce((acc, opt, index) => {
-        console.log(opt);
 
         // if (opt.isCorrect) {
         acc[`option${index}`] = opt.isCorrect;

@@ -3,17 +3,15 @@ import {
   Avatar,
   Box,
   Chip,
-  Stack,
-  Typography,
   CircularProgress,
+  Stack,
+  Tooltip,
+  Typography,
 } from "@mui/material";
-import {
-  Person as PersonIcon,
-  School as SchoolIcon,
-  CalendarToday as CalendarIcon,
-} from "@mui/icons-material";
+import { Person as PersonIcon, Send as SendIcon } from "@mui/icons-material";
 
 export default function StudentProgressCard({
+  index = 0,
   name,
   email,
   image,
@@ -24,85 +22,104 @@ export default function StudentProgressCard({
   time,
   status,
   percent,
-  examName,
   marks,
   onClick,
+  onForceSubmit,
+  isForceSubmitting,
 }) {
   const percentageValue = parseInt(percent) || 0;
 
-  // Determine color based on percentage
   const getScoreColor = (score) => {
-    if (score >= 80) return "#4caf50"; // Green
-    if (score >= 50) return "#ff9800"; // Orange
-    return "#f44336"; // Red
+    if (score >= 80) return "#4caf50";
+    if (score >= 50) return "#ff9800";
+    return "#f44336";
   };
 
-  const scoreColor = getScoreColor(percentageValue);
+  const scoreColor = status === "COMPLETED" ? getScoreColor(percentageValue) : "var(--text4)";
+  const isEven = index % 2 === 0;
+
+  const statusConfig = {
+    COMPLETED: { label: "Completed", bg: "rgba(76, 175, 80, 0.08)", color: "#4caf50" },
+    IN_PROGRESS: { label: "In Progress", bg: "rgba(33, 150, 243, 0.08)", color: "#2196f3" },
+    NOT_ATTENDED: { label: "Absent", bg: "rgba(158, 158, 158, 0.08)", color: "#9e9e9e" },
+  };
+
+  const sc = statusConfig[status] || statusConfig.NOT_ATTENDED;
 
   return (
-    <Box
+    <Stack
       onClick={onClick}
+      flexDirection="row"
+      alignItems="center"
       sx={{
         width: "100%",
-        backgroundColor: "var(--white)",
-        borderRadius: "12px",
-        border: "1px solid var(--border-color)",
-        padding: "20px",
-        transition: "all 0.2s ease-in-out",
+        backgroundColor: isEven ? "var(--white)" : "var(--bg-color, #fafafa)",
+        borderRadius: "6px",
+        padding: "7px 12px",
         cursor: "pointer",
+        transition: "all 0.15s ease",
+        gap: "12px",
+        borderLeft: status === "COMPLETED"
+          ? `3px solid ${scoreColor}`
+          : status === "IN_PROGRESS"
+            ? "3px solid #2196f3"
+            : "3px solid transparent",
         "&:hover": {
-          transform: "translateY(-2px)",
-          boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-          borderColor: "var(--primary-color)",
+          backgroundColor: "rgba(24, 113, 99, 0.04)",
         },
-        display: "flex",
-        flexDirection: { xs: "column", md: "row" },
-        alignItems: "center",
-        gap: "20px",
-        justifyContent: "space-between",
       }}
     >
-      {/* Student Profile Section */}
-      <Stack
-        flexDirection="row"
-        alignItems="center"
-        gap="16px"
-        sx={{ minWidth: "250px" }}
+      {/* # */}
+      <Typography
+        sx={{
+          fontSize: "11px",
+          fontWeight: 600,
+          color: "var(--text4)",
+          minWidth: "24px",
+          textAlign: "center",
+        }}
       >
+        {index + 1}
+      </Typography>
+
+      {/* Avatar + Name */}
+      <Stack flexDirection="row" alignItems="center" gap="8px" sx={{ minWidth: "180px", flex: 1 }}>
         <Avatar
           src={image}
           sx={{
-            width: "56px",
-            height: "56px",
-            borderRadius: "12px",
+            width: 30,
+            height: 30,
+            borderRadius: "8px",
             backgroundColor: "var(--primary-color-acc-2)",
             color: "var(--primary-color)",
-            border: "2px solid var(--white)",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            fontSize: "13px",
           }}
         >
-          {!image && <PersonIcon />}
+          {!image && <PersonIcon sx={{ fontSize: "16px" }} />}
         </Avatar>
-        <Stack gap="4px">
+        <Stack sx={{ minWidth: 0 }}>
           <Typography
+            title={name}
             sx={{
-              fontFamily: "Lato",
-              fontSize: "16px",
-              fontWeight: "700",
+              fontSize: "12px",
+              fontWeight: 600,
               color: "var(--text1)",
-              lineHeight: 1.2,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              maxWidth: "150px",
             }}
           >
             {name}
           </Typography>
           <Typography
             sx={{
-              fontFamily: "Lato",
-              fontSize: "13px",
+              fontSize: "10px",
               color: "var(--text4)",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              maxWidth: "150px",
             }}
           >
             {email}
@@ -110,227 +127,122 @@ export default function StudentProgressCard({
         </Stack>
       </Stack>
 
-      {/* Exam & Institute Info */}
-      <Stack
-        flexDirection="row"
-        gap="30px"
-        flex={1}
-        justifyContent="center"
+      {/* College + Batch */}
+      <Stack sx={{ flex: 0.8, minWidth: 0, display: { xs: "none", md: "flex" } }}>
+        <Typography
+          title={college}
+          sx={{
+            fontSize: "11px",
+            fontWeight: 600,
+            color: "var(--text2)",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {college || "-"}
+        </Typography>
+        <Typography sx={{ fontSize: "10px", color: "var(--text4)" }}>
+          {year || "-"}
+        </Typography>
+      </Stack>
+
+      {/* Roll No */}
+      <Typography
         sx={{
-          borderLeft: { md: "1px solid var(--border-color)" },
-          borderRight: { md: "1px solid var(--border-color)" },
-          paddingX: { md: "20px" },
-          width: { xs: "100%", md: "auto" },
+          fontSize: "11px",
+          fontWeight: 600,
+          color: "var(--text2)",
+          minWidth: "70px",
+          textAlign: "center",
+          display: { xs: "none", lg: "block" },
         }}
       >
-        <Stack gap="8px" flex={1}>
-          <Stack flexDirection="row" alignItems="center" gap="6px">
-            <SchoolIcon sx={{ fontSize: "16px", color: "var(--text4)" }} />
-            <Typography
-              sx={{
-                fontFamily: "Lato",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "var(--text2)",
-              }}
-            >
-              {college}
-            </Typography>
-          </Stack>
-          <Typography
-            sx={{
-              fontFamily: "Lato",
-              fontSize: "12px",
-              color: "var(--text4)",
-              paddingLeft: "22px",
-            }}
-          >
-            {year}
-          </Typography>
-        </Stack>
+        {rollNo || "-"}
+      </Typography>
 
-        <Stack gap="8px" flex={1}>
-          <Typography
-            sx={{
-              fontFamily: "Lato",
-              fontSize: "14px",
-              fontWeight: "600",
-              color: "var(--text2)",
-            }}
-          >
-            {rollNo || "-"}
-          </Typography>
-          <Stack flexDirection="row" alignItems="center" gap="6px">
-            <Typography
-              sx={{
-                fontFamily: "Lato",
-                fontSize: "12px",
-                color: "var(--text4)",
-              }}
-            >
-              Roll No
-            </Typography>
-          </Stack>
-        </Stack>
-
-        <Stack gap="8px" flex={1}>
-          <Typography
-            sx={{
-              fontFamily: "Lato",
-              fontSize: "14px",
-              fontWeight: "600",
-              color: "var(--text2)",
-            }}
-          >
-            {tag || "-"}
-          </Typography>
-          <Stack flexDirection="row" alignItems="center" gap="6px">
-            <Typography
-              sx={{
-                fontFamily: "Lato",
-                fontSize: "12px",
-                color: "var(--text4)",
-              }}
-            >
-              Department
-            </Typography>
-          </Stack>
-        </Stack>
-
-        <Stack gap="8px" flex={1}>
-          <Typography
-            sx={{
-              fontFamily: "Lato",
-              fontSize: "14px",
-              fontWeight: "600",
-              color: "var(--text2)",
-            }}
-          >
-            {examName}
-          </Typography>
-          <Stack flexDirection="row" alignItems="center" gap="6px">
-            <CalendarIcon sx={{ fontSize: "14px", color: "var(--text4)" }} />
-            <Typography
-              sx={{
-                fontFamily: "Lato",
-                fontSize: "12px",
-                color: "var(--text4)",
-              }}
-            >
-              {time}
-            </Typography>
-          </Stack>
-        </Stack>
-      </Stack>
-
-      {/* Performance & Status */}
-      <Stack
-        flexDirection="row"
-        alignItems="center"
-        gap="24px"
-        sx={{ minWidth: "200px", justifyContent: "flex-end" }}
+      {/* Date */}
+      <Typography
+        sx={{
+          fontSize: "10px",
+          color: "var(--text4)",
+          minWidth: "65px",
+          textAlign: "center",
+          display: { xs: "none", lg: "block" },
+        }}
       >
+        {time}
+      </Typography>
+
+      {/* Marks + Score Bar */}
+      <Stack alignItems="flex-end" sx={{ minWidth: "90px" }}>
         {status === "COMPLETED" ? (
-          <Stack flexDirection="row" alignItems="center" gap="12px">
-            <Box sx={{ position: "relative", display: "inline-flex" }}>
-              <CircularProgress
-                variant="determinate"
-                value={percentageValue}
-                size={44}
-                thickness={4}
-                sx={{ color: scoreColor }}
-              />
-              <Box
-                sx={{
-                  top: 0,
-                  left: 0,
-                  bottom: 0,
-                  right: 0,
-                  position: "absolute",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  component="div"
-                  sx={{
-                    fontWeight: "700",
-                    color: scoreColor,
-                    fontSize: "11px",
-                  }}
-                >
-                  {percent}
-                </Typography>
-              </Box>
-            </Box>
-            <Stack>
-              <Typography
-                sx={{
-                  fontFamily: "Lato",
-                  fontSize: "16px",
-                  fontWeight: "700",
-                  color: "var(--text1)",
-                }}
-              >
+          <Stack gap="3px" width="100%" alignItems="flex-end">
+            <Stack direction="row" alignItems="baseline" gap="4px">
+              <Typography sx={{ fontSize: "12px", fontWeight: 700, color: scoreColor }}>
                 {marks}
               </Typography>
-              <Typography
-                sx={{
-                  fontFamily: "Lato",
-                  fontSize: "11px",
-                  color: "var(--text4)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                Marks
+              <Typography sx={{ fontSize: "10px", fontWeight: 600, color: scoreColor }}>
+                {percent}
               </Typography>
             </Stack>
+            <Box sx={{ width: "100%", height: 3, borderRadius: 2, backgroundColor: "#f0f0f0", overflow: "hidden" }}>
+              <Box
+                sx={{
+                  height: "100%",
+                  width: `${percentageValue}%`,
+                  backgroundColor: scoreColor,
+                  borderRadius: 2,
+                  transition: "width 0.5s ease",
+                }}
+              />
+            </Box>
           </Stack>
         ) : (
-          <Typography
-            sx={{
-              fontFamily: "Lato",
-              fontSize: "14px",
-              color: "var(--text4)",
-              fontStyle: "italic",
-            }}
-          >
-            -- / --
-          </Typography>
+          <Typography sx={{ fontSize: "11px", color: "var(--text4)" }}>--</Typography>
         )}
+      </Stack>
 
+      {/* Status + Action */}
+      <Stack direction="row" alignItems="center" gap="4px" sx={{ minWidth: onForceSubmit ? "110px" : "72px" }}>
         <Chip
-          label={status === "COMPLETED" ? "Passed" : status.replace("_", " ")}
+          label={sc.label}
+          size="small"
           sx={{
-            height: "28px",
-            fontSize: "12px",
-            fontWeight: "600",
-            textTransform: "capitalize",
-            backgroundColor:
-              status === "COMPLETED"
-                ? "rgba(76, 175, 80, 0.1)"
-                : status === "IN_PROGRESS"
-                ? "rgba(33, 150, 243, 0.1)"
-                : "rgba(244, 67, 54, 0.1)",
-            color:
-              status === "COMPLETED"
-                ? "#4caf50"
-                : status === "IN_PROGRESS"
-                ? "#2196f3"
-                : "#f44336",
-            border: `1px solid ${
-              status === "COMPLETED"
-                ? "#4caf50"
-                : status === "IN_PROGRESS"
-                ? "#2196f3"
-                : "#f44336"
-            }`,
+            height: "20px",
+            fontSize: "10px",
+            fontWeight: 600,
+            backgroundColor: sc.bg,
+            color: sc.color,
+            border: `1px solid ${sc.color}30`,
+            minWidth: "72px",
+            "& .MuiChip-label": { padding: "0 8px" },
           }}
         />
+        {onForceSubmit && (
+          <Tooltip title="Force submit this attempt" arrow>
+            <Box
+              onClick={isForceSubmitting ? undefined : onForceSubmit}
+              sx={{
+                width: 24, height: 24,
+                borderRadius: "6px",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                backgroundColor: "#ff980015",
+                border: "1px solid #ff980030",
+                cursor: isForceSubmitting ? "default" : "pointer",
+                flexShrink: 0,
+                "&:hover": { backgroundColor: isForceSubmitting ? "#ff980015" : "#ff980025" },
+              }}
+            >
+              {isForceSubmitting ? (
+                <CircularProgress size={12} sx={{ color: "#ff9800" }} />
+              ) : (
+                <SendIcon sx={{ fontSize: "12px", color: "#ff9800" }} />
+              )}
+            </Box>
+          </Tooltip>
+        )}
       </Stack>
-    </Box>
+    </Stack>
   );
 }

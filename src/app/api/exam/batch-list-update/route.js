@@ -2,8 +2,6 @@ import { updateBatchListExamBasicInfo } from "@/src/util/exam/examController";
 
 export async function POST(req) {
   const { batchList, examID } = await req.json();
-  console.log("batchList", batchList);
-  console.log("examID", examID);
   if (!batchList || !examID) {
     return Response.json({
       success: false,

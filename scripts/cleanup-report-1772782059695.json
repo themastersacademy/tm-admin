@@ -1,0 +1,483 @@
+{
+  "failedUploads": [
+    {
+      "resourceID": "37b730e3-333d-479d-919e-03232f479426",
+      "bankID": "046eb7da-db2b-45d6-8cb0-9d71f5a77ac2",
+      "name": "2. Percentages - Problems part-1.mp4",
+      "videoID": "5c0fe331-68e4-4cae-b66d-799f4b52ba0a",
+      "bunnyStatus": "Created",
+      "bunnyStatusCode": 0,
+      "isUploaded": false,
+      "storageSize": 0
+    },
+    {
+      "resourceID": "4b568405-8644-4498-bb6d-ce64f902a43e",
+      "bankID": "7a5557d0-0926-4c89-abb3-dcec9f8d01d6",
+      "name": "3.SE-3.mp4",
+      "videoID": "cc8748ce-9830-4b96-beb5-282c0ec73944",
+      "bunnyStatus": "Created",
+      "bunnyStatusCode": 0,
+      "isUploaded": false,
+      "storageSize": 0
+    },
+    {
+      "resourceID": "e534f67b-9a92-4422-94dd-cc52cb9466b3",
+      "bankID": "61f0cf53-1597-429e-9797-2507985d62d8",
+      "name": "12. 2. Change of order of Integration.mp4",
+      "videoID": "9220f403-f3f7-486c-9b68-10b4200c7454",
+      "bunnyStatus": "Created",
+      "bunnyStatusCode": 0,
+      "isUploaded": false,
+      "storageSize": 0
+    },
+    {
+      "resourceID": "7c9c772c-602f-44c0-a609-c21e11dffc33",
+      "bankID": "fb0f77a5-bdff-4b34-bff1-1c73519741ce",
+      "name": "3. Surds and Indices - Important Rules.mp4",
+      "videoID": "2c5e856f-3ea9-46e3-8e9c-970ce85b2a0e",
+      "bunnyStatus": "Created",
+      "bunnyStatusCode": 0,
+      "isUploaded": false,
+      "storageSize": 0
+    },
+    {
+      "resourceID": "85a8b094-bf5f-4e8c-befe-e687a0edc2c2",
+      "bankID": "7a5557d0-0926-4c89-abb3-dcec9f8d01d6",
+      "name": "2.SE-1.mp4",
+      "videoID": "3e2b9f47-da28-40a5-b9c5-7ecaf93a263d",
+      "bunnyStatus": "Created",
+      "bunnyStatusCode": 0,
+      "isUploaded": false,
+      "storageSize": 0
+    },
+    {
+      "resourceID": "bd7c2aa8-f22f-472c-97b7-005b9c66f048",
+      "bankID": "fb0f77a5-bdff-4b34-bff1-1c73519741ce",
+      "name": "1. Surds and Indices - Basic Concepts -1.mp4",
+      "videoID": "d10af0cb-9bff-4dd0-bbc1-c5a3eeccdd13",
+      "bunnyStatus": "Created",
+      "bunnyStatusCode": 0,
+      "isUploaded": false,
+      "storageSize": 0
+    },
+    {
+      "resourceID": "0246a702-6924-4652-a3ea-d515ed86a07f",
+      "bankID": "7a5557d0-0926-4c89-abb3-dcec9f8d01d6",
+      "name": "1.SE.mp4",
+      "videoID": "05fe6076-ad87-4c07-a5a5-811c646974e5",
+      "bunnyStatus": "Created",
+      "bunnyStatusCode": 0,
+      "isUploaded": false,
+      "storageSize": 0
+    },
+    {
+      "resourceID": "a08266bd-94c4-474f-8dea-8e1436ff8d00",
+      "bankID": "046eb7da-db2b-45d6-8cb0-9d71f5a77ac2",
+      "name": "3. Percentages - Problems part-2.mp4",
+      "videoID": "e221c62f-371f-4625-84b0-00841de34e46",
+      "bunnyStatus": "Created",
+      "bunnyStatusCode": 0,
+      "isUploaded": false,
+      "storageSize": 0
+    },
+    {
+      "resourceID": "29a8d693-4f76-492a-8c87-674459814e19",
+      "bankID": "e4149277-d5f9-42ad-8612-05d53616276a",
+      "name": "3. Averages - Practice problems-2.mp4",
+      "videoID": "bd63fd99-2e6c-4930-acfc-77a6091b1155",
+      "bunnyStatus": "Created",
+      "bunnyStatusCode": 0,
+      "isUploaded": false,
+      "storageSize": 0
+    },
+    {
+      "resourceID": "d70b74b1-1873-492f-aeac-45443dbe12b7",
+      "bankID": "046eb7da-db2b-45d6-8cb0-9d71f5a77ac2",
+      "name": "4. Percentages - Problems part-3.mp4",
+      "videoID": "dead71bd-cd05-4bcc-a903-edf56858ff9b",
+      "bunnyStatus": "Created",
+      "bunnyStatusCode": 0,
+      "isUploaded": false,
+      "storageSize": 0
+    },
+    {
+      "resourceID": "150d8706-038d-47a5-a208-0267cdcf18c1",
+      "bankID": "7a5557d0-0926-4c89-abb3-dcec9f8d01d6",
+      "name": "2.SE-1.mp4",
+      "videoID": "e3062154-be82-4894-8b1e-f22ff87cc2a0",
+      "bunnyStatus": "Created",
+      "bunnyStatusCode": 0,
+      "isUploaded": false,
+      "storageSize": 0
+    },
+    {
+      "resourceID": "f5d7a3be-3987-4b05-80ca-8e372dbfaa7c",
+      "bankID": "fb0f77a5-bdff-4b34-bff1-1c73519741ce",
+      "name": "1. Surds and Indices - Basic Concepts -1.mp4",
+      "videoID": "a131dd38-6289-4a1c-ad97-6d3b4b3e185a",
+      "bunnyStatus": "Created",
+      "bunnyStatusCode": 0,
+      "isUploaded": false,
+      "storageSize": 0
+    },
+    {
+      "resourceID": "7f5889ed-ec30-4a10-89a8-2c2c5329df7d",
+      "bankID": "046eb7da-db2b-45d6-8cb0-9d71f5a77ac2",
+      "name": "2. Percentages - Problems part-1.mp4",
+      "videoID": "aa8cb716-6539-48ca-b73f-f6dc7d27ff0a",
+      "bunnyStatus": "Created",
+      "bunnyStatusCode": 0,
+      "isUploaded": false,
+      "storageSize": 0
+    },
+    {
+      "resourceID": "dacbe6da-653f-4c24-a9ac-a39e33308536",
+      "bankID": "fb0f77a5-bdff-4b34-bff1-1c73519741ce",
+      "name": "1. Surds and Indices - Basic Concepts -1.mp4",
+      "videoID": "e92656f7-d836-4739-a42d-067d80ca0536",
+      "bunnyStatus": "Created",
+      "bunnyStatusCode": 0,
+      "isUploaded": false,
+      "storageSize": 0
+    }
+  ],
+  "duplicates": [
+    {
+      "bankID": "61f0cf53-1597-429e-9797-2507985d62d8",
+      "bankTitle": "GATE - Calculus",
+      "name": "10. 11. Line Surface and Volume Integrals.mp4",
+      "count": 2,
+      "keep": {
+        "resourceID": "aa601b17-c404-46e0-adf9-7b8380e56fb2",
+        "videoID": "5600adfe-67ad-4bb3-b6df-a5d0398bd3db",
+        "isUploaded": true,
+        "bunnyStatus": "Finished"
+      },
+      "remove": [
+        {
+          "resourceID": "1a5a7452-926b-42ac-93ba-92acaa23348b",
+          "videoID": "a274a15c-4ee9-4fce-ba13-58498bfa8704",
+          "isUploaded": true,
+          "bunnyStatus": "Finished",
+          "storageSize": 2567488615
+        }
+      ]
+    },
+    {
+      "bankID": "61f0cf53-1597-429e-9797-2507985d62d8",
+      "bankTitle": "GATE - Calculus",
+      "name": "13. Vector Calculus - Part -2.mp4",
+      "count": 2,
+      "keep": {
+        "resourceID": "11bc1287-c546-45c7-9d8f-e2fa6dff4f6c",
+        "videoID": "0d3955b6-cb35-47ff-87f7-69ec5f0cdcae",
+        "isUploaded": true,
+        "bunnyStatus": "Finished"
+      },
+      "remove": [
+        {
+          "resourceID": "61ca95ce-6826-4838-95c8-a8de947b8f48",
+          "videoID": "6515acc8-826f-4ac6-9b62-9a04f8932dbd",
+          "isUploaded": true,
+          "bunnyStatus": "Finished",
+          "storageSize": 3061953996
+        }
+      ]
+    },
+    {
+      "bankID": "61f0cf53-1597-429e-9797-2507985d62d8",
+      "bankTitle": "GATE - Calculus",
+      "name": "12. 2. Change of order of Integration.mp4",
+      "count": 2,
+      "keep": {
+        "resourceID": "07c364a0-a9e8-4885-a8ca-4fdfebfb417e",
+        "videoID": "872d846e-5540-4674-b468-553c897c8e62",
+        "isUploaded": true,
+        "bunnyStatus": "Finished"
+      },
+      "remove": [
+        {
+          "resourceID": "e534f67b-9a92-4422-94dd-cc52cb9466b3",
+          "videoID": "9220f403-f3f7-486c-9b68-10b4200c7454",
+          "isUploaded": false,
+          "bunnyStatus": "Created",
+          "storageSize": 0
+        }
+      ]
+    },
+    {
+      "bankID": "61f0cf53-1597-429e-9797-2507985d62d8",
+      "bankTitle": "GATE - Calculus",
+      "name": "05. 08. VC - Maxima and Minima.mp4",
+      "count": 2,
+      "keep": {
+        "resourceID": "da9e30e3-f9c1-4f23-b5c5-ab046807a10d",
+        "videoID": "7fa7411b-3a57-4b92-9216-d05f091ce429",
+        "isUploaded": true,
+        "bunnyStatus": "Finished"
+      },
+      "remove": [
+        {
+          "resourceID": "f471a05d-4b29-4e64-aff8-b5cfdc5e13dc",
+          "videoID": "2deded92-55f3-41f4-8d2f-d11f316a1657",
+          "isUploaded": true,
+          "bunnyStatus": "Finished",
+          "storageSize": 2611797911
+        }
+      ]
+    },
+    {
+      "bankID": "046eb7da-db2b-45d6-8cb0-9d71f5a77ac2",
+      "bankTitle": "Percentages",
+      "name": "2. Percentages - Problems part-1.mp4",
+      "count": 3,
+      "keep": {
+        "resourceID": "b776b2c3-2614-4dfb-a474-1fe7efe83fbd",
+        "videoID": "53e83a51-597e-4c1b-a04f-3030ef8941fe",
+        "isUploaded": true,
+        "bunnyStatus": "Finished"
+      },
+      "remove": [
+        {
+          "resourceID": "37b730e3-333d-479d-919e-03232f479426",
+          "videoID": "5c0fe331-68e4-4cae-b66d-799f4b52ba0a",
+          "isUploaded": false,
+          "bunnyStatus": "Created",
+          "storageSize": 0
+        },
+        {
+          "resourceID": "7f5889ed-ec30-4a10-89a8-2c2c5329df7d",
+          "videoID": "aa8cb716-6539-48ca-b73f-f6dc7d27ff0a",
+          "isUploaded": false,
+          "bunnyStatus": "Created",
+          "storageSize": 0
+        }
+      ]
+    },
+    {
+      "bankID": "046eb7da-db2b-45d6-8cb0-9d71f5a77ac2",
+      "bankTitle": "Percentages",
+      "name": "3. Percentages - Problems part-2.mp4",
+      "count": 2,
+      "keep": {
+        "resourceID": "b0c40d69-c4c6-476b-b739-6c103e0b543e",
+        "videoID": "f3039a80-860f-4a78-baca-0da79df646c2",
+        "isUploaded": true,
+        "bunnyStatus": "Finished"
+      },
+      "remove": [
+        {
+          "resourceID": "a08266bd-94c4-474f-8dea-8e1436ff8d00",
+          "videoID": "e221c62f-371f-4625-84b0-00841de34e46",
+          "isUploaded": false,
+          "bunnyStatus": "Created",
+          "storageSize": 0
+        }
+      ]
+    },
+    {
+      "bankID": "046eb7da-db2b-45d6-8cb0-9d71f5a77ac2",
+      "bankTitle": "Percentages",
+      "name": "4. Percentages - Problems part-3.mp4",
+      "count": 2,
+      "keep": {
+        "resourceID": "08effe1c-3593-4da7-bae7-8c5a5efa31f6",
+        "videoID": "c4e16ca0-4a53-44f8-9579-3ee898477e04",
+        "isUploaded": true,
+        "bunnyStatus": "Finished"
+      },
+      "remove": [
+        {
+          "resourceID": "d70b74b1-1873-492f-aeac-45443dbe12b7",
+          "videoID": "dead71bd-cd05-4bcc-a903-edf56858ff9b",
+          "isUploaded": false,
+          "bunnyStatus": "Created",
+          "storageSize": 0
+        }
+      ]
+    },
+    {
+      "bankID": "7a5557d0-0926-4c89-abb3-dcec9f8d01d6",
+      "bankTitle": "Simple Equations",
+      "name": "3.SE-3.mp4",
+      "count": 2,
+      "keep": {
+        "resourceID": "41135fa3-a059-4ea5-b1cf-aaf053789e7e",
+        "videoID": "cf092bfe-c654-4fb6-ad85-b9ed1d7e8206",
+        "isUploaded": true,
+        "bunnyStatus": "Finished"
+      },
+      "remove": [
+        {
+          "resourceID": "4b568405-8644-4498-bb6d-ce64f902a43e",
+          "videoID": "cc8748ce-9830-4b96-beb5-282c0ec73944",
+          "isUploaded": false,
+          "bunnyStatus": "Created",
+          "storageSize": 0
+        }
+      ]
+    },
+    {
+      "bankID": "7a5557d0-0926-4c89-abb3-dcec9f8d01d6",
+      "bankTitle": "Simple Equations",
+      "name": "2.SE-1.mp4",
+      "count": 3,
+      "keep": {
+        "resourceID": "fc24b8df-665c-4f15-b343-c54d4186b266",
+        "videoID": "10616e2e-992c-40bb-a5c4-d477de37d511",
+        "isUploaded": true,
+        "bunnyStatus": "Finished"
+      },
+      "remove": [
+        {
+          "resourceID": "85a8b094-bf5f-4e8c-befe-e687a0edc2c2",
+          "videoID": "3e2b9f47-da28-40a5-b9c5-7ecaf93a263d",
+          "isUploaded": false,
+          "bunnyStatus": "Created",
+          "storageSize": 0
+        },
+        {
+          "resourceID": "150d8706-038d-47a5-a208-0267cdcf18c1",
+          "videoID": "e3062154-be82-4894-8b1e-f22ff87cc2a0",
+          "isUploaded": false,
+          "bunnyStatus": "Created",
+          "storageSize": 0
+        }
+      ]
+    },
+    {
+      "bankID": "7a5557d0-0926-4c89-abb3-dcec9f8d01d6",
+      "bankTitle": "Simple Equations",
+      "name": "1.SE.mp4",
+      "count": 2,
+      "keep": {
+        "resourceID": "dff8c811-4dd0-4e43-888f-81e65ab51993",
+        "videoID": "476cf851-6865-463b-9dd3-79b65440a33c",
+        "isUploaded": true,
+        "bunnyStatus": "Finished"
+      },
+      "remove": [
+        {
+          "resourceID": "0246a702-6924-4652-a3ea-d515ed86a07f",
+          "videoID": "05fe6076-ad87-4c07-a5a5-811c646974e5",
+          "isUploaded": false,
+          "bunnyStatus": "Created",
+          "storageSize": 0
+        }
+      ]
+    },
+    {
+      "bankID": "fb0f77a5-bdff-4b34-bff1-1c73519741ce",
+      "bankTitle": "Surds & Indices",
+      "name": "3. Surds and Indices - Important Rules.mp4",
+      "count": 2,
+      "keep": {
+        "resourceID": "85a3d13c-15b5-46aa-a8ed-2429dce83e5e",
+        "videoID": "4829fbe1-acbc-4fd1-b52a-1634ab88205a",
+        "isUploaded": true,
+        "bunnyStatus": "Finished"
+      },
+      "remove": [
+        {
+          "resourceID": "7c9c772c-602f-44c0-a609-c21e11dffc33",
+          "videoID": "2c5e856f-3ea9-46e3-8e9c-970ce85b2a0e",
+          "isUploaded": false,
+          "bunnyStatus": "Created",
+          "storageSize": 0
+        }
+      ]
+    },
+    {
+      "bankID": "fb0f77a5-bdff-4b34-bff1-1c73519741ce",
+      "bankTitle": "Surds & Indices",
+      "name": "1. Surds and Indices - Basic Concepts -1.mp4",
+      "count": 4,
+      "keep": {
+        "resourceID": "e6a23c25-9d24-4a91-a821-92a9277c2706",
+        "videoID": "338a1ba0-e75b-4e01-a729-0329b681139d",
+        "isUploaded": true,
+        "bunnyStatus": "Finished"
+      },
+      "remove": [
+        {
+          "resourceID": "bd7c2aa8-f22f-472c-97b7-005b9c66f048",
+          "videoID": "d10af0cb-9bff-4dd0-bbc1-c5a3eeccdd13",
+          "isUploaded": false,
+          "bunnyStatus": "Created",
+          "storageSize": 0
+        },
+        {
+          "resourceID": "f5d7a3be-3987-4b05-80ca-8e372dbfaa7c",
+          "videoID": "a131dd38-6289-4a1c-ad97-6d3b4b3e185a",
+          "isUploaded": false,
+          "bunnyStatus": "Created",
+          "storageSize": 0
+        },
+        {
+          "resourceID": "dacbe6da-653f-4c24-a9ac-a39e33308536",
+          "videoID": "e92656f7-d836-4739-a42d-067d80ca0536",
+          "isUploaded": false,
+          "bunnyStatus": "Created",
+          "storageSize": 0
+        }
+      ]
+    }
+  ],
+  "orphanedDB": [
+    {
+      "resourceID": "29f0904d-3733-4af9-81ce-65749958b5f8",
+      "bankID": "3cb6869d-3555-47b3-b2ad-c5410c7621e2",
+      "name": "Sample.mp4",
+      "videoID": "2ae0a237-e638-437a-b594-c962cc6e7ad4",
+      "isUploaded": true
+    }
+  ],
+  "orphanedBunny": [],
+  "staleBankEntries": [
+    {
+      "bankID": "b8ea01f4-3bb9-42c9-b251-7d176194339d",
+      "bankTitle": "Profit and Loss",
+      "bankPKey": "BANK#b8ea01f4-3bb9-42c9-b251-7d176194339d",
+      "arrayCount": 6,
+      "actualCount": 9,
+      "staleCount": 1,
+      "missingCount": 4,
+      "staleEntries": [
+        {
+          "resourceID": "e6311d36-bab9-4aa3-af3f-171fd537534b",
+          "name": "6. Profit and Loss - Problems 4-2.mp4"
+        }
+      ]
+    },
+    {
+      "bankID": "c718370a-fbe1-4b9c-8b49-3277513d0c7a",
+      "bankTitle": "Engineering Mathematics",
+      "bankPKey": "BANK#c718370a-fbe1-4b9c-8b49-3277513d0c7a",
+      "arrayCount": 11,
+      "actualCount": 10,
+      "staleCount": 1,
+      "missingCount": 0,
+      "staleEntries": [
+        {
+          "resourceID": "38345f78-b879-4914-be06-c4ee4e1fb919",
+          "name": "1. EM - Linear Algebra - Matrix"
+        }
+      ]
+    },
+    {
+      "bankID": "7aed29bf-3108-4a6a-b5d2-e91b8edf0654",
+      "bankTitle": "Differential Equations",
+      "bankPKey": "BANK#7aed29bf-3108-4a6a-b5d2-e91b8edf0654",
+      "arrayCount": 5,
+      "actualCount": 4,
+      "staleCount": 1,
+      "missingCount": 0,
+      "staleEntries": [
+        {
+          "resourceID": "effb7bee-2fbb-437d-98f1-2d79cfc513ca",
+          "name": "GATE _ Engineering Mathematics _ Differential Equations - First Order Differential Equations.mp4"
+        }
+      ]
+    }
+  ]
+}

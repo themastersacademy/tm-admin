@@ -1,14 +1,16 @@
 "use client";
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
-import { Add, Close, East, InfoOutlined } from "@mui/icons-material";
+import { Add, Close, East } from "@mui/icons-material";
 import {
   Stack,
   Typography,
   Button,
   IconButton,
   CircularProgress,
+  Dialog,
   DialogContent,
+  DialogActions,
   Tabs,
   Tab,
   Box,
@@ -20,7 +22,6 @@ import SubjectContext from "@/src/app/context/SubjectContext";
 import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
 import CourseCardSkeleton from "@/src/components/CourseCardSkeleton/CourseCardSkeleton";
 import NoDataFound from "@/src/components/NoDataFound/NoDataFound";
-import DialogBox from "@/src/components/DialogBox/DialogBox";
 import CreateCourseDialog from "./CreateCourseDialog";
 import defaultThumbnail from "@/public/Images/defaultThumbnail.svg";
 import SubjectCard from "./SubjectCard";
@@ -28,10 +29,11 @@ import VideoCourseCard from "./VideoCourseCard";
 import SubjectSelection from "./SubjectSelection";
 
 const StyledTabs = styled(Tabs)({
-  backgroundColor: "var(--bg-color)",
-  borderRadius: "12px",
-  padding: "4px",
-  minHeight: "44px",
+  backgroundColor: "var(--white)",
+  borderRadius: "8px",
+  border: "1px solid var(--border-color)",
+  padding: "3px",
+  minHeight: "32px",
   width: "fit-content",
   "& .MuiTabs-indicator": {
     display: "none",
@@ -42,16 +44,15 @@ const StyledTab = styled(Tab)({
   textTransform: "none",
   fontFamily: "Lato",
   fontWeight: 600,
-  fontSize: "14px",
-  borderRadius: "8px",
-  minHeight: "36px",
-  padding: "8px 20px",
-  color: "var(--text2)",
-  transition: "all 0.2s ease",
+  fontSize: "12px",
+  borderRadius: "6px",
+  minHeight: "28px",
+  padding: "4px 16px",
+  color: "var(--text3)",
+  transition: "all 0.15s ease",
   "&.Mui-selected": {
     color: "var(--primary-color)",
-    backgroundColor: "var(--white)",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+    backgroundColor: "var(--primary-color-acc-2)",
   },
 });
 
@@ -63,7 +64,6 @@ export default function Syllabus({ goal, fetchGoal, goalLoading }) {
   const [dialog, setDialog] = useState({
     open: false,
     loading: false,
-    title: "",
   });
   const [videoDialog, setVideoDialog] = useState({
     open: false,
@@ -71,7 +71,6 @@ export default function Syllabus({ goal, fetchGoal, goalLoading }) {
   });
   const [selectedSubjectID, setSelectedSubjectID] = useState("");
 
-  // Local state for optimistic updates
   const [localSubjects, setLocalSubjects] = useState([]);
   const [localCourses, setLocalCourses] = useState([]);
 
@@ -98,7 +97,6 @@ export default function Syllabus({ goal, fetchGoal, goalLoading }) {
     const targetSubjectID =
       action === "remove" ? subjectID : selectedSubjectID;
 
-    // Optimistic Update
     const previousSubjects = [...localSubjects];
     if (action === "add") {
       const subjectToAdd = subjectList.find(
@@ -106,7 +104,7 @@ export default function Syllabus({ goal, fetchGoal, goalLoading }) {
       );
       if (subjectToAdd) {
         setLocalSubjects((prev) => [...prev, subjectToAdd]);
-        setDialog({ open: false, loading: false }); // Close dialog immediately
+        setDialog({ open: false, loading: false });
         setSelectedSubjectID("");
       }
     } else {
@@ -130,12 +128,11 @@ export default function Syllabus({ goal, fetchGoal, goalLoading }) {
 
       if (response.success) {
         showSnackbar(response.message, "success");
-        fetchGoal(); // Sync with server
+        fetchGoal();
       } else {
         throw new Error(response.message);
       }
     } catch (error) {
-      // Revert on failure
       setLocalSubjects(previousSubjects);
       showSnackbar(error.message || "Action failed", "error");
     }
@@ -184,9 +181,9 @@ export default function Syllabus({ goal, fetchGoal, goalLoading }) {
     <Stack
       sx={{
         backgroundColor: "var(--white)",
-        padding: "24px",
-        gap: "24px",
-        borderRadius: "16px",
+        padding: "16px",
+        gap: "16px",
+        borderRadius: "10px",
         border: "1px solid var(--border-color)",
       }}
     >
@@ -203,7 +200,7 @@ export default function Syllabus({ goal, fetchGoal, goalLoading }) {
 
         <Button
           variant="contained"
-          startIcon={<Add />}
+          startIcon={<Add sx={{ fontSize: "16px" }} />}
           onClick={() => openDialog(activeTab === 0 ? "subject" : "video")}
           disableElevation
           sx={{
@@ -211,79 +208,17 @@ export default function Syllabus({ goal, fetchGoal, goalLoading }) {
             textTransform: "none",
             borderRadius: "8px",
             fontWeight: 600,
-            fontFamily: "Lato",
-            height: "40px",
+            fontSize: "12px",
+            height: "34px",
+            padding: "6px 16px",
+            "&:hover": {
+              backgroundColor: "var(--primary-color-dark)",
+            },
           }}
         >
           Add {activeTab === 0 ? "Subject" : "Course"}
         </Button>
       </Stack>
-
-      {/* Info Banner for Subjects */}
-      {activeTab === 0 && (
-        <Box
-          sx={{
-            background:
-              "linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-dark, #0056b3) 100%)",
-            borderRadius: "16px",
-            padding: "24px",
-            position: "relative",
-            overflow: "hidden",
-            color: "#fff",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-          }}
-        >
-          <Box
-            sx={{
-              position: "absolute",
-              right: "-20px",
-              bottom: "-20px",
-              opacity: 0.1,
-              transform: "rotate(-15deg)",
-            }}
-          >
-            <InfoOutlined sx={{ fontSize: "180px", color: "#fff" }} />
-          </Box>
-
-          <Stack
-            gap="8px"
-            sx={{ position: "relative", zIndex: 1, maxWidth: "80%" }}
-          >
-            <Stack flexDirection="row" gap="12px" alignItems="center">
-              <Box
-                sx={{
-                  backgroundColor: "rgba(255,255,255,0.2)",
-                  padding: "8px",
-                  borderRadius: "10px",
-                  display: "flex",
-                }}
-              >
-                <InfoOutlined sx={{ fontSize: "24px" }} />
-              </Box>
-              <Typography
-                sx={{ fontFamily: "Lato", fontSize: "18px", fontWeight: 700 }}
-              >
-                Why are Subjects important?
-              </Typography>
-            </Stack>
-
-            <Typography
-              sx={{
-                fontFamily: "Lato",
-                fontSize: "14px",
-                lineHeight: "1.6",
-                opacity: 0.9,
-                marginTop: "8px",
-              }}
-            >
-              Subjects form the core structure of your curriculum. Adding
-              subjects allows you to organize exams, study materials, and video
-              courses effectively, ensuring a structured learning path for
-              students.
-            </Typography>
-          </Stack>
-        </Box>
-      )}
 
       {/* Tab Content */}
       <Box>
@@ -306,51 +241,32 @@ export default function Syllabus({ goal, fetchGoal, goalLoading }) {
       </Box>
 
       {/* Subject Dialog */}
-      <DialogBox
-        isOpen={dialog.open}
-        title="Add Subject"
-        icon={
+      <Dialog
+        open={dialog.open}
+        onClose={() => closeDialog("subject")}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: "12px", maxWidth: "500px" } }}
+      >
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          padding="14px 20px"
+          sx={{ borderBottom: "1px solid var(--border-color)" }}
+        >
+          <Typography sx={{ fontSize: "15px", fontWeight: 700, color: "var(--text1)" }}>
+            Add Subject
+          </Typography>
           <IconButton
             onClick={() => closeDialog("subject")}
-            sx={{ borderRadius: "8px", padding: "4px" }}
+            size="small"
+            sx={{ width: 28, height: 28 }}
           >
-            <Close />
+            <Close sx={{ fontSize: "16px" }} />
           </IconButton>
-        }
-        actionButton={
-          <Button
-            variant="contained"
-            endIcon={<East />}
-            onClick={() => handleSubjectAction("add")}
-            disabled={dialog.loading}
-            disableElevation
-            sx={{
-              textTransform: "none",
-              backgroundColor: "var(--primary-color)",
-              borderRadius: "8px",
-              padding: "8px 24px",
-            }}
-          >
-            {dialog.loading ? (
-              <CircularProgress size={20} color="inherit" />
-            ) : (
-              "Add Subject"
-            )}
-          </Button>
-        }
-      >
-        <DialogContent sx={{ padding: "20px" }}>
-          <Typography
-            sx={{
-              fontFamily: "Lato",
-              fontSize: "14px",
-              color: "var(--text2)",
-              marginBottom: "16px",
-            }}
-          >
-            Select a subject from the list below to add it to this goal. Use the
-            search bar to find specific subjects quickly.
-          </Typography>
+        </Stack>
+        <DialogContent sx={{ padding: "16px 20px" }}>
           <SubjectSelection
             value={selectedSubjectID}
             onChange={(e) => setSelectedSubjectID(e.target.value)}
@@ -360,7 +276,47 @@ export default function Syllabus({ goal, fetchGoal, goalLoading }) {
             getValue={(s) => s.subjectID}
           />
         </DialogContent>
-      </DialogBox>
+        <DialogActions sx={{ padding: "12px 20px", borderTop: "1px solid var(--border-color)" }}>
+          <Button
+            onClick={() => closeDialog("subject")}
+            sx={{
+              textTransform: "none",
+              color: "var(--text2)",
+              fontWeight: 600,
+              fontSize: "12px",
+              height: "34px",
+              borderRadius: "8px",
+              border: "1px solid var(--border-color)",
+              padding: "6px 16px",
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => handleSubjectAction("add")}
+            disabled={dialog.loading || !selectedSubjectID}
+            disableElevation
+            sx={{
+              textTransform: "none",
+              backgroundColor: "var(--primary-color)",
+              borderRadius: "8px",
+              padding: "6px 16px",
+              fontWeight: 600,
+              fontSize: "12px",
+              height: "34px",
+              "&:hover": { backgroundColor: "var(--primary-color-dark)" },
+              "&:disabled": { backgroundColor: "var(--text3)", color: "#fff", opacity: 0.5 },
+            }}
+          >
+            {dialog.loading ? (
+              <CircularProgress size={16} color="inherit" />
+            ) : (
+              "Add Subject"
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Create Course Dialog */}
       <CreateCourseDialog
@@ -374,7 +330,7 @@ export default function Syllabus({ goal, fetchGoal, goalLoading }) {
 }
 
 const SubjectList = ({ subjectList, loading, onRemove }) => (
-  <Stack flexWrap="wrap" flexDirection="row" gap="20px">
+  <Stack flexWrap="wrap" flexDirection="row" gap="12px">
     {loading ? (
       [...Array(3)].map((_, i) => <SecondaryCardSkeleton key={i} />)
     ) : subjectList && subjectList.length ? (
@@ -392,7 +348,7 @@ const SubjectList = ({ subjectList, loading, onRemove }) => (
 );
 
 const CourseList = ({ courses, loading, onEdit }) => (
-  <Stack flexDirection="row" flexWrap="wrap" gap="24px">
+  <Stack flexDirection="row" flexWrap="wrap" gap="16px">
     {loading ? (
       [...Array(4)].map((_, i) => <CourseCardSkeleton key={i} />)
     ) : courses && courses.length ? (

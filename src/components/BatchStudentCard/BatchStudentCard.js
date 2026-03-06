@@ -1,191 +1,210 @@
 import {
   Delete,
-  Email,
   Person,
-  CalendarToday,
-  Badge,
   Edit,
+  LocalOffer,
 } from "@mui/icons-material";
 import {
   Avatar,
   Box,
-  Card,
-  CardActionArea,
-  Divider,
+  Chip,
   IconButton,
   Stack,
   Tooltip,
   Typography,
-  Chip,
 } from "@mui/material";
 
-export default function BatchStudentCard({ student, onRemove, onEdit }) {
+export default function BatchStudentCard({ student, onRemove, onEdit, index = 0 }) {
   const { studentMeta, joinedAt, tag } = student;
   const { name, email } = studentMeta;
+  const isEven = index % 2 === 0;
 
   const formattedDate = joinedAt
     ? new Date(joinedAt).toLocaleDateString("en-US", {
-        year: "numeric",
         month: "short",
         day: "numeric",
+        year: "2-digit",
       })
-    : "N/A";
+    : "-";
 
   return (
-    <Card
-      elevation={0}
+    <Stack
+      direction="row"
+      alignItems="center"
       sx={{
-        width: "350px",
-        border: "1px solid var(--border-color)",
-        borderRadius: "12px",
-        transition: "all 0.2s ease-in-out",
+        width: "100%",
+        backgroundColor: isEven ? "var(--white)" : "var(--bg-color, #fafafa)",
+        borderRadius: "6px",
+        padding: "7px 12px",
+        gap: "12px",
+        transition: "all 0.15s ease",
         "&:hover": {
-          transform: "translateY(-4px)",
-          boxShadow: "0 12px 24px -10px rgba(0, 0, 0, 0.1)",
-          borderColor: "var(--primary-color)",
+          backgroundColor: "rgba(24, 113, 99, 0.04)",
+          "& .action-buttons": { opacity: 1 },
         },
       }}
     >
-      <Stack padding="20px" gap="16px">
-        {/* Header with Avatar and Actions */}
-        <Stack
-          flexDirection="row"
-          justifyContent="space-between"
-          alignItems="flex-start"
-        >
-          <Avatar
-            sx={{
-              bgcolor: "var(--primary-color-acc-2)",
-              color: "var(--primary-color)",
-              width: 48,
-              height: 48,
-            }}
-          >
-            <Person />
-          </Avatar>
-          <Stack flexDirection="row" gap="8px">
-            {onEdit && (
-              <Tooltip title="Edit Student" arrow>
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(student);
-                  }}
-                  sx={{
-                    color: "var(--primary-color)",
-                    backgroundColor: "var(--white)",
-                    border: "1px solid var(--border-color)",
-                    "&:hover": {
-                      backgroundColor: "var(--bg-color)",
-                      borderColor: "var(--primary-color)",
-                    },
-                  }}
-                >
-                  <Edit fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            )}
-            <Tooltip title="Remove Student" arrow>
-              <IconButton
-                size="small"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRemove(student.id);
-                }}
-                sx={{
-                  color: "var(--delete-color)",
-                  backgroundColor: "#ffebee",
-                  "&:hover": {
-                    backgroundColor: "#ffcdd2",
-                  },
-                }}
-              >
-                <Delete fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Stack>
-        </Stack>
+      {/* # */}
+      <Typography
+        sx={{
+          fontSize: "11px",
+          fontWeight: 600,
+          color: "var(--text4)",
+          minWidth: "24px",
+          textAlign: "center",
+        }}
+      >
+        {index + 1}
+      </Typography>
 
-        {/* Student Info */}
-        <Box>
+      {/* Avatar + Name */}
+      <Stack direction="row" alignItems="center" gap="8px" sx={{ minWidth: "180px", flex: 1 }}>
+        <Avatar
+          src={studentMeta?.image}
+          sx={{
+            width: 30,
+            height: 30,
+            borderRadius: "8px",
+            backgroundColor: "var(--primary-color-acc-2)",
+            color: "var(--primary-color)",
+            fontSize: "13px",
+          }}
+        >
+          {!studentMeta?.image && <Person sx={{ fontSize: "16px" }} />}
+        </Avatar>
+        <Stack sx={{ minWidth: 0 }}>
           <Typography
-            variant="h6"
+            title={name}
             sx={{
-              fontWeight: 700,
-              fontSize: "18px",
+              fontSize: "12px",
+              fontWeight: 600,
               color: "var(--text1)",
-              mb: 0.5,
+              whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              maxWidth: "160px",
             }}
           >
             {name}
           </Typography>
-          <Stack flexDirection="row" alignItems="center" gap="6px">
-            <Email sx={{ fontSize: 14, color: "var(--text3)" }} />
-            <Typography
-              variant="body2"
-              sx={{
-                color: "var(--text3)",
-                fontSize: "13px",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {email}
-            </Typography>
-          </Stack>
-
-          <Stack direction="row" flexWrap="wrap" gap={1} mt={1}>
-            {student.rollNo && (
-              <Stack flexDirection="row" alignItems="center" gap="6px">
-                <Badge sx={{ fontSize: 14, color: "var(--primary-color)" }} />
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: "var(--primary-color)",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                  }}
-                >
-                  Roll No: {student.rollNo}
-                </Typography>
-              </Stack>
-            )}
-
-            {tag && (
-              <Chip
-                label={tag}
-                size="small"
-                sx={{
-                  height: "22px",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  backgroundColor: "var(--bg-color)",
-                  color: "var(--text2)",
-                  borderRadius: "6px",
-                }}
-              />
-            )}
-          </Stack>
-        </Box>
-
-        <Divider sx={{ borderStyle: "dashed" }} />
-
-        {/* Footer with Joined Date */}
-        <Stack flexDirection="row" alignItems="center" gap="6px">
-          <CalendarToday sx={{ fontSize: 14, color: "var(--text3)" }} />
           <Typography
-            variant="caption"
-            sx={{ color: "var(--text3)", fontSize: "12px" }}
+            sx={{
+              fontSize: "10px",
+              color: "var(--text4)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              maxWidth: "160px",
+            }}
           >
-            Joined: {formattedDate}
+            {email}
           </Typography>
         </Stack>
       </Stack>
-    </Card>
+
+      {/* Roll No */}
+      <Typography
+        sx={{
+          fontSize: "11px",
+          fontWeight: 600,
+          color: "var(--text2)",
+          minWidth: "70px",
+          textAlign: "center",
+          display: { xs: "none", md: "block" },
+        }}
+      >
+        {student.rollNo || "-"}
+      </Typography>
+
+      {/* Tag */}
+      <Box sx={{ minWidth: "80px", display: { xs: "none", md: "flex" }, justifyContent: "center" }}>
+        {tag ? (
+          <Chip
+            icon={<LocalOffer sx={{ fontSize: "11px !important" }} />}
+            label={tag}
+            size="small"
+            sx={{
+              height: "20px",
+              fontSize: "10px",
+              fontWeight: 600,
+              backgroundColor: "var(--primary-color-acc-2)",
+              color: "var(--primary-color)",
+              border: "1px solid rgba(24, 113, 99, 0.2)",
+              "& .MuiChip-icon": { color: "var(--primary-color)", ml: "4px" },
+              "& .MuiChip-label": { padding: "0 6px" },
+            }}
+          />
+        ) : (
+          <Typography sx={{ fontSize: "11px", color: "var(--text4)" }}>-</Typography>
+        )}
+      </Box>
+
+      {/* Joined Date */}
+      <Typography
+        sx={{
+          fontSize: "10px",
+          color: "var(--text4)",
+          minWidth: "65px",
+          textAlign: "center",
+          display: { xs: "none", lg: "block" },
+        }}
+      >
+        {formattedDate}
+      </Typography>
+
+      {/* Actions */}
+      <Stack
+        className="action-buttons"
+        direction="row"
+        gap="4px"
+        sx={{
+          opacity: 0,
+          transition: "opacity 0.15s ease",
+          minWidth: "56px",
+          justifyContent: "flex-end",
+        }}
+      >
+        {onEdit && (
+          <Tooltip title="Edit" arrow>
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(student);
+              }}
+              sx={{
+                width: 24,
+                height: 24,
+                borderRadius: "6px",
+                backgroundColor: "var(--primary-color-acc-2)",
+                border: "1px solid rgba(24, 113, 99, 0.2)",
+                "&:hover": { backgroundColor: "rgba(24, 113, 99, 0.15)" },
+              }}
+            >
+              <Edit sx={{ fontSize: "12px", color: "var(--primary-color)" }} />
+            </IconButton>
+          </Tooltip>
+        )}
+        <Tooltip title="Remove" arrow>
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove(student.id);
+            }}
+            sx={{
+              width: 24,
+              height: 24,
+              borderRadius: "6px",
+              backgroundColor: "#ffebee",
+              border: "1px solid #ffcdd2",
+              "&:hover": { backgroundColor: "#ffcdd2" },
+            }}
+          >
+            <Delete sx={{ fontSize: "12px", color: "#f44336" }} />
+          </IconButton>
+        </Tooltip>
+      </Stack>
+    </Stack>
   );
 }

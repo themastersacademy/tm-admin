@@ -33,11 +33,14 @@ export async function createFile({ title, bankID, fileName, fileType }) {
     }
 
     // 🔹 Prepare resource item for DynamoDB
+    const resourceID = randomUUID();
     const resourceParams = {
       TableName: `${process.env.AWS_DB_NAME}content`,
       Item: {
-        pKey: `RESOURCE#${randomUUID()}`,
+        pKey: `RESOURCE#${resourceID}`,
         sKey: `RESOURCE@${bankID}`,
+        "GSI1-pKey": `RESOURCE@${bankID}`,
+        "GSI1-sKey": `RESOURCE#${resourceID}`,
         type: "FILE",
         name: title,
         url: "",

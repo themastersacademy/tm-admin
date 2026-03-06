@@ -1,4 +1,4 @@
-import { NextResponse, userAgent } from "next/server";
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 
@@ -10,27 +10,11 @@ const publicRoutes = [
   "/_next",
   "/api/login",
   "/api/logout",
-  //"/api/event-update",
 ];
 
-// export const config = {
-//   matcher: ["/api/*"],
-// };
-
-export async function middleware(request) {
+export async function proxy(request) {
   const pathname = request.nextUrl.pathname;
-  const { device } = userAgent(request);
   const cookieStore = await cookies();
-
-  // Check if the device is a mobile
-  // if (device.type === "mobile") {
-  //   // Redirect to the custom mobile-not-supported page
-  //   if (pathname !== "/mobile-not-supported") {
-  //     const mobileRedirectUrl = new URL("/mobile-not-supported", request.url);
-  //     return NextResponse.redirect(mobileRedirectUrl);
-  //   }
-  //   return NextResponse.next();
-  // }
 
   try {
     const session = cookieStore.get("session")?.value;
@@ -63,15 +47,13 @@ export async function middleware(request) {
       return dashboardRedirect(request);
     }
 
-    // Allow the request to proceed for authenticated users
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-userID", payload.id);
     requestHeaders.set("x-email", payload.email);
 
     return NextResponse.next({ headers: requestHeaders });
   } catch (error) {
-    // Log only the error name (e.g. "JWTExpired") — never log the full token or payload
-    console.error("Middleware auth error:", error.name);
+    console.error("Proxy auth error:", error.name);
     await cookieStore.delete("session");
     if (pathname.startsWith("/api/")) {
       return new Response(JSON.stringify({ message: "Unauthorized" }), {
@@ -83,7 +65,6 @@ export async function middleware(request) {
   }
 }
 
-// Apply middleware to all routes
 export const config = {
   matcher: ["/((?!_next/static|_next/image|.*\\.png$).*)"],
 };

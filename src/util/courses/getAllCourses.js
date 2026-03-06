@@ -44,29 +44,32 @@ export async function getAllCoursesByGoalID({ goalID }) {
       );
     }
 
-    // Backward compatibility for legacy records missing GSI attributes or index issues.
-    if (items.length === 0) {
-      let legacyLastKey;
-      do {
-        const legacyResponse = await dynamoDB.send(
-          new ScanCommand({
-            TableName: TABLE_NAME,
-            FilterExpression: "sKey = :sKey",
-            ExpressionAttributeValues: {
-              ":sKey": `COURSES@${goalID}`,
-            },
-            ProjectionExpression:
-              "pKey, sKey, title, thumbnail, lessons, #duration, isLive, subscription",
-            ExpressionAttributeNames: {
-              "#duration": "duration",
-            },
-            ...(legacyLastKey && { ExclusiveStartKey: legacyLastKey }),
-          })
-        );
-        items.push(...(legacyResponse.Items || []));
-        legacyLastKey = legacyResponse.LastEvaluatedKey;
-      } while (legacyLastKey);
-    }
+    // Merge with legacy scan fallback (deduplicated)
+    const foundKeys = new Set(items.map((item) => item.pKey));
+    let legacyLastKey;
+    do {
+      const legacyResponse = await dynamoDB.send(
+        new ScanCommand({
+          TableName: TABLE_NAME,
+          FilterExpression: "sKey = :sKey",
+          ExpressionAttributeValues: {
+            ":sKey": `COURSES@${goalID}`,
+          },
+          ProjectionExpression:
+            "pKey, sKey, title, thumbnail, lessons, #duration, isLive, subscription",
+          ExpressionAttributeNames: {
+            "#duration": "duration",
+          },
+          ...(legacyLastKey && { ExclusiveStartKey: legacyLastKey }),
+        })
+      );
+      for (const item of legacyResponse.Items || []) {
+        if (!foundKeys.has(item.pKey)) {
+          items.push(item);
+        }
+      }
+      legacyLastKey = legacyResponse.LastEvaluatedKey;
+    } while (legacyLastKey);
 
     return {
       success: true,
@@ -124,29 +127,32 @@ export async function getALLCourse() {
       );
     }
 
-    // Backward compatibility for legacy records missing GSI attributes or index issues.
-    if (items.length === 0) {
-      let legacyLastKey;
-      do {
-        const legacyResponse = await dynamoDB.send(
-          new ScanCommand({
-            TableName: TABLE_NAME,
-            FilterExpression: "begins_with(sKey, :sKey)",
-            ExpressionAttributeValues: {
-              ":sKey": "COURSES@",
-            },
-            ProjectionExpression:
-              "pKey, sKey, title, thumbnail, lessons, #duration, subscription",
-            ExpressionAttributeNames: {
-              "#duration": "duration",
-            },
-            ...(legacyLastKey && { ExclusiveStartKey: legacyLastKey }),
-          })
-        );
-        items.push(...(legacyResponse.Items || []));
-        legacyLastKey = legacyResponse.LastEvaluatedKey;
-      } while (legacyLastKey);
-    }
+    // Merge with legacy scan fallback (deduplicated)
+    const foundKeys = new Set(items.map((item) => item.pKey));
+    let legacyLastKey2;
+    do {
+      const legacyResponse = await dynamoDB.send(
+        new ScanCommand({
+          TableName: TABLE_NAME,
+          FilterExpression: "begins_with(sKey, :sKey)",
+          ExpressionAttributeValues: {
+            ":sKey": "COURSES@",
+          },
+          ProjectionExpression:
+            "pKey, sKey, title, thumbnail, lessons, #duration, subscription",
+          ExpressionAttributeNames: {
+            "#duration": "duration",
+          },
+          ...(legacyLastKey2 && { ExclusiveStartKey: legacyLastKey2 }),
+        })
+      );
+      for (const item of legacyResponse.Items || []) {
+        if (!foundKeys.has(item.pKey)) {
+          items.push(item);
+        }
+      }
+      legacyLastKey2 = legacyResponse.LastEvaluatedKey;
+    } while (legacyLastKey2);
 
     return {
       success: true,

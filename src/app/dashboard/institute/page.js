@@ -1,7 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback } from "react";
-import { Stack } from "@mui/material";
+import { Box, Stack } from "@mui/material";
 import InstituteHeader from "./Components/InstituteHeader";
 import InstituteCard from "@/src/components/InstituteCard/InstituteCard";
 import SecondaryCardSkeleton from "@/src/components/SecondaryCardSkeleton/SecondaryCardSkeleton";
@@ -33,7 +33,6 @@ export default function Institute() {
       if (data.success) {
         setInstituteList(data.data);
       } else {
-        console.log(data.message);
       }
     } catch (error) {
       if (error.name !== "AbortError") {
@@ -116,37 +115,33 @@ export default function Institute() {
         }}
         isLoading={isLoading}
       />
-      <Stack
+      <Box
         sx={{
-          border: "1px solid var(--border-color)",
-          backgroundColor: "var(--white)",
-          borderRadius: "10px",
-          padding: "20px",
-          minHeight: "80vh",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+          gap: "14px",
         }}
       >
-        <Stack flexDirection="row" gap="20px" flexWrap="wrap">
-          {!isLoading ? (
-            instituteList.length > 0 ? (
-              instituteList.map((item, index) => (
-                <InstituteCard
-                  key={index}
-                  institute={item}
-                  onEdit={handleEditInstitute}
-                />
-              ))
-            ) : (
-              <Stack width="100%" height="70vh">
-                <NoDataFound info="No institute created yet" />
-              </Stack>
-            )
-          ) : (
-            Array.from({ length: 3 }).map((_, index) => (
-              <SecondaryCardSkeleton key={index} />
+        {!isLoading ? (
+          instituteList.length > 0 ? (
+            instituteList.map((item, index) => (
+              <InstituteCard
+                key={index}
+                institute={item}
+                onEdit={handleEditInstitute}
+              />
             ))
-          )}
-        </Stack>
-      </Stack>
+          ) : (
+            <Stack sx={{ gridColumn: "1 / -1", minHeight: "60vh" }}>
+              <NoDataFound info="No institute created yet" />
+            </Stack>
+          )
+        ) : (
+          Array.from({ length: 4 }).map((_, index) => (
+            <SecondaryCardSkeleton key={index} />
+          ))
+        )}
+      </Box>
       <CreateInstituteDialog
         open={isDialogOpen}
         onClose={handleCloseDialog}

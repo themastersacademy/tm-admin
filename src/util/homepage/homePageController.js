@@ -3,6 +3,7 @@ import {
   GetCommand,
   PutCommand,
   UpdateCommand,
+  QueryCommand,
   ScanCommand,
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
@@ -69,35 +70,55 @@ export async function updateFeaturedGoals(featuredGoalIDs) {
 
 // Get all announcements
 export async function getAllAnnouncements() {
-  const params = {
-    TableName: `${process.env.AWS_DB_NAME}master`,
-    FilterExpression: "begins_with(pKey, :prefix)",
-    ExpressionAttributeValues: {
-      ":prefix": "ANNOUNCEMENT#",
-    },
-    ProjectionExpression:
-      "pKey, title, message, #type, isActive, createdAt, updatedAt",
-    ExpressionAttributeNames: {
-      "#type": "type",
-    },
-  };
+  const TABLE = `${process.env.AWS_DB_NAME}master`;
 
   try {
-    const items = [];
+    // Step 1: Query via GSI
+    const gsiItems = [];
     let lastKey;
 
     do {
       const response = await dynamoDB.send(
-        new ScanCommand({
-          ...params,
+        new QueryCommand({
+          TableName: TABLE,
+          IndexName: "masterTableIndex",
+          KeyConditionExpression: "#gsi1pk = :gsi1pk",
+          ExpressionAttributeNames: {
+            "#gsi1pk": "GSI1-pKey",
+          },
+          ExpressionAttributeValues: {
+            ":gsi1pk": "ANNOUNCEMENTS",
+          },
           ...(lastKey && { ExclusiveStartKey: lastKey }),
         })
       );
-      items.push(...(response.Items || []));
+      gsiItems.push(...(response.Items || []));
       lastKey = response.LastEvaluatedKey;
     } while (lastKey);
 
-    const announcements = items.map((item) => ({
+    // Step 2: Merge with legacy scan fallback
+    const foundKeys = new Set(gsiItems.map((item) => item.pKey));
+    let legacyLastKey;
+    do {
+      const response = await dynamoDB.send(
+        new ScanCommand({
+          TableName: TABLE,
+          FilterExpression: "begins_with(pKey, :prefix)",
+          ExpressionAttributeValues: {
+            ":prefix": "ANNOUNCEMENT#",
+          },
+          ...(legacyLastKey && { ExclusiveStartKey: legacyLastKey }),
+        })
+      );
+      for (const item of response.Items || []) {
+        if (!foundKeys.has(item.pKey)) {
+          gsiItems.push(item);
+        }
+      }
+      legacyLastKey = response.LastEvaluatedKey;
+    } while (legacyLastKey);
+
+    const announcements = gsiItems.map((item) => ({
       announcementID: item.pKey.split("#")[1],
       title: item.title,
       message: item.message,
@@ -123,11 +144,14 @@ export async function getAllAnnouncements() {
 // Create announcement
 export async function createAnnouncement({ title, message, type, isActive }) {
   const announcementID = randomUUID();
+  const pKey = `ANNOUNCEMENT#${announcementID}`;
   const params = {
     TableName: `${process.env.AWS_DB_NAME}master`,
     Item: {
-      pKey: `ANNOUNCEMENT#${announcementID}`,
+      pKey,
       sKey: "ANNOUNCEMENT",
+      "GSI1-pKey": "ANNOUNCEMENTS",
+      "GSI1-sKey": pKey,
       title,
       message,
       type: type || "info", // info, warning, success, error
@@ -211,35 +235,57 @@ export async function deleteAnnouncement(announcementID) {
 
 // Get active announcements (for user app)
 export async function getActiveAnnouncements() {
-  const params = {
-    TableName: `${process.env.AWS_DB_NAME}master`,
-    FilterExpression: "begins_with(pKey, :prefix) AND isActive = :active",
-    ExpressionAttributeValues: {
-      ":prefix": "ANNOUNCEMENT#",
-      ":active": true,
-    },
-    ProjectionExpression: "pKey, title, message, #type, createdAt",
-    ExpressionAttributeNames: {
-      "#type": "type",
-    },
-  };
+  const TABLE = `${process.env.AWS_DB_NAME}master`;
 
   try {
-    const items = [];
+    // Query via GSI + merge with legacy
+    const gsiItems = [];
     let lastKey;
 
     do {
       const response = await dynamoDB.send(
-        new ScanCommand({
-          ...params,
+        new QueryCommand({
+          TableName: TABLE,
+          IndexName: "masterTableIndex",
+          KeyConditionExpression: "#gsi1pk = :gsi1pk",
+          ExpressionAttributeNames: {
+            "#gsi1pk": "GSI1-pKey",
+          },
+          ExpressionAttributeValues: {
+            ":gsi1pk": "ANNOUNCEMENTS",
+          },
           ...(lastKey && { ExclusiveStartKey: lastKey }),
         })
       );
-      items.push(...(response.Items || []));
+      gsiItems.push(...(response.Items || []));
       lastKey = response.LastEvaluatedKey;
     } while (lastKey);
 
-    const announcements = items.map((item) => ({
+    const foundKeys = new Set(gsiItems.map((item) => item.pKey));
+    let legacyLastKey;
+    do {
+      const response = await dynamoDB.send(
+        new ScanCommand({
+          TableName: TABLE,
+          FilterExpression: "begins_with(pKey, :prefix)",
+          ExpressionAttributeValues: {
+            ":prefix": "ANNOUNCEMENT#",
+          },
+          ...(legacyLastKey && { ExclusiveStartKey: legacyLastKey }),
+        })
+      );
+      for (const item of response.Items || []) {
+        if (!foundKeys.has(item.pKey)) {
+          gsiItems.push(item);
+        }
+      }
+      legacyLastKey = response.LastEvaluatedKey;
+    } while (legacyLastKey);
+
+    // Filter active in-memory
+    const activeItems = gsiItems.filter((item) => item.isActive === true);
+
+    const announcements = activeItems.map((item) => ({
       announcementID: item.pKey.split("#")[1],
       title: item.title,
       message: item.message,

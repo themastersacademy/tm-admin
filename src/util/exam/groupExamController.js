@@ -142,7 +142,6 @@ export async function updateExamGroup({
       message: "Exam group updated successfully",
     };
   } catch (error) {
-    console.log(error);
     throw error;
   }
 }
@@ -222,7 +221,6 @@ export async function getExamGroupByGoalID(goalID) {
   };
   try {
     const { Items } = await dynamoDB.send(new QueryCommand(params));
-    console.log(Items[0]);
 
     // For each group, fetch the exam count
     const groupsWithCount = await Promise.all(

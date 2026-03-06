@@ -5,7 +5,6 @@ export async function GET(request) {
     const response = await getAllGoals();
     return Response.json(response, { status: 200 });
   } catch (error) {
-    console.log(error);
     return Response.json(
       { success: false, message: "Internal server error" },
       { status: 500 }

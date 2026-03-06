@@ -58,7 +58,6 @@ export async function createCoupon({
     await dynamoDB.send(
       new PutCommand({
         TableName: TABLE_NAME,
-        IndexName: INDEX_NAME,
         Item: coupon,
         ConditionExpression: "attribute_not_exists(pKey)",
       })

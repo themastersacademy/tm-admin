@@ -1,7 +1,7 @@
 import createLesson from "@/src/util/courses/createLesson";
 
 export async function POST(request) {
-  const { courseID } = await request.json();
+  const { courseID, sectionID } = await request.json();
   if (!courseID) {
     return Response.json(
       { success: false, message: "Missing courseID" },
@@ -9,7 +9,7 @@ export async function POST(request) {
     );
   }
   try {
-    const result = await createLesson({ courseID });
+    const result = await createLesson({ courseID, sectionID });
     return Response.json(result);
   } catch (error) {
     console.error("Error in createLesson route:", error);

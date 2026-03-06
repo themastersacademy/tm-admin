@@ -10,19 +10,17 @@ const StyledTabs = styled(Tabs)(({ customstyles, width }) => ({
   borderRadius: "0px",
   width: width,
   padding: "0px",
-  minHeight: "56px",
+  minHeight: "40px",
   position: "relative",
   borderBottom: "2px solid var(--border-color)",
   ...customstyles?.tabs,
   "& .MuiTabs-indicator": {
-    height: "3px",
-    borderRadius: "3px 3px 0 0",
-    background:
-      "linear-gradient(90deg, var(--primary-color) 0%, rgba(var(--primary-rgb), 0.7) 100%)",
-    boxShadow: "0 -2px 8px rgba(var(--primary-rgb), 0.3)",
+    height: "2px",
+    borderRadius: "2px 2px 0 0",
+    backgroundColor: "var(--primary-color)",
   },
   "& .MuiTabs-flexContainer": {
-    gap: "8px",
+    gap: "4px",
   },
 }));
 
@@ -30,40 +28,24 @@ const StyledTab = styled(Tab)(({ customstyles }) => ({
   textTransform: "none",
   fontFamily: "Lato",
   fontWeight: 600,
-  fontSize: "15px",
-  color: "var(--text2)",
+  fontSize: "13px",
+  color: "var(--text3)",
   borderRadius: "0px",
-  minWidth: "120px",
-  maxWidth: "200px",
-  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-  minHeight: "56px",
-  padding: "12px 24px",
+  minWidth: "unset",
+  maxWidth: "180px",
+  transition: "all 0.2s ease",
+  minHeight: "40px",
+  padding: "8px 16px",
   whiteSpace: "nowrap",
   position: "relative",
-  letterSpacing: "0.3px",
+  letterSpacing: "0.2px",
   "&.Mui-selected": {
     color: "var(--primary-color)",
     fontWeight: 700,
-    "& .tab-icon": {
-      transform: "scale(1.1)",
-    },
   },
   "&:hover:not(.Mui-selected)": {
     color: "var(--text1)",
-    backgroundColor: "rgba(var(--primary-rgb), 0.04)",
-  },
-  "&::before": {
-    content: '""',
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: "3px",
-    backgroundColor: "transparent",
-    transition: "background-color 0.3s ease",
-  },
-  "&.Mui-selected::before": {
-    backgroundColor: "transparent",
+    backgroundColor: "rgba(24, 113, 99, 0.04)",
   },
   ...customstyles?.tab,
 }));
@@ -79,20 +61,7 @@ function CustomTabPanel(props) {
       aria-labelledby={`simple-tab-${index}`}
       {...other}
     >
-      {value === index && (
-        <Box
-          sx={{
-            marginTop: "24px",
-            animation: "fadeIn 0.3s ease-in-out",
-            "@keyframes fadeIn": {
-              from: { opacity: 0, transform: "translateY(8px)" },
-              to: { opacity: 1, transform: "translateY(0)" },
-            },
-          }}
-        >
-          {children}
-        </Box>
-      )}
+      {value === index && <Box>{children}</Box>}
     </div>
   );
 }
@@ -124,7 +93,7 @@ export default function CustomTabs({
       <Stack flexDirection="row" alignItems="center">
         {back && (
           <ArrowBackIos
-            sx={{ cursor: "pointer" }}
+            sx={{ cursor: "pointer", fontSize: "18px" }}
             onClick={() => {
               router.back();
             }}
@@ -134,7 +103,7 @@ export default function CustomTabs({
         <Stack
           sx={{
             backgroundColor: "var(--white)",
-            borderRadius: "12px 12px 0 0",
+            borderRadius: "10px 10px 0 0",
             border: "1px solid var(--border-color)",
             borderBottom: "none",
             overflow: "hidden",
@@ -166,8 +135,8 @@ export default function CustomTabs({
           backgroundColor: "var(--white)",
           border: "1px solid var(--border-color)",
           borderTop: "none",
-          borderRadius: "0 0 12px 12px",
-          padding: "24px",
+          borderRadius: "0 0 10px 10px",
+          padding: "16px",
           minHeight: "400px",
         }}
       >

@@ -100,8 +100,8 @@ const QuestionList = ({
     selectedQuestions.length < uniqueQuestions.length;
 
   return (
-    <Stack gap="15px">
-      <Stack flexDirection="row" alignItems="center" gap="8px">
+    <Stack gap="10px">
+      <Stack flexDirection="row" alignItems="center" gap="6px">
         <Checkbox
           checked={allSelected}
           indeterminate={isIndeterminate}
@@ -193,62 +193,35 @@ const QuestionList = ({
           alignItems="center"
           justifyContent="center"
           sx={{
-            padding: "40px 20px",
-            backgroundColor: "rgba(255, 152, 0, 0.02)",
-            borderRadius: "12px",
-            border: "1px dashed rgba(255, 152, 0, 0.3)",
-            minHeight: "200px",
+            padding: "24px 16px",
+            backgroundColor: "rgba(24, 113, 99, 0.02)",
+            borderRadius: "8px",
+            border: "1px dashed rgba(24, 113, 99, 0.25)",
           }}
         >
-          <Stack
-            alignItems="center"
-            gap="16px"
-            sx={{ maxWidth: "400px", textAlign: "center" }}
-          >
-            {/* Empty State Icon */}
-            <Stack
+          <Stack alignItems="center" gap="8px" sx={{ textAlign: "center" }}>
+            <Visibility
+              sx={{ fontSize: "28px", color: "rgba(24, 113, 99, 0.4)" }}
+            />
+            <Typography
               sx={{
-                width: "80px",
-                height: "80px",
-                borderRadius: "50%",
-                background:
-                  "linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, rgba(245, 124, 0, 0.05) 100%)",
-                border: "2px solid rgba(255, 152, 0, 0.2)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                fontSize: "14px",
+                fontWeight: "600",
+                color: "var(--text2)",
+                fontFamily: "Lato",
               }}
             >
-              <Visibility
-                sx={{ fontSize: "40px", color: "rgba(255, 152, 0, 0.6)" }}
-              />
-            </Stack>
-
-            {/* Empty State Text */}
-            <Stack gap="8px">
-              <Typography
-                sx={{
-                  fontSize: "18px",
-                  fontWeight: "700",
-                  color: "var(--text1)",
-                  fontFamily: "Lato",
-                }}
-              >
-                No Questions Added Yet
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "14px",
-                  fontWeight: "400",
-                  color: "var(--text3)",
-                  fontFamily: "Lato",
-                  lineHeight: 1.5,
-                }}
-              >
-                Click the &quot;Add Questions&quot; button above to start adding
-                questions to this section.
-              </Typography>
-            </Stack>
+              No Questions Added Yet
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: "12px",
+                color: "var(--text3)",
+                fontFamily: "Lato",
+              }}
+            >
+              Click &quot;Add Questions&quot; above to get started.
+            </Typography>
           </Stack>
         </Stack>
       )}

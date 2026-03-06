@@ -6,7 +6,6 @@ export default async function createBank({ title }) {
   const bankID = `BANK#${randomUUID()}`;
   const params = {
     TableName: `${process.env.AWS_DB_NAME}content`,
-    IndexName: "contentTableIndex",
     Item: {
       pKey: bankID,
       sKey: `BANKS`,
@@ -14,8 +13,9 @@ export default async function createBank({ title }) {
       "GSI1-sKey": bankID,
       title,
       videoCollectionID: await createVideoCollection({ name: title }),
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      resources: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     },
   };
 
@@ -56,7 +56,6 @@ function createVideoCollection({ name }) {
 }
 
 async function deleteVideoCollection({ videoCollectionID }) {
-  console.log("Deleting video collection", videoCollectionID);
   const url = `https://video.bunnycdn.com/library/${process.env.BUNNY_VIDEO_LIBRARY_ID}/collections/${videoCollectionID}`;
   const options = {
     method: "DELETE",
@@ -67,6 +66,5 @@ async function deleteVideoCollection({ videoCollectionID }) {
   };
   fetch(url, options)
     .then((res) => res.json())
-    .then((json) => console.log(json))
     .catch((err) => console.error(err));
 }

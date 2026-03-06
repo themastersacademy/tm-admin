@@ -5,7 +5,6 @@ export async function POST(req) {
   if (!subjectID || !title) {
     return Response.json({ error: "Missing required fields" }, { status: 400 });
   }
-  console.log(subjectID, title);
   try {
     const result = await updateSubject({ subjectID, title });
     return Response.json(result);

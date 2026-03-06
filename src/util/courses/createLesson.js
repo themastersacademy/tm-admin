@@ -1,9 +1,9 @@
 import { dynamoDB } from "../awsAgent";
-import { QueryCommand, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
+import { QueryCommand, TransactWriteCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 import { updateGoalCoursesList } from "./updateCourse";
 
-export default async function createLesson({ courseID }) {
+export default async function createLesson({ courseID, sectionID }) {
   // Define the table name once.
   const TABLE = `${process.env.AWS_DB_NAME}master`;
 
@@ -38,6 +38,8 @@ export default async function createLesson({ courseID }) {
     const lessonItem = {
       pKey: `LESSON#${lessonID}`,
       sKey: `LESSONS@${courseID}`,
+      "GSI1-pKey": `LESSONS@${courseID}`,
+      "GSI1-sKey": `LESSON#${lessonID}`,
       resourceID: "",
       title: "",
       titleLower: "",
@@ -47,8 +49,8 @@ export default async function createLesson({ courseID }) {
       path: "",
       name: "",
       videoID: "",
-      createdAt: now,
-      updatedAt: now,
+      createdAt: new Date(now).toISOString(),
+      updatedAt: new Date(now).toISOString(),
     };
 
     // 3. Use a transaction to create the lesson and update the course record atomically.
@@ -82,6 +84,27 @@ export default async function createLesson({ courseID }) {
     };
 
     await dynamoDB.send(new TransactWriteCommand(transactParams));
+
+    // If sectionID is provided, add the lesson to that section
+    if (sectionID) {
+      const sections = courseItem.sections || [];
+      const section = sections.find((s) => s.id === sectionID);
+      if (section) {
+        section.lessonIDs.push(lessonID);
+        await dynamoDB.send(
+          new UpdateCommand({
+            TableName: TABLE,
+            Key: {
+              pKey: `COURSE#${courseID}`,
+              sKey: `COURSES@${goalID}`,
+            },
+            UpdateExpression: "SET sections = :sections",
+            ExpressionAttributeValues: { ":sections": sections },
+          })
+        );
+      }
+    }
+
     await updateGoalCoursesList({
       courseID,
       goalID,
