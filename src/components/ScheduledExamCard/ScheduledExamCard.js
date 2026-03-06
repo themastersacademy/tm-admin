@@ -5,7 +5,6 @@ import {
   Stack,
   Typography,
   Chip,
-  Box,
   IconButton,
   Dialog,
   DialogTitle,
@@ -80,23 +79,32 @@ export default function ScheduledExamCard({
         label: "Live",
         color: "#2e7d32",
         bg: "#e8f5e9",
-        icon: <CheckCircle sx={{ fontSize: "14px" }} />,
+        border: "#2e7d3230",
+        icon: <CheckCircle sx={{ fontSize: "12px" }} />,
       };
     if (isEnded)
       return {
         label: "Ended",
         color: "#c62828",
         bg: "#ffebee",
-        icon: <Cancel sx={{ fontSize: "14px" }} />,
+        border: "#c6282830",
+        icon: <Cancel sx={{ fontSize: "12px" }} />,
       };
     if (isUpcoming)
       return {
         label: "Scheduled",
         color: "#1565c0",
         bg: "#e3f2fd",
-        icon: <Schedule sx={{ fontSize: "14px" }} />,
+        border: "#1565c030",
+        icon: <Schedule sx={{ fontSize: "12px" }} />,
       };
-    return { label: "Draft", color: "#757575", bg: "#f5f5f5", icon: null };
+    return {
+      label: "Draft",
+      color: "#757575",
+      bg: "#f5f5f5",
+      border: "#75757530",
+      icon: null,
+    };
   };
 
   const status = getStatus();
@@ -114,251 +122,168 @@ export default function ScheduledExamCard({
         sx={{
           width: "100%",
           border: "1px solid var(--border-color)",
-          borderRadius: "14px",
+          borderRadius: "10px",
           overflow: "hidden",
-          transition: "all 0.2s ease",
+          transition: "all 0.15s ease",
           "&:hover": {
-            transform: "translateY(-3px)",
-            boxShadow: "0 8px 24px -8px rgba(0,0,0,0.12)",
             borderColor: "var(--primary-color)",
           },
         }}
       >
-        <CardActionArea onClick={handleNavigate} sx={{ padding: "18px" }}>
-          <Stack gap="14px">
-            {/* Top: Status + Batch chips */}
+        <CardActionArea onClick={handleNavigate} sx={{ padding: "14px 16px" }}>
+          <Stack gap="10px">
+            {/* Title row: Icon + Title + Status chip */}
             <Stack
               direction="row"
-              justifyContent="space-between"
-              alignItems="center"
+              alignItems="flex-start"
+              gap="10px"
             >
-              <Chip
-                icon={status.icon}
-                label={status.label}
-                size="small"
-                sx={{
-                  height: "24px",
-                  backgroundColor: status.bg,
-                  color: status.color,
-                  fontWeight: 600,
-                  fontSize: "11px",
-                  "& .MuiChip-icon": { color: "inherit" },
-                }}
-              />
-              {batchList && batchList.length > 0 && (
-                <Chip
-                  icon={<Groups sx={{ fontSize: "14px !important" }} />}
-                  label={`${batchList.length} ${batchList.length === 1 ? "Batch" : "Batches"}`}
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowBatchDialog(true);
-                  }}
-                  sx={{
-                    height: "24px",
-                    backgroundColor: "rgba(24, 113, 99, 0.08)",
-                    color: "var(--primary-color)",
-                    fontWeight: 600,
-                    fontSize: "11px",
-                    border: "1px solid rgba(24, 113, 99, 0.2)",
-                    "& .MuiChip-icon": { color: "var(--primary-color)" },
-                    "&:hover": {
-                      backgroundColor: "var(--primary-color)",
-                      color: "#fff",
-                      "& .MuiChip-icon": { color: "#fff" },
-                    },
-                  }}
-                />
-              )}
-            </Stack>
-
-            {/* Title + Icon row */}
-            <Stack direction="row" alignItems="flex-start" gap="12px">
               <Stack
                 sx={{
-                  width: "42px",
-                  height: "42px",
-                  borderRadius: "10px",
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "8px",
                   backgroundColor: "rgba(24, 113, 99, 0.08)",
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
+                  border: "1px solid rgba(24, 113, 99, 0.15)",
                   flexShrink: 0,
                 }}
               >
-                <Quiz sx={{ color: "var(--primary-color)", fontSize: 22 }} />
+                <Quiz sx={{ color: "var(--primary-color)", fontSize: 18 }} />
               </Stack>
               <Stack flex={1} minWidth={0}>
                 <Typography
                   sx={{
                     fontWeight: 700,
-                    fontSize: "15px",
+                    fontSize: "14px",
                     color: "var(--text1)",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     display: "-webkit-box",
-                    WebkitLineClamp: 2,
+                    WebkitLineClamp: 1,
                     WebkitBoxOrient: "vertical",
-                    lineHeight: 1.4,
-                    minHeight: "21px",
+                    lineHeight: 1.3,
                   }}
                 >
                   {title || "Untitled Exam"}
                 </Typography>
-                {startTimeStamp && (
-                  <Typography
-                    sx={{
-                      fontSize: "12px",
-                      color: "var(--text3)",
-                      mt: "4px",
-                    }}
-                  >
-                    {formatDateTime(startTimeStamp)}
-                  </Typography>
-                )}
               </Stack>
+              <Chip
+                icon={status.icon}
+                label={status.label}
+                size="small"
+                sx={{
+                  height: "20px",
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  backgroundColor: status.bg,
+                  color: status.color,
+                  border: `1px solid ${status.border}`,
+                  "& .MuiChip-icon": { color: "inherit" },
+                  "& .MuiChip-label": { padding: "0 6px" },
+                }}
+              />
+            </Stack>
+
+            {/* Schedule dates */}
+            <Stack direction="row" alignItems="center" justifyContent="space-between">
+              <Stack direction="row" alignItems="center" gap="5px">
+                <Schedule sx={{ fontSize: "13px", color: "var(--text4)" }} />
+                <Typography sx={{ fontSize: "11px", color: "var(--text4)" }}>
+                  {startTimeStamp
+                    ? formatDateTime(startTimeStamp)
+                    : "No schedule set"}
+                </Typography>
+              </Stack>
+              {endTimeStamp && (
+                <Typography sx={{ fontSize: "11px", color: "var(--text4)" }}>
+                  Ends: {formatDateTime(endTimeStamp)}
+                </Typography>
+              )}
             </Stack>
 
             {/* Stats row */}
             <Stack
               direction="row"
+              gap="8px"
               sx={{
-                backgroundColor: "var(--bg-color)",
-                borderRadius: "10px",
-                padding: "10px 14px",
+                borderTop: "1px solid var(--border-color)",
+                paddingTop: "10px",
               }}
             >
-              <Stack
-                direction="row"
-                alignItems="center"
-                gap="6px"
-                flex={1}
-                justifyContent="center"
-              >
-                <Timer sx={{ fontSize: 16, color: "var(--text3)" }} />
-                <Stack>
-                  <Typography
-                    sx={{
-                      fontSize: "10px",
-                      color: "var(--text3)",
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    Duration
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: "13px",
-                      fontWeight: 600,
-                      color: "var(--text1)",
-                      lineHeight: 1.3,
-                    }}
-                  >
-                    {formatDuration(duration)}
-                  </Typography>
-                </Stack>
-              </Stack>
-              <Box
-                sx={{ width: "1px", backgroundColor: "var(--border-color)" }}
+              <StatBadge
+                icon={<Timer sx={{ fontSize: "13px" }} />}
+                value={formatDuration(duration)}
+                label="Duration"
+                color="var(--primary-color)"
+                bgColor="rgba(24, 113, 99, 0.06)"
+                borderColor="rgba(24, 113, 99, 0.12)"
               />
-              <Stack
-                direction="row"
-                alignItems="center"
-                gap="6px"
-                flex={1}
-                justifyContent="center"
-              >
-                <Grading sx={{ fontSize: 16, color: "var(--text3)" }} />
-                <Stack>
-                  <Typography
-                    sx={{
-                      fontSize: "10px",
-                      color: "var(--text3)",
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    Marks
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: "13px",
-                      fontWeight: 600,
-                      color: "var(--text1)",
-                      lineHeight: 1.3,
-                    }}
-                  >
-                    {totalMarks || 0}
-                  </Typography>
-                </Stack>
-              </Stack>
-              <Box
-                sx={{ width: "1px", backgroundColor: "var(--border-color)" }}
+              <StatBadge
+                icon={<Grading sx={{ fontSize: "13px" }} />}
+                value={`${totalMarks || 0}`}
+                label="Marks"
+                color="#4CAF50"
+                bgColor="rgba(76, 175, 80, 0.06)"
+                borderColor="rgba(76, 175, 80, 0.12)"
               />
-              <Stack
-                direction="row"
-                alignItems="center"
-                gap="6px"
-                flex={1}
-                justifyContent="center"
-              >
-                <Quiz sx={{ fontSize: 16, color: "var(--text3)" }} />
-                <Stack>
-                  <Typography
-                    sx={{
-                      fontSize: "10px",
-                      color: "var(--text3)",
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    Questions
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: "13px",
-                      fontWeight: 600,
-                      color: "var(--text1)",
-                      lineHeight: 1.3,
-                    }}
-                  >
-                    {totalQuestions || 0}
-                  </Typography>
-                </Stack>
-              </Stack>
+              <StatBadge
+                icon={<Quiz sx={{ fontSize: "13px" }} />}
+                value={`${totalQuestions || 0}`}
+                label="Questions"
+                color="#2196F3"
+                bgColor="rgba(33, 150, 243, 0.06)"
+                borderColor="rgba(33, 150, 243, 0.12)"
+              />
             </Stack>
 
-            {/* Bottom: End time + View button */}
+            {/* Bottom row */}
             <Stack
               direction="row"
               justifyContent="space-between"
               alignItems="center"
             >
-              {endTimeStamp ? (
-                <Typography sx={{ fontSize: "11px", color: "var(--text3)" }}>
-                  Ends: {formatDateTime(endTimeStamp)}
-                </Typography>
-              ) : (
-                <Box />
-              )}
+              <Stack direction="row" alignItems="center" gap="6px">
+                {batchList && batchList.length > 0 && (
+                  <Chip
+                    icon={<Groups sx={{ fontSize: "12px !important" }} />}
+                    label={`${batchList.length} ${batchList.length === 1 ? "Batch" : "Batches"}`}
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowBatchDialog(true);
+                    }}
+                    sx={{
+                      height: "20px",
+                      fontSize: "10px",
+                      fontWeight: 600,
+                      backgroundColor: "rgba(24, 113, 99, 0.08)",
+                      color: "var(--primary-color)",
+                      border: "1px solid rgba(24, 113, 99, 0.15)",
+                      "& .MuiChip-icon": { color: "var(--primary-color)" },
+                      "& .MuiChip-label": { padding: "0 6px" },
+                    }}
+                  />
+                )}
+              </Stack>
               <Stack
                 direction="row"
                 alignItems="center"
-                gap="4px"
-                sx={{
-                  color: "var(--primary-color)",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                }}
+                gap="3px"
+                sx={{ color: "var(--primary-color)" }}
               >
                 <Typography
                   sx={{
-                    fontSize: "12px",
+                    fontSize: "11px",
                     fontWeight: 600,
                     color: "var(--primary-color)",
                   }}
                 >
                   View Details
                 </Typography>
-                <East sx={{ fontSize: 14 }} />
+                <East sx={{ fontSize: 12 }} />
               </Stack>
             </Stack>
           </Stack>
@@ -371,7 +296,7 @@ export default function ScheduledExamCard({
         onClose={() => setShowBatchDialog(false)}
         maxWidth="xs"
         fullWidth
-        PaperProps={{ sx: { borderRadius: "16px" } }}
+        PaperProps={{ sx: { borderRadius: "10px" } }}
       >
         <DialogTitle
           sx={{
@@ -381,7 +306,7 @@ export default function ScheduledExamCard({
             pb: "12px",
           }}
         >
-          <Typography variant="h6" fontWeight="700" fontSize="16px">
+          <Typography fontWeight="700" fontSize="15px" fontFamily="Lato">
             Scheduled Batches
           </Typography>
           <IconButton
@@ -399,11 +324,12 @@ export default function ScheduledExamCard({
                 <ListItem
                   key={batch.id}
                   sx={{
-                    borderRadius: "8px",
-                    marginBottom: index < batchMeta.length - 1 ? "6px" : 0,
-                    backgroundColor: "var(--bg-color)",
+                    borderRadius: "6px",
+                    marginBottom: index < batchMeta.length - 1 ? "4px" : 0,
+                    backgroundColor: "rgba(24, 113, 99, 0.04)",
+                    border: "1px solid rgba(24, 113, 99, 0.08)",
                     "&:hover": {
-                      backgroundColor: "rgba(24, 113, 99, 0.06)",
+                      backgroundColor: "rgba(24, 113, 99, 0.08)",
                     },
                   }}
                 >
@@ -411,7 +337,7 @@ export default function ScheduledExamCard({
                     primary={batch.title}
                     primaryTypographyProps={{
                       fontWeight: 600,
-                      fontSize: "14px",
+                      fontSize: "13px",
                     }}
                   />
                 </ListItem>
@@ -421,9 +347,10 @@ export default function ScheduledExamCard({
                 <ListItem
                   key={batchId}
                   sx={{
-                    borderRadius: "8px",
-                    marginBottom: index < batchList.length - 1 ? "6px" : 0,
-                    backgroundColor: "var(--bg-color)",
+                    borderRadius: "6px",
+                    marginBottom: index < batchList.length - 1 ? "4px" : 0,
+                    backgroundColor: "rgba(24, 113, 99, 0.04)",
+                    border: "1px solid rgba(24, 113, 99, 0.08)",
                   }}
                 >
                   <ListItemText
@@ -431,11 +358,11 @@ export default function ScheduledExamCard({
                     secondary={batchId}
                     primaryTypographyProps={{
                       fontWeight: 600,
-                      fontSize: "14px",
+                      fontSize: "13px",
                     }}
                     secondaryTypographyProps={{
-                      fontSize: "11px",
-                      color: "var(--text3)",
+                      fontSize: "10px",
+                      color: "var(--text4)",
                     }}
                   />
                 </ListItem>
@@ -445,7 +372,7 @@ export default function ScheduledExamCard({
                 color="var(--text3)"
                 textAlign="center"
                 padding="20px"
-                fontSize="14px"
+                fontSize="13px"
               >
                 No batches scheduled
               </Typography>
@@ -456,3 +383,42 @@ export default function ScheduledExamCard({
     </>
   );
 }
+
+const StatBadge = ({ icon, value, label, color, bgColor, borderColor }) => (
+  <Stack
+    alignItems="center"
+    justifyContent="center"
+    gap="2px"
+    flex={1}
+    sx={{
+      padding: "6px 4px",
+      backgroundColor: bgColor,
+      borderRadius: "6px",
+      border: `1px solid ${borderColor}`,
+    }}
+  >
+    <Stack sx={{ color }}>{icon}</Stack>
+    <Typography
+      sx={{
+        fontSize: "12px",
+        fontWeight: 700,
+        color,
+        fontFamily: "Lato",
+        lineHeight: 1,
+      }}
+    >
+      {value}
+    </Typography>
+    <Typography
+      sx={{
+        fontSize: "8px",
+        fontWeight: 600,
+        color: "var(--text4)",
+        textTransform: "uppercase",
+        letterSpacing: "0.3px",
+      }}
+    >
+      {label}
+    </Typography>
+  </Stack>
+);

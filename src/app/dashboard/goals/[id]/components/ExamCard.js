@@ -17,86 +17,65 @@ export default function ExamCard({
       onClick={onClick}
       sx={{
         width: "100%",
-        maxWidth: "360px",
-        padding: "24px",
-        borderRadius: "16px",
+        maxWidth: "320px",
         border: "1px solid var(--border-color)",
+        borderTop: `3px solid ${color}`,
+        borderRadius: "10px",
         cursor: "pointer",
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-        position: "relative",
+        transition: "all 0.15s ease",
         overflow: "hidden",
         "&:hover": {
-          transform: "translateY(-4px)",
-          boxShadow: "0 12px 24px -10px rgba(0, 0, 0, 0.1)",
           borderColor: color,
-          "& .icon-box": {
-            transform: "scale(1.1)",
-            backgroundColor: color,
-            color: "#fff",
-          },
-          "& .arrow-icon": {
-            transform: "translateX(4px)",
-            color: color,
-          },
         },
       }}
     >
-      <Stack gap="20px">
+      <Stack padding="14px 16px" gap="12px">
         <Stack
           flexDirection="row"
           justifyContent="space-between"
-          alignItems="flex-start"
+          alignItems="center"
         >
-          <Box
-            className="icon-box"
-            sx={{
-              width: "56px",
-              height: "56px",
-              borderRadius: "12px",
-              backgroundColor: bgColor,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              transition: "all 0.3s ease",
-            }}
-          >
-            <Image src={icon} alt={title} width={32} height={32} />
-          </Box>
-          <Box
-            className="arrow-icon"
-            sx={{
-              transition: "all 0.3s ease",
-              color: "var(--text3)",
-            }}
-          >
-            <ArrowForward />
-          </Box>
+          <Stack direction="row" alignItems="center" gap="10px">
+            <Box
+              sx={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "8px",
+                backgroundColor: bgColor,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                border: `1px solid ${color}20`,
+                flexShrink: 0,
+              }}
+            >
+              <Image src={icon} alt={title} width={18} height={20} />
+            </Box>
+            <Typography
+              sx={{
+                fontFamily: "Lato",
+                fontWeight: 700,
+                fontSize: "14px",
+                color: "var(--text1)",
+              }}
+            >
+              {title}
+            </Typography>
+          </Stack>
+          <ArrowForward
+            sx={{ fontSize: "18px", color: "var(--text4)" }}
+          />
         </Stack>
 
-        <Stack gap="8px">
-          <Typography
-            variant="h6"
-            sx={{
-              fontFamily: "Lato",
-              fontWeight: 700,
-              fontSize: "18px",
-              color: "var(--text1)",
-            }}
-          >
-            {title}
-          </Typography>
-          <Typography
-            sx={{
-              fontFamily: "Lato",
-              fontSize: "14px",
-              color: "var(--text3)",
-              lineHeight: 1.6,
-              minHeight: "44px", // Ensure consistent height
-            }}
-          >
-            {description}
-          </Typography>
-        </Stack>
+        <Typography
+          sx={{
+            fontSize: "12px",
+            color: "var(--text4)",
+            lineHeight: 1.5,
+          }}
+        >
+          {description}
+        </Typography>
       </Stack>
     </Card>
   );

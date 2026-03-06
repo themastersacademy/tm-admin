@@ -228,63 +228,56 @@ export default function Info({ goal }) {
 
       {/* Header */}
       <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Stack gap="4px">
+        <Stack direction="row" alignItems="center" gap="8px">
+          <Article sx={{ fontSize: "20px", color: "var(--primary-color)" }} />
           <Typography
             sx={{
               fontFamily: "Lato",
-              fontSize: "20px",
+              fontSize: "16px",
               fontWeight: 700,
               color: "var(--text1)",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
             }}
           >
-            <Article sx={{ color: "var(--primary-color)" }} /> Blog Content
+            Blog Content
           </Typography>
-          <Typography sx={{ fontSize: "13px", color: "var(--text3)" }}>
-            Create and manage blog posts for this goal
-          </Typography>
-        </Stack>
-
-        <Stack direction="row" alignItems="center" gap="12px">
           {!isLoading && infoList.length > 0 && (
             <Chip
-              label={`${infoList.length} ${
-                infoList.length === 1 ? "Blog" : "Blogs"
-              }`}
+              size="small"
+              label={infoList.length}
               sx={{
-                backgroundColor: "rgba(var(--primary-rgb), 0.1)",
+                height: "20px",
+                fontSize: "11px",
+                fontWeight: 700,
+                backgroundColor: "rgba(24, 113, 99, 0.08)",
                 color: "var(--primary-color)",
-                fontWeight: 600,
-                fontSize: "12px",
+                border: "1px solid rgba(24, 113, 99, 0.15)",
+                "& .MuiChip-label": { padding: "0 6px" },
               }}
             />
           )}
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => openDialog("create")}
-            sx={{
-              textTransform: "none",
-              backgroundColor: "var(--primary-color)",
-              borderRadius: "8px",
-              padding: "8px 24px",
-              fontWeight: 600,
-              boxShadow: "none",
-              "&:hover": {
-                backgroundColor: "var(--primary-color-dark)",
-                boxShadow: "none",
-              },
-            }}
-            disableElevation
-          >
-            Create Blog
-          </Button>
         </Stack>
-      </Stack>
 
-      <Divider />
+        <Button
+          variant="contained"
+          startIcon={<Add sx={{ fontSize: "16px" }} />}
+          onClick={() => openDialog("create")}
+          disableElevation
+          sx={{
+            backgroundColor: "var(--primary-color)",
+            textTransform: "none",
+            borderRadius: "8px",
+            fontWeight: 600,
+            fontSize: "12px",
+            height: "34px",
+            padding: "6px 16px",
+            "&:hover": {
+              backgroundColor: "var(--primary-color-dark)",
+            },
+          }}
+        >
+          Create Blog
+        </Button>
+      </Stack>
 
       {/* Dialog */}
       {dialogMode && (
@@ -536,6 +529,7 @@ export default function Info({ goal }) {
               title={item.title}
               description={item.description}
               createdAt={item.createdAt || Date.now()}
+              index={idx}
               onView={() => openDialog("preview", idx, item)}
               onEdit={() => openDialog("update", idx, item)}
               onDelete={() => {

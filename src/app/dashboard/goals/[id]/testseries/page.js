@@ -202,11 +202,12 @@ export default function TestSeries() {
           {!isLoading ? (
             paginatedMockList.length > 0 ? (
               <Stack
-                flexDirection="row"
-                flexWrap="wrap"
-                gap="30px"
-                rowGap="15px"
-                marginTop="20px"
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                  gap: "16px",
+                  marginTop: "16px",
+                }}
               >
                 {paginatedMockList.map((item, index) => (
                   <ScheduledExamCard
@@ -224,11 +225,12 @@ export default function TestSeries() {
             )
           ) : (
             <Stack
-              flexDirection="row"
-              flexWrap="wrap"
-              gap="30px"
-              rowGap="15px"
-              marginTop="20px"
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: "16px",
+                marginTop: "16px",
+              }}
             >
               {Array.from({ length: 5 }).map((_, index) => (
                 <SecondaryCardSkeleton key={index} />

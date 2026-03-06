@@ -43,14 +43,20 @@ export default function ScheduledExams() {
       <Typography sx={{ fontSize: "20px", fontWeight: "700" }}>
         Scheduled Exams
       </Typography>
-      <Stack flexDirection="row" flexWrap="wrap" rowGap="15px" columnGap="30px">
+      <Stack
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+          gap: "16px",
+        }}
+      >
         {!isLoading ? (
           exams.length > 0 ? (
             exams.map((exam, index) => (
               <ScheduledExamCard key={index} exam={exam} />
             ))
           ) : (
-            <Stack width="100%" minHeight="60vh">
+            <Stack sx={{ gridColumn: "1 / -1", minHeight: "60vh" }}>
               <NoDataFound info="No scheduled exams for this batch" />
             </Stack>
           )

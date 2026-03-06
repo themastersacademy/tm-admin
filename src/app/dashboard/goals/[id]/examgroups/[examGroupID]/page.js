@@ -617,11 +617,12 @@ export default function ExamGroupID() {
           />
         </Stack>
         <Stack
-          flexDirection="row"
-          flexWrap="wrap"
-          columnGap="20px"
-          rowGap="15px"
-          marginTop="25px"
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: "16px",
+            marginTop: "20px",
+          }}
         >
           {!isLoading ? (
             examList?.length > 0 ? (
@@ -637,16 +638,16 @@ export default function ExamGroupID() {
                 />
               ))
             ) : (
-              <Stack minHeight="60vh" width="100%">
+              <Stack sx={{ gridColumn: "1 / -1", minHeight: "60vh" }}>
                 <NoDataFound info="No Exam Group Created yet" />
               </Stack>
             )
           ) : (
-            <Stack flexDirection="row" gap="20px" flexWrap="wrap">
+            <>
               <PrimaryCardSkeleton />
               <PrimaryCardSkeleton />
               <PrimaryCardSkeleton />
-            </Stack>
+            </>
           )}
         </Stack>
       </Stack>
