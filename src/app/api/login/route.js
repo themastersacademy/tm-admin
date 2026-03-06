@@ -49,7 +49,7 @@ export async function POST(request) {
     }
 
     const params = {
-      TableName: `TMA-DEV-admin `,
+      TableName: "TMA-DEV-admin",
       FilterExpression: "email = :email",
       ExpressionAttributeValues: { ":email": email },
     };
