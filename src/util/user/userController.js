@@ -29,9 +29,41 @@ export async function getAllUsers({
   page = 1,
   limit = 10,
   includeStats = true,
+  minimal = false,
 } = {}) {
   const currentPage = Math.max(Number(page) || 1, 1);
   const pageSize = Math.max(Number(limit) || 10, 1);
+
+  // minimal mode: fetch all users with only fields needed for search autocomplete
+  if (minimal) {
+    const minimalParams = {
+      TableName: `${process.env.AWS_DB_NAME}users`,
+      IndexName: "GSI1-index",
+      FilterExpression:
+        "attribute_exists(email) AND begins_with(pKey, :pKey)",
+      ProjectionExpression: "id, #name, email, image",
+      ExpressionAttributeNames: { "#name": "name" },
+      ExpressionAttributeValues: { ":pKey": "USER#" },
+    };
+    try {
+      const allItems = [];
+      let lastKey;
+      do {
+        const response = await dynamoDB.send(
+          new ScanCommand({
+            ...minimalParams,
+            Limit: 500,
+            ...(lastKey && { ExclusiveStartKey: lastKey }),
+          })
+        );
+        allItems.push(...(response.Items || []));
+        lastKey = response.LastEvaluatedKey;
+      } while (lastKey);
+      return { success: true, data: allItems };
+    } catch (error) {
+      throw new Error(`Failed to load users: ${error.message}`);
+    }
+  }
 
   const params = {
     TableName: `${process.env.AWS_DB_NAME}users`,

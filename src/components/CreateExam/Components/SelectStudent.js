@@ -14,7 +14,7 @@ import {
   Typography,
   Box,
 } from "@mui/material";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { apiFetch } from "@/src/lib/apiFetch";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
 import { CheckCircle, Cancel } from "@mui/icons-material";
@@ -27,6 +27,7 @@ export default function SelectStudent({
 }) {
   const { showSnackbar } = useSnackbar();
   const [open, setOpen] = useState(false);
+  const [allUsers, setAllUsers] = useState([]);
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -95,35 +96,40 @@ export default function SelectStudent({
     fetchBatchStudents();
   }, [exam.batchList]);
 
-  const fetchStudents = useCallback(async (query) => {
-    if (!query) {
+  // Load all users once on mount for instant client-side search
+  useEffect(() => {
+    const loadAllUsers = async () => {
+      setLoading(true);
+      try {
+        const data = await apiFetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/get-all-users?minimal=true`
+        );
+        if (data.success) {
+          setAllUsers(data.data);
+        }
+      } catch (error) {
+        console.error("Error loading users:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAllUsers();
+  }, []);
+
+  // Filter client-side on every keystroke — no API call needed
+  useEffect(() => {
+    if (!inputValue || inputValue.length < 2) {
       setOptions([]);
       return;
     }
-    setLoading(true);
-    try {
-      const data = await apiFetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/get-all-users?search=${query}&limit=20`
-      );
-      if (data.success) {
-        setOptions(data.data);
-      }
-    } catch (error) {
-      console.error("Error searching students:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (inputValue) {
-        fetchStudents(inputValue);
-      }
-    }, 500);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [inputValue, fetchStudents]);
+    const q = inputValue.toLowerCase();
+    const filtered = allUsers.filter(
+      (u) =>
+        u.name?.toLowerCase().includes(q) ||
+        u.email?.toLowerCase().includes(q)
+    );
+    setOptions(filtered.slice(0, 20));
+  }, [inputValue, allUsers]);
 
   const handleChange = (event, newValue) => {
     // Filter out students who are already in the batch list

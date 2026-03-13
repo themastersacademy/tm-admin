@@ -15,6 +15,7 @@ export async function GET(request) {
   const includeStatsParam = searchParams.get("includeStats");
   const includeStats =
     includeStatsParam !== null ? includeStatsParam === "true" : hasPage;
+  const minimal = searchParams.get("minimal") === "true";
 
   try {
     const response = await getAllUsers({
@@ -25,6 +26,7 @@ export async function GET(request) {
       page,
       limit,
       includeStats,
+      minimal,
     });
     return Response.json(response);
   } catch (error) {
