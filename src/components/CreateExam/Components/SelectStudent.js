@@ -14,10 +14,15 @@ import {
   Typography,
   Box,
 } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "@/src/lib/apiFetch";
 import { useSnackbar } from "@/src/app/context/SnackbarContext";
 import { CheckCircle, Cancel } from "@mui/icons-material";
+
+// Module-level cache — survives component re-mounts within the same session
+let _usersCache = null;
+let _usersCacheAt = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 export default function SelectStudent({
   exam,
@@ -27,9 +32,9 @@ export default function SelectStudent({
 }) {
   const { showSnackbar } = useSnackbar();
   const [open, setOpen] = useState(false);
-  const [allUsers, setAllUsers] = useState([]);
-  const [options, setOptions] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [allUsers, setAllUsers] = useState(() => _usersCache || []);
+  const [usersLoading, setUsersLoading] = useState(!_usersCache);
+  const [loading, setLoading] = useState(false); // for fetching selected students
   const [inputValue, setInputValue] = useState("");
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [batchStudents, setBatchStudents] = useState([]);
@@ -96,39 +101,38 @@ export default function SelectStudent({
     fetchBatchStudents();
   }, [exam.batchList]);
 
-  // Load all users once on mount for instant client-side search
+  // Load all users once — uses module-level cache to avoid re-fetching on re-mount
   useEffect(() => {
-    const loadAllUsers = async () => {
-      setLoading(true);
-      try {
-        const data = await apiFetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/get-all-users?minimal=true`
-        );
-        if (data.success) {
-          setAllUsers(data.data);
-        }
-      } catch (error) {
-        console.error("Error loading users:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadAllUsers();
-  }, []);
-
-  // Filter client-side on every keystroke — no API call needed
-  useEffect(() => {
-    if (!inputValue || inputValue.length < 2) {
-      setOptions([]);
+    const now = Date.now();
+    if (_usersCache && now - _usersCacheAt < CACHE_TTL_MS) {
+      setAllUsers(_usersCache);
+      setUsersLoading(false);
       return;
     }
+    setUsersLoading(true);
+    apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/users/get-all-users?minimal=true`)
+      .then((data) => {
+        if (data.success) {
+          _usersCache = data.data;
+          _usersCacheAt = Date.now();
+          setAllUsers(data.data);
+        }
+      })
+      .catch((error) => console.error("Error loading users:", error))
+      .finally(() => setUsersLoading(false));
+  }, []);
+
+  // Filter client-side — useMemo avoids a setState round-trip on every keystroke
+  const options = useMemo(() => {
+    if (!inputValue || inputValue.length < 2) return [];
     const q = inputValue.toLowerCase();
-    const filtered = allUsers.filter(
-      (u) =>
-        u.name?.toLowerCase().includes(q) ||
-        u.email?.toLowerCase().includes(q)
-    );
-    setOptions(filtered.slice(0, 20));
+    return allUsers
+      .filter(
+        (u) =>
+          u.name?.toLowerCase().includes(q) ||
+          u.email?.toLowerCase().includes(q)
+      )
+      .slice(0, 20);
   }, [inputValue, allUsers]);
 
   const handleChange = (event, newValue) => {
@@ -223,7 +227,14 @@ export default function SelectStudent({
         getOptionLabel={(option) => option.name || option.email || ""}
         options={getFilteredOptions(options)}
         getOptionDisabled={(option) => option.disabled}
-        loading={loading}
+        loading={usersLoading}
+        noOptionsText={
+          usersLoading
+            ? "Loading students..."
+            : inputValue.length < 2
+              ? "Type at least 2 characters"
+              : "No students found"
+        }
         onInputChange={(event, newInputValue) => {
           setInputValue(newInputValue);
         }}
@@ -287,7 +298,7 @@ export default function SelectStudent({
               ...params.InputProps,
               endAdornment: (
                 <>
-                  {loading ? (
+                  {usersLoading ? (
                     <CircularProgress
                       size={16}
                       sx={{ color: "var(--primary-color)" }}

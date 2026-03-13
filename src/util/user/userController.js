@@ -41,7 +41,7 @@ export async function getAllUsers({
       IndexName: "GSI1-index",
       FilterExpression:
         "attribute_exists(email) AND begins_with(pKey, :pKey)",
-      ProjectionExpression: "id, #name, email, image",
+      ProjectionExpression: "id, #name, email, image, emailVerified",
       ExpressionAttributeNames: { "#name": "name" },
       ExpressionAttributeValues: { ":pKey": "USER#" },
     };
@@ -59,7 +59,17 @@ export async function getAllUsers({
         allItems.push(...(response.Items || []));
         lastKey = response.LastEvaluatedKey;
       } while (lastKey);
-      return { success: true, data: allItems };
+
+      // Deduplicate by email — keep the verified account, or the first seen
+      const seen = new Map();
+      for (const item of allItems) {
+        const key = item.email?.toLowerCase();
+        if (!key) continue;
+        if (!seen.has(key) || item.emailVerified) {
+          seen.set(key, item);
+        }
+      }
+      return { success: true, data: Array.from(seen.values()) };
     } catch (error) {
       throw new Error(`Failed to load users: ${error.message}`);
     }
