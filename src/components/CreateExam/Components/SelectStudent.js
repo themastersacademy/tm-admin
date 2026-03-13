@@ -113,9 +113,19 @@ export default function SelectStudent({
     apiFetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/users/get-all-users?minimal=true`)
       .then((data) => {
         if (data.success) {
-          _usersCache = data.data;
+          // Deduplicate by email — keep the record with a profile image when available
+          const seen = new Map();
+          for (const u of data.data) {
+            const key = u.email?.toLowerCase();
+            if (!key) continue;
+            if (!seen.has(key) || (!seen.get(key).image && u.image)) {
+              seen.set(key, u);
+            }
+          }
+          const deduped = Array.from(seen.values());
+          _usersCache = deduped;
           _usersCacheAt = Date.now();
-          setAllUsers(data.data);
+          setAllUsers(deduped);
         }
       })
       .catch((error) => console.error("Error loading users:", error))
