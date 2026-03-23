@@ -7,10 +7,9 @@ export async function POST(request) {
   if (!title || !goalID) {
     return Response.json({ message: "Title is required" }, { status: 400 });
   }
-  //title should be more than 3 characters and less than 50 characters
-  if (title.length < 3 || title.length > 50) {
+  if (title.length < 3 || title.length > 150) {
     return Response.json(
-      { message: "Title should be more than 3 characters" },
+      { message: title.length < 3 ? "Title must be at least 3 characters" : "Title must be 150 characters or less" },
       { status: 400 }
     );
   }
