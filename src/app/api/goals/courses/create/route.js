@@ -27,6 +27,7 @@ export async function POST(request) {
     });
     return Response.json(result, { status: 200 });
   } catch (error) {
-    return Response.json({ message: "Error creating course" }, { status: 500 });
+    console.error("Error creating course:", error);
+    return Response.json({ success: false, message: error.message || "Error creating course" }, { status: 500 });
   }
 }

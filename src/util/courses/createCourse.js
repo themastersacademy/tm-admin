@@ -22,7 +22,6 @@ export default async function createCourse({
   const courseID = `COURSE#${randomUUID()}`;
   const params = {
     TableName: `${process.env.AWS_DB_NAME}master`,
-    IndexName: "masterTableIndex",
     Item: {
       pKey: courseID,
       sKey: `COURSES@${goalID}`,
