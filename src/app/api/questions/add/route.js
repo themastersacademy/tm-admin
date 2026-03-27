@@ -6,18 +6,14 @@ export async function POST(request) {
 
   // Validate against our flat schema
   if (!checkQuestionFormat(questionData)) {
-    return new Response(JSON.stringify({ error: "Invalid question format" }), {
-      status: 400,
-    });
+    return Response.json({ error: "Invalid question format" }, { status: 400 });
   }
 
   try {
     const result = await addQuestion(questionData);
-    return new Response(JSON.stringify(result), { status: 201 });
+    return Response.json(result, { status: 201 });
   } catch (err) {
     console.error("Error adding question:", err);
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
-      status: 500,
-    });
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }

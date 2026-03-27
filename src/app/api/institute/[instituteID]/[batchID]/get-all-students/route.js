@@ -8,6 +8,14 @@ export async function GET(req, { params }) {
       { status: 400 }
     );
   }
-  const result = await getStudentsForBatch(batchID);
-  return Response.json(result);
+  try {
+    const result = await getStudentsForBatch(batchID);
+    return Response.json(result);
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    return Response.json(
+      { success: false, message: "Failed to fetch students" },
+      { status: 500 }
+    );
+  }
 }

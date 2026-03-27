@@ -30,9 +30,9 @@ export async function POST(request) {
       .items(
         Joi.object({
           type: Joi.string().required(),
-          duration: Joi.number().required(),
-          priceWithTax: Joi.number().required(),
-          discountInPercent: Joi.number().required(),
+          duration: Joi.string().required(),
+          priceWithTax: Joi.string().required(),
+          discountInPercent: Joi.string().allow("").required(),
         })
       )
       .required(),

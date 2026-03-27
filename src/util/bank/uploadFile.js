@@ -20,6 +20,7 @@ export async function createFile({ title, bankID, fileName, fileType }) {
   const awsFileName = `${
     process.env.AWS_BANK_PATH
   }${randomUUID()}-${title.replace(/\s+/g, "_")}.${fileExtension}`;
+  const resourceID = randomUUID();
   try {
     // 🏦 Check if the bank exists in DynamoDB
     const bankParams = {
@@ -33,7 +34,6 @@ export async function createFile({ title, bankID, fileName, fileType }) {
     }
 
     // 🔹 Prepare resource item for DynamoDB
-    const resourceID = randomUUID();
     const resourceParams = {
       TableName: `${process.env.AWS_DB_NAME}content`,
       Item: {
@@ -100,11 +100,15 @@ export async function createFile({ title, bankID, fileName, fileType }) {
     console.error("Error:", err);
 
     // 🚨 Rollback - Delete the record if DynamoDB write fails
-    const deleteParams = {
-      TableName: `${process.env.AWS_DB_NAME}content`,
-      Key: { pKey: `RESOURCE#${fileName}`, sKey: `RESOURCE@${bankID}` },
-    };
-    await dynamoDB.send(new DeleteCommand(deleteParams));
+    try {
+      const deleteParams = {
+        TableName: `${process.env.AWS_DB_NAME}content`,
+        Key: { pKey: `RESOURCE#${resourceID}`, sKey: `RESOURCE@${bankID}` },
+      };
+      await dynamoDB.send(new DeleteCommand(deleteParams));
+    } catch (rollbackErr) {
+      console.error("Rollback failed:", rollbackErr);
+    }
 
     throw new Error("Internal server error");
   }

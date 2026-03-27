@@ -83,7 +83,7 @@ export function validateSubscription(subscription) {
       return;
     }
 
-    // 6b) discountInPercent: string representing integer 0–100
+    // 6b) discountInPercent: string representing a number 0–100
     if (typeof plan.discountInPercent !== "string") {
       errors.push({
         path: `${basePath}.discountInPercent`,
@@ -91,11 +91,11 @@ export function validateSubscription(subscription) {
       });
     } else {
       const disc = Number(plan.discountInPercent);
-      if (!Number.isInteger(disc) || disc < 0 || disc > 100) {
+      if (Number.isNaN(disc) || disc < 0 || disc > 100) {
         errors.push({
           path: `${basePath}.discountInPercent`,
           message:
-            "`discountInPercent` must be an integer string between 0 and 100",
+            "`discountInPercent` must be a string representing a number between 0 and 100",
         });
       }
     }

@@ -24,11 +24,19 @@ export async function POST(request) {
   }
 
   // All sanitized & valid → batch write
-  const results = await batchAddQuestions(questions);
+  try {
+    const results = await batchAddQuestions(questions);
 
-  // If any failure, return 207 Multi-Status semantics
-  const anyFail = results.some((r) => !r.success);
-  const status = anyFail ? 207 : 201;
+    // If any failure, return 207 Multi-Status semantics
+    const anyFail = results.some((r) => !r.success);
+    const status = anyFail ? 207 : 201;
 
-  return Response.json({ success: true, results }, { status });
+    return Response.json({ success: true, results }, { status });
+  } catch (error) {
+    console.error("Error importing questions:", error);
+    return Response.json(
+      { success: false, error: "Failed to import questions" },
+      { status: 500 }
+    );
+  }
 }

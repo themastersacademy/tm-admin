@@ -4,9 +4,9 @@ export async function POST(req) {
   const { priceWithTax, type, duration, discountInPercent } = await req.json();
   if (!priceWithTax || !type || !duration) {
     return Response.json({
-      status: false,
+      success: false,
       message: "All fields are required",
-    });
+    }, { status: 400 });
   }
   try {
     const response = await createSubscriptionPlan({
@@ -17,9 +17,10 @@ export async function POST(req) {
     });
     return Response.json(response);
   } catch (error) {
+    console.error("Error creating subscription:", error);
     return Response.json({
-      status: false,
+      success: false,
       message: error.message,
-    });
+    }, { status: 500 });
   }
 }

@@ -19,6 +19,7 @@ import ExplanationStepper from "./ExplanationStepper";
 import PreviewStepper from "./PreviewStepper";
 import checkQuestionFormat from "@/src/lib/checkQuestionFormat";
 import { apiFetch } from "@/src/lib/apiFetch";
+import { useSnackbar } from "@/src/app/context/SnackbarContext";
 
 export default function QuestionStepper({
   steps,
@@ -34,6 +35,7 @@ export default function QuestionStepper({
   initialData,
 }) {
   const router = useRouter();
+  const { showSnackbar } = useSnackbar();
   const [isLoading, setIsLoading] = useState(false);
   const [addNewQuestion, setAddNewQuestion] = useState(false);
 
@@ -50,6 +52,10 @@ export default function QuestionStepper({
     // Validate entire questionData shape
     if (!checkQuestionFormat(questionData)) {
       setIsLoading(false);
+      showSnackbar(
+        "Question is incomplete. Please fill in all required fields before saving.",
+        "error"
+      );
       return;
     }
 
@@ -74,6 +80,7 @@ export default function QuestionStepper({
 
       if (res.success) {
         if (addNewQuestion && !isEdit) {
+          showSnackbar("Question saved! Ready for next.", "success");
           await setInitState();
         } else {
           if (onSuccess) {
@@ -83,10 +90,11 @@ export default function QuestionStepper({
           }
         }
       } else {
-        console.error("Save failed:", res);
+        showSnackbar(res.message || "Failed to save question. Please try again.", "error");
       }
     } catch (err) {
       console.error("Error saving question:", err);
+      showSnackbar("An unexpected error occurred. Please try again.", "error");
     } finally {
       setIsLoading(false);
     }

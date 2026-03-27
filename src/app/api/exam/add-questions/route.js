@@ -6,7 +6,7 @@ export async function POST(req) {
     return Response.json({
       success: false,
       message: "Missing required fields",
-    });
+    }, { status: 400 });
   }
 
   try {
@@ -18,9 +18,10 @@ export async function POST(req) {
     });
     return Response.json(result);
   } catch (error) {
+    console.error("Error adding questions to exam:", error);
     return Response.json({
       success: false,
       message: error.message,
-    });
+    }, { status: 500 });
   }
 }
