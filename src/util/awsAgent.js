@@ -21,7 +21,9 @@ const dbClient = new DynamoDBClient({
   },
 });
 
-const dynamoDB = DynamoDBDocument.from(dbClient);
+const dynamoDB = DynamoDBDocument.from(dbClient, {
+  marshallOptions: { removeUndefinedValues: true },
+});
 
 const s3 = new S3Client({
   region: process.env.AWS_REGION,
