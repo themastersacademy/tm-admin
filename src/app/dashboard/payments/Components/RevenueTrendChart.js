@@ -9,6 +9,7 @@ import {
   YAxis,
 } from "recharts";
 import { Box, Typography, Stack, Select, MenuItem } from "@mui/material";
+import { TrendingUp } from "@mui/icons-material";
 import { useState, useMemo } from "react";
 
 export default function RevenueTrendChart({ transactions }) {
@@ -21,7 +22,6 @@ export default function RevenueTrendChart({ transactions }) {
     const result = [];
 
     if (timeRange === "30days") {
-      // Last 30 days
       for (let i = 29; i >= 0; i--) {
         const d = new Date(now);
         d.setDate(d.getDate() - i);
@@ -43,7 +43,6 @@ export default function RevenueTrendChart({ transactions }) {
         });
       }
     } else {
-      // Last 12 months
       for (let i = 11; i >= 0; i--) {
         const d = new Date(now);
         d.setMonth(d.getMonth() - i);
@@ -71,35 +70,68 @@ export default function RevenueTrendChart({ transactions }) {
     return result;
   }, [transactions, timeRange]);
 
+  const hasRevenue = data.some((d) => d.revenue > 0);
+
   return (
     <Box
       sx={{
         backgroundColor: "var(--white)",
-        borderRadius: "16px",
+        borderRadius: "14px",
         border: "1px solid var(--border-color)",
         padding: "24px",
         height: "100%",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       <Stack
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        mb={3}
+        mb={2}
       >
-        <Typography variant="h6" fontWeight={700}>
-          Revenue Trend
-        </Typography>
+        <Stack direction="row" alignItems="center" gap="10px">
+          <Box
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: "8px",
+              backgroundColor: "rgba(24, 113, 99, 0.08)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <TrendingUp
+              sx={{ fontSize: 18, color: "var(--primary-color)" }}
+            />
+          </Box>
+          <Typography
+            sx={{
+              fontSize: "16px",
+              fontWeight: 700,
+              color: "var(--text1)",
+            }}
+          >
+            Revenue Trend
+          </Typography>
+        </Stack>
         <Select
           value={timeRange}
           onChange={(e) => setTimeRange(e.target.value)}
           size="small"
           sx={{
-            height: "36px",
-            fontSize: "14px",
+            height: "32px",
+            fontSize: "13px",
+            fontWeight: 600,
             borderRadius: "8px",
-            backgroundColor: "var(--bg-color)",
-            "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+            color: "var(--text2)",
+            "& .MuiOutlinedInput-notchedOutline": {
+              borderColor: "var(--border-color)",
+            },
+            "&:hover .MuiOutlinedInput-notchedOutline": {
+              borderColor: "var(--primary-color)",
+            },
           }}
         >
           <MenuItem value="30days">Last 30 Days</MenuItem>
@@ -107,51 +139,96 @@ export default function RevenueTrendChart({ transactions }) {
         </Select>
       </Stack>
 
-      <Box height={300}>
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data}>
-            <defs>
-              <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#2196F3" stopOpacity={0.1} />
-                <stop offset="95%" stopColor="#2196F3" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              vertical={false}
-              stroke="#eee"
+      <Box flex={1} minHeight={0}>
+        {!hasRevenue ? (
+          <Stack
+            alignItems="center"
+            justifyContent="center"
+            height="100%"
+            gap="8px"
+          >
+            <TrendingUp
+              sx={{ fontSize: 48, color: "var(--border-color)" }}
             />
-            <XAxis
-              dataKey="name"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 12, fill: "#666" }}
-              dy={10}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 12, fill: "#666" }}
-              tickFormatter={(value) => `₹${value}`}
-            />
-            <Tooltip
-              contentStyle={{
-                borderRadius: "8px",
-                border: "none",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-              }}
-              formatter={(value) => [`₹${value}`, "Revenue"]}
-            />
-            <Area
-              type="monotone"
-              dataKey="revenue"
-              stroke="#2196F3"
-              strokeWidth={3}
-              fillOpacity={1}
-              fill="url(#colorRevenue)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+            <Typography
+              sx={{ fontSize: "14px", color: "var(--text3)", fontWeight: 600 }}
+            >
+              No revenue data yet
+            </Typography>
+            <Typography
+              sx={{ fontSize: "12px", color: "var(--text4)" }}
+            >
+              Completed transactions will appear here
+            </Typography>
+          </Stack>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data}>
+              <defs>
+                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="5%"
+                    stopColor="var(--primary-color)"
+                    stopOpacity={0.15}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="var(--primary-color)"
+                    stopOpacity={0}
+                  />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="var(--border-color)"
+              />
+              <XAxis
+                dataKey="name"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 11, fill: "#999" }}
+                dy={8}
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 11, fill: "#999" }}
+                tickFormatter={(value) => `₹${value}`}
+                width={60}
+              />
+              <Tooltip
+                contentStyle={{
+                  borderRadius: "10px",
+                  border: "1px solid var(--border-color)",
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                }}
+                formatter={(value) => [
+                  `₹${value.toLocaleString("en-IN")}`,
+                  "Revenue",
+                ]}
+              />
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="var(--primary-color)"
+                strokeWidth={2.5}
+                fillOpacity={1}
+                fill="url(#colorRevenue)"
+                dot={false}
+                activeDot={{
+                  r: 5,
+                  fill: "var(--primary-color)",
+                  stroke: "var(--white)",
+                  strokeWidth: 2,
+                }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
       </Box>
     </Box>
   );

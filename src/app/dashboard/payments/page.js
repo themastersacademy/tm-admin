@@ -66,6 +66,9 @@ export default function Payments() {
           const completedTransactions = allTransactions.filter(
             (t) => t.status === "completed"
           );
+          const failedTransactions = allTransactions.filter(
+            (t) => t.status === "failed" || t.status === "cancelled"
+          );
 
           totalRevenue = completedTransactions.reduce(
             (sum, t) => sum + (t.amount || 0),
@@ -105,14 +108,27 @@ export default function Payments() {
           } else if (currentMonthRevenue > 0) {
             monthlyGrowth = 100;
           }
-        }
 
-        setStats({
-          totalRevenue,
-          activePlans,
-          totalCoupons,
-          monthlyGrowth: parseFloat(monthlyGrowth.toFixed(1)),
-        });
+          setStats({
+            totalRevenue,
+            activePlans,
+            totalCoupons,
+            monthlyGrowth: parseFloat(monthlyGrowth.toFixed(1)),
+            totalTransactions: allTransactions.length,
+            completedCount: completedTransactions.length,
+            failedCount: failedTransactions.length,
+          });
+        } else {
+          setStats({
+            totalRevenue: 0,
+            activePlans,
+            totalCoupons,
+            monthlyGrowth: 0,
+            totalTransactions: 0,
+            completedCount: 0,
+            failedCount: 0,
+          });
+        }
       } catch (error) {
         console.error("Error fetching stats:", error);
       } finally {
@@ -145,11 +161,11 @@ export default function Payments() {
     <Stack padding="20px" gap="16px">
       <PaymentsHeader stats={stats} loading={loading} />
 
-      {!loading && transactions.length > 0 && (
+      {!loading && (
         <Stack
           direction={{ xs: "column", md: "row" }}
           gap="16px"
-          height="350px"
+          height="320px"
         >
           <Box flex={2}>
             <RevenueTrendChart transactions={transactions} />

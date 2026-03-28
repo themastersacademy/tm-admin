@@ -8,9 +8,19 @@ import {
   Tooltip,
 } from "recharts";
 import { Box, Typography, Stack } from "@mui/material";
+import { PieChartOutline } from "@mui/icons-material";
 import { useMemo } from "react";
 
-const COLORS = ["#2196F3", "#4CAF50", "#FF9800", "#E91E63", "#9C27B0"];
+const COLORS = ["#187163", "#2196F3", "#FF9800", "#E91E63", "#9C27B0"];
+
+const METHOD_LABELS = {
+  upi: "UPI",
+  card: "Card",
+  netbanking: "Net Banking",
+  wallet: "Wallet",
+  emi: "EMI",
+  unknown: "Other",
+};
 
 export default function PaymentMethodChart({ transactions }) {
   const data = useMemo(() => {
@@ -25,7 +35,7 @@ export default function PaymentMethodChart({ transactions }) {
       }, {});
 
     return Object.entries(methodCounts).map(([name, value]) => ({
-      name: name.charAt(0).toUpperCase() + name.slice(1),
+      name: METHOD_LABELS[name] || name.charAt(0).toUpperCase() + name.slice(1),
       value,
     }));
   }, [transactions]);
@@ -34,52 +44,112 @@ export default function PaymentMethodChart({ transactions }) {
     <Box
       sx={{
         backgroundColor: "var(--white)",
-        borderRadius: "16px",
+        borderRadius: "14px",
         border: "1px solid var(--border-color)",
         padding: "24px",
         height: "100%",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      <Typography variant="h6" fontWeight={700} mb={3}>
-        Payment Methods
-      </Typography>
+      <Stack direction="row" alignItems="center" gap="10px" mb={2}>
+        <Box
+          sx={{
+            width: 32,
+            height: 32,
+            borderRadius: "8px",
+            backgroundColor: "rgba(33, 150, 243, 0.08)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <PieChartOutline sx={{ fontSize: 18, color: "#2196F3" }} />
+        </Box>
+        <Typography
+          sx={{
+            fontSize: "16px",
+            fontWeight: 700,
+            color: "var(--text1)",
+          }}
+        >
+          Payment Methods
+        </Typography>
+      </Stack>
 
-      <Box height={300}>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={100}
-              paddingAngle={5}
-              dataKey="value"
+      <Box flex={1} minHeight={0}>
+        {data.length === 0 ? (
+          <Stack
+            alignItems="center"
+            justifyContent="center"
+            height="100%"
+            gap="8px"
+          >
+            <PieChartOutline
+              sx={{ fontSize: 48, color: "var(--border-color)" }}
+            />
+            <Typography
+              sx={{ fontSize: "14px", color: "var(--text3)", fontWeight: 600 }}
             >
-              {data.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={COLORS[index % COLORS.length]}
-                />
-              ))}
-            </Pie>
-            <Tooltip
-              contentStyle={{
-                borderRadius: "8px",
-                border: "none",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-              }}
-            />
-            <Legend
-              verticalAlign="bottom"
-              height={36}
-              iconType="circle"
-              formatter={(value) => (
-                <span style={{ color: "#666", fontSize: "14px" }}>{value}</span>
-              )}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+              No payment data yet
+            </Typography>
+            <Typography sx={{ fontSize: "12px", color: "var(--text4)" }}>
+              Method breakdown will appear after payments
+            </Typography>
+          </Stack>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="45%"
+                innerRadius={55}
+                outerRadius={90}
+                paddingAngle={4}
+                dataKey="value"
+                strokeWidth={0}
+              >
+                {data.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  borderRadius: "10px",
+                  border: "1px solid var(--border-color)",
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                }}
+                formatter={(value, name) => [
+                  `${value} transaction${value > 1 ? "s" : ""}`,
+                  name,
+                ]}
+              />
+              <Legend
+                verticalAlign="bottom"
+                height={36}
+                iconType="circle"
+                iconSize={8}
+                formatter={(value) => (
+                  <span
+                    style={{
+                      color: "var(--text2)",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {value}
+                  </span>
+                )}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        )}
       </Box>
     </Box>
   );
