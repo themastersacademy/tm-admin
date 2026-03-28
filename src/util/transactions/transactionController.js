@@ -32,11 +32,24 @@ export async function getAllTransactions(startDate, endDate) {
   }
 
   try {
-    const result = await dynamoDB.send(new ScanCommand(params));
+    const items = [];
+    let lastKey;
+
+    do {
+      const result = await dynamoDB.send(
+        new ScanCommand({
+          ...params,
+          ...(lastKey && { ExclusiveStartKey: lastKey }),
+        })
+      );
+      items.push(...(result.Items || []));
+      lastKey = result.LastEvaluatedKey;
+    } while (lastKey);
+
     return {
       success: true,
       message: "Transactions fetched successfully",
-      data: result.Items.map((item) => ({
+      data: items.map((item) => ({
         ...item,
         id: item.pKey.split("#")[1],
         pKey: undefined,
